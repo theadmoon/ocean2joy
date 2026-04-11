@@ -13,6 +13,351 @@ function ProjectDetails() {
   const [deliverables, setDeliverables] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [showFileModal, setShowFileModal] = useState(false);
+
+  // Mock file contents that match the comedy project
+  const fileContents = {
+    "Comedy_Script_v1.pdf": {
+      type: "script",
+      name: "Comedy Script - 'Office Chaos'",
+      content: `COMEDY SCRIPT - "OFFICE CHAOS"
+30-minute Comedy Video
+Written by Marcos Knight
+
+═══════════════════════════════════════════════
+
+CHARACTERS:
+- DAVE (Male, 35) - Overly enthusiastic office manager
+- LISA (Female, 28) - Sarcastic IT specialist
+
+SETTING: Modern office space with cubicles
+
+═══════════════════════════════════════════════
+
+SCENE 1: THE COFFEE MACHINE INCIDENT
+[INT. OFFICE - MORNING]
+
+DAVE enters the break room with exaggerated confidence, 
+holding a "World's Best Boss" mug.
+
+DAVE
+(loudly to everyone)
+Good morning team! Today is the day we revolutionize 
+our coffee break procedures!
+
+LISA
+(not looking up from laptop)
+Dave, it's just coffee.
+
+DAVE
+Just coffee?! JUST COFFEE?! Lisa, coffee is the 
+lifeblood of productivity! Watch and learn!
+
+Dave attempts to demonstrate an overly complicated 
+coffee-making procedure involving timers and charts.
+
+[SPECIAL EFFECT 1: Slow-motion coffee explosion]
+
+═══════════════════════════════════════════════
+
+SCENE 2: THE TECH SUPPORT CRISIS
+[INT. OFFICE - AFTERNOON]
+
+Dave's computer screen freezes during an important 
+presentation. He panics.
+
+DAVE
+(sweating, clicking frantically)
+No, no, no! Not now! LISA! EMERGENCY CODE RED!
+
+LISA
+(walking over calmly)
+Did you try turning it off and on again?
+
+DAVE
+That's... that's your professional advice?
+
+LISA
+(deadpan)
+I went to four years of university for this wisdom.
+
+[She presses one button. Everything works.]
+
+DAVE
+You're a wizard, Lisa.
+
+LISA
+I'm really not.
+
+═══════════════════════════════════════════════
+
+SCENE 3: THE PRESENTATION DISASTER
+[INT. CONFERENCE ROOM - LATE AFTERNOON]
+
+Dave attempts to give a motivational presentation 
+using a laser pointer. Things go wrong.
+
+[SPECIAL EFFECT 2: Laser pointer creates 
+animated chaos on screen - charts flying, 
+digital explosions]
+
+LISA
+(whispering to camera)
+This is why we can't have nice things.
+
+═══════════════════════════════════════════════
+
+[Additional 25 minutes of comedic scenes follow...]
+
+FINAL SCENE: THE RECONCILIATION
+
+Both characters share a laugh over the day's chaos.
+
+FADE OUT.
+
+═══════════════════════════════════════════════
+
+PRODUCTION NOTES:
+- 30 minutes total runtime
+- 2 special effects sequences marked above
+- Emphasis on physical comedy and timing
+- Modern office setting with minimal props
+- Natural lighting preferred
+
+END OF SCRIPT`
+    },
+    "Character_References.zip": {
+      type: "document",
+      name: "Character References & Casting",
+      content: `CHARACTER REFERENCES & CASTING NOTES
+Project: Office Chaos Comedy
+═══════════════════════════════════════════════
+
+CHARACTER 1: DAVE
+─────────────────────────────────────────────
+
+AGE: 35 years old
+ROLE: Overly enthusiastic office manager
+
+PHYSICAL DESCRIPTION:
+- Height: 5'10" - 6'0"
+- Build: Average to slightly overweight
+- Hair: Brown, slightly messy professional style
+- Style: Business casual (khakis, polo shirts)
+
+PERSONALITY TRAITS:
+- Overly optimistic
+- Loves creating unnecessary procedures
+- Takes everything too seriously
+- Physical comedy specialist
+- Great comedic timing
+
+REFERENCE ACTORS:
+- Similar energy to Steve Carell (The Office)
+- Physical comedy style of Jim Carrey
+- Earnest delivery like Paul Rudd
+
+COSTUME REQUIREMENTS:
+- 3 business casual outfits
+- "World's Best Boss" mug (prop)
+- Clipboard and unnecessary charts
+- Motivational posters (background)
+
+═══════════════════════════════════════════════
+
+CHARACTER 2: LISA
+─────────────────────────────────────────────
+
+AGE: 28 years old
+ROLE: Sarcastic IT specialist
+
+PHYSICAL DESCRIPTION:
+- Height: 5'5" - 5'7"
+- Build: Average, athletic
+- Hair: Dark, practical ponytail or short
+- Style: Casual tech wear (hoodies, jeans)
+
+PERSONALITY TRAITS:
+- Deadpan delivery expert
+- Extremely competent but apathetic
+- Quick wit and sarcasm
+- Straight-woman to Dave's chaos
+- Perfect comedic timing for reactions
+
+REFERENCE ACTORS:
+- Deadpan style of Aubrey Plaza
+- Wit of Tina Fey
+- Reactions like Rashida Jones
+
+COSTUME REQUIREMENTS:
+- Tech casual wardrobe (3 outfits)
+- Laptop and tech props
+- Coffee mug with sarcastic quote
+- IT toolkit (visual prop)
+
+═══════════════════════════════════════════════
+
+CASTING NOTES:
+
+Chemistry is CRITICAL. Actors must:
+✓ Have improv experience
+✓ Work well together (chemistry read required)
+✓ Strong physical comedy skills (Dave)
+✓ Perfect deadpan timing (Lisa)
+✓ Both comfortable with 30-min format
+
+APPROVED ACTORS (Selected by Production):
+✓ Both actors cast - excellent chemistry
+✓ Prior comedy experience confirmed
+✓ Available for Feb 25-27 filming dates
+
+═══════════════════════════════════════════════`
+    },
+    "Location_Photos.pdf": {
+      type: "document",
+      name: "Location Photos & Setup",
+      content: `LOCATION PHOTOS & SETUP GUIDE
+Project: Office Chaos Comedy
+═══════════════════════════════════════════════
+
+LOCATION 1: MAIN OFFICE SPACE
+─────────────────────────────────────────────
+
+DESCRIPTION:
+Modern open-plan office with cubicles and 
+contemporary furniture. Natural lighting from 
+large windows.
+
+SETUP REQUIREMENTS:
+• 4-6 cubicle workstations
+• Modern office chairs (rolling)
+• Desktop computers and monitors
+• Office supplies and paperwork (set dressing)
+• Motivational posters on walls
+• Professional but lived-in atmosphere
+
+LIGHTING:
+- Natural window light (primary)
+- Overhead fluorescent (practical)
+- Additional soft fill lights for faces
+- No harsh shadows - keep it bright and airy
+
+CAMERA ANGLES:
+✓ Wide shots of office space
+✓ Over-shoulder desk shots
+✓ Close-ups for reaction shots
+✓ Tracking shots through cubicles
+
+═══════════════════════════════════════════════
+
+LOCATION 2: BREAK ROOM
+─────────────────────────────────────────────
+
+DESCRIPTION:
+Small office break room with coffee machine,
+sink, small fridge, and table.
+
+KEY PROPS:
+• Coffee machine (hero prop - must be functional)
+• "World's Best Boss" mug
+• Multiple coffee mugs
+• Water cooler
+• Microwave
+• Small table with chairs
+• Bulletin board with notices
+
+SPECIAL REQUIREMENTS:
+⚠ Coffee machine for SPECIAL EFFECT #1
+  (slow-motion coffee explosion scene)
+- Safe breakaway materials needed
+- Multiple takes planned
+- Cleaning crew standing by
+
+LIGHTING:
+- Overhead practical lights
+- Window light from side
+- Additional fill for actor faces
+
+═══════════════════════════════════════════════
+
+LOCATION 3: CONFERENCE ROOM
+─────────────────────────────────────────────
+
+DESCRIPTION:
+Professional conference room with large table,
+presentation screen, and whiteboard.
+
+SETUP:
+• Large conference table (seats 8-10)
+• Office chairs
+• Projection screen or large monitor
+• Whiteboard with markers
+• Presentation materials
+• Water glasses and pitcher
+
+SPECIAL REQUIREMENTS:
+⚠ Laser pointer for SPECIAL EFFECT #2
+  (animated chaos on screen)
+- Green screen or practical screen
+- VFX markers for post-production
+- Multiple camera angles for coverage
+
+LIGHTING:
+- Professional conference room feel
+- Overhead recessed lighting
+- Monitor/screen glow (practical)
+- Clean, professional look
+
+═══════════════════════════════════════════════
+
+GENERAL PRODUCTION NOTES:
+
+FILMING DATES: February 25-27, 2026
+
+SCHEDULE:
+Day 1: Main office scenes (Scenes 1-4)
+Day 2: Break room + coffee explosion (Scene 5-8)
+Day 3: Conference room + VFX shots (Scene 9-12)
+
+CREW REQUIREMENTS:
+✓ Director of Photography
+✓ Gaffer + Lighting crew (3)
+✓ Sound mixer + boom op
+✓ Production assistants (2)
+✓ Set decorator
+✓ Props master
+✓ VFX supervisor (on-set for marker placement)
+
+EQUIPMENT:
+- 2 cameras (A-cam, B-cam)
+- Dolly/tracking system
+- Professional lighting kit
+- Lavalier mics for actors
+- Boom microphones
+- Monitors for director/client review
+
+═══════════════════════════════════════════════
+
+All locations secured and ready for production.
+Insurance and permits: ✓ APPROVED
+
+END OF DOCUMENT`
+    }
+  };
+
+  const openFile = (fileName) => {
+    const content = fileContents[fileName];
+    if (content) {
+      setSelectedFile(content);
+      setShowFileModal(true);
+    }
+  };
+
+  const closeFileModal = () => {
+    setShowFileModal(false);
+    setSelectedFile(null);
+  };
 
   useEffect(() => {
     if (projectId) {
@@ -111,22 +456,38 @@ function ProjectDetails() {
                   📎 Client Materials
                 </h3>
                 <p className="text-gray-700 mb-4 text-left">
-                  Materials uploaded by client for this project:
+                  Materials uploaded by client for this project (click to view):
                 </p>
                 <div className="space-y-2">
-                  {project.reference_materials.map((file, idx) => (
-                    <div key={idx} className="flex items-center gap-3 text-sm bg-white p-3 rounded-lg border border-sky-200">
-                      <svg className="w-5 h-5 text-sky-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-gray-700 text-left flex-1">{file}</span>
-                      <span className="text-xs text-teal-600 font-medium">✓</span>
-                    </div>
-                  ))}
+                  {project.reference_materials.map((file, idx) => {
+                    const fileName = file.split(' (')[0]; // Extract filename before " (uploaded by client)"
+                    const hasContent = fileContents[fileName];
+                    
+                    return (
+                      <div 
+                        key={idx} 
+                        onClick={() => hasContent && openFile(fileName)}
+                        className={`flex items-center gap-3 text-sm bg-white p-3 rounded-lg border border-sky-200 ${
+                          hasContent ? 'cursor-pointer hover:bg-sky-50 hover:border-sky-400 transition-all' : ''
+                        }`}
+                      >
+                        <svg className="w-5 h-5 text-sky-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-gray-700 text-left flex-1">{file}</span>
+                        {hasContent && (
+                          <span className="text-xs bg-sky-500 text-white px-2 py-1 rounded font-medium">
+                            Click to view
+                          </span>
+                        )}
+                        <span className="text-xs text-teal-600 font-medium">✓</span>
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className="mt-4 bg-white p-3 rounded-lg border border-teal-200">
                   <p className="text-xs text-teal-800 text-left">
-                    <strong>Note:</strong> These materials were used for custom production. All deliverables created based on client's specifications.
+                    <strong>Note:</strong> These materials were used for custom production. Click any file to view its contents.
                   </p>
                 </div>
               </div>
@@ -233,11 +594,30 @@ function ProjectDetails() {
                         {msg.attachments && msg.attachments.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-white/20">
                             <p className="text-xs mb-2 opacity-80">Attachments:</p>
-                            {msg.attachments.map((file, idx) => (
-                              <div key={idx} className="text-xs flex items-center gap-1 mt-1">
-                                📎 {file}
-                              </div>
-                            ))}
+                            {msg.attachments.map((file, idx) => {
+                              const hasContent = fileContents[file];
+                              return (
+                                <div 
+                                  key={idx} 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (hasContent) openFile(file);
+                                  }}
+                                  className={`text-xs flex items-center gap-2 mt-1 p-2 rounded ${
+                                    hasContent 
+                                      ? 'cursor-pointer hover:bg-white/10 transition-colors' 
+                                      : ''
+                                  }`}
+                                >
+                                  📎 {file}
+                                  {hasContent && (
+                                    <span className="ml-auto text-[10px] bg-white/20 px-2 py-0.5 rounded">
+                                      click to view
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -353,6 +733,59 @@ function ProjectDetails() {
           </div>
         </div>
       </div>
+
+      {/* File Preview Modal */}
+      {showFileModal && selectedFile && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={closeFileModal}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-sky-500 to-teal-500 text-white p-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold">{selectedFile.name}</h3>
+                <p className="text-sky-100 text-sm mt-1">
+                  {selectedFile.type === 'script' ? '📄 Script Document' : '📋 Reference Document'}
+                </p>
+              </div>
+              <button
+                onClick={closeFileModal}
+                className="text-white hover:bg-white/20 rounded-full p-2 transition"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-8 overflow-y-auto max-h-[calc(90vh-120px)] bg-gray-50">
+              <div className="bg-white rounded-lg p-8 shadow-inner border border-gray-200">
+                <pre className="text-sm text-gray-800 font-mono whitespace-pre-wrap leading-relaxed text-left">
+                  {selectedFile.content}
+                </pre>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-gray-100 p-4 flex items-center justify-between border-t border-gray-200">
+              <p className="text-xs text-gray-600">
+                ✓ Client-uploaded material used for custom production
+              </p>
+              <button
+                onClick={closeFileModal}
+                className="btn-ocean-outline text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
