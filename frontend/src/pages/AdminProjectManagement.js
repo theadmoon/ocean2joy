@@ -57,10 +57,10 @@ function AdminProjectManagement() {
         [field]: editedData[field]
       }));
       toggleEditMode(field);
-      alert('Сохранено успешно!');
+      alert('Saved successfully!');
     } catch (error) {
       console.error('Error:', error);
-      alert('Ошибка при сохранении');
+      alert('Error saving');
     } finally {
       setSaving(false);
     }
@@ -130,39 +130,39 @@ function AdminProjectManagement() {
   ];
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="text-2xl text-sky-600">Загрузка...</div></div>;
+    return <div className="min-h-screen flex items-center justify-center"><div className="text-2xl text-sky-600">Loading...</div></div>;
   }
 
   if (!project) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="text-center"><h2 className="text-2xl font-bold text-gray-900 mb-4">Проект не найден</h2><Link to="/admin/dashboard" className="btn-ocean">Назад к Dashboard</Link></div></div>;
+    return <div className="min-h-screen flex items-center justify-center"><div className="text-center"><h2 className="text-2xl font-bold text-gray-900 mb-4">Project not found</h2><Link to="/admin/dashboard" className="btn-ocean">Back to Dashboard</Link></div></div>;
   }
 
   return (
     <div className="admin-project-management py-12 px-4 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <Link to="/admin/dashboard" className="text-sky-600 hover:text-sky-700 font-semibold mb-6 inline-block">← Назад к Admin Dashboard</Link>
+        <Link to="/admin/dashboard" className="text-sky-600 hover:text-sky-700 font-semibold mb-6 inline-block">← Back to Admin Dashboard</Link>
         
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">Управление проектом</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Project Management</h1>
             <span className={`status-badge status-${project.status} text-lg px-4 py-2`}>
               {project.status.replace('_', ' ')}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div><span className="font-semibold">Проект:</span> {project.project_number}</div>
-            <div><span className="font-semibold">Клиент:</span> {project.user_name || 'N/A'}</div>
-            <div><span className="font-semibold">Название:</span> {project.project_title}</div>
-            <div><span className="font-semibold">Сумма:</span> ${project.quote_amount}</div>
+            <div><span className="font-semibold">Project:</span> {project.project_number}</div>
+            <div><span className="font-semibold">Client:</span> {project.user_name || 'N/A'}</div>
+            <div><span className="font-semibold">Title:</span> {project.project_title}</div>
+            <div><span className="font-semibold">Amount:</span> ${project.quote_amount}</div>
           </div>
         </div>
 
         {/* Operational Chain Management */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <span>Операционная цепочка</span>
-            <span className="text-sm font-normal text-gray-500">(Все ключевые параметры)</span>
+            <span>Operational Chain</span>
+            <span className="text-sm font-normal text-gray-500">(All Key Parameters)</span>
           </h2>
           
           <div className="space-y-6">
@@ -197,7 +197,7 @@ function AdminProjectManagement() {
                       <div className="bg-white rounded-lg p-3 mb-3">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <label className="text-xs font-semibold text-gray-700 block mb-1">Дата:</label>
+                            <label className="text-xs font-semibold text-gray-700 block mb-1">Date:</label>
                             {isEditing ? (
                               <input
                                 type="datetime-local"
@@ -207,7 +207,7 @@ function AdminProjectManagement() {
                               />
                             ) : (
                               <span className={`text-sm ${hasDate ? 'text-gray-900' : 'text-red-500 font-semibold'}`}>
-                                {hasDate ? new Date(dateValue).toLocaleString('ru-RU') : '⚠ НЕ ЗАПОЛНЕНО'}
+                                {hasDate ? new Date(dateValue).toLocaleString('en-US') : '⚠ NOT FILLED'}
                               </span>
                             )}
                           </div>
@@ -218,7 +218,7 @@ function AdminProjectManagement() {
                                 disabled={saving}
                                 className="btn-ocean text-xs px-3 py-1"
                               >
-                                <FaSave className="inline mr-1" />Сохранить
+                                <FaSave className="inline mr-1" />Save
                               </button>
                             ) : (
                               <button 
@@ -237,7 +237,7 @@ function AdminProjectManagement() {
                         <div className="bg-white rounded-lg p-3 mb-3">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
-                              <label className="text-xs font-semibold text-gray-700 block mb-1">Сумма:</label>
+                              <label className="text-xs font-semibold text-gray-700 block mb-1">Amount:</label>
                               {editMode[step.valueField] ? (
                                 <input
                                   type="number"
@@ -277,7 +277,7 @@ function AdminProjectManagement() {
                       {/* PayPal Transaction Fields */}
                       {step.paypalFields && (
                         <div className="bg-white rounded-lg p-3 mb-3">
-                          <label className="text-xs font-semibold text-gray-700 block mb-2">Данные PayPal транзакции:</label>
+                          <label className="text-xs font-semibold text-gray-700 block mb-2">PayPal Transaction Data:</label>
                           
                           {/* Transaction ID */}
                           <div className="mb-2">
@@ -301,7 +301,7 @@ function AdminProjectManagement() {
                             ) : (
                               <div className="flex items-center justify-between">
                                 <span className={`text-sm ${hasValue(project['paypal_transaction_id']) ? 'text-gray-900' : 'text-red-500 font-semibold'}`}>
-                                  {project['paypal_transaction_id'] || '⚠ НЕ ЗАПОЛНЕНО'}
+                                  {project['paypal_transaction_id'] || '⚠ NOT FILLED'}
                                 </span>
                                 <button 
                                   onClick={() => toggleEditMode('paypal_transaction_id')}
@@ -335,7 +335,7 @@ function AdminProjectManagement() {
                             ) : (
                               <div className="flex items-center justify-between">
                                 <span className={`text-sm ${hasValue(project['paypal_payer_email']) ? 'text-gray-900' : 'text-red-500 font-semibold'}`}>
-                                  {project['paypal_payer_email'] || '⚠ НЕ ЗАПОЛНЕНО'}
+                                  {project['paypal_payer_email'] || '⚠ NOT FILLED'}
                                 </span>
                                 <button 
                                   onClick={() => toggleEditMode('paypal_payer_email')}
@@ -357,7 +357,7 @@ function AdminProjectManagement() {
                                   onChange={(e) => handleFieldChange('paypal_payment_status', e.target.value)}
                                   className="border border-gray-300 rounded px-3 py-1 text-sm flex-1"
                                 >
-                                  <option value="">Выберите статус</option>
+                                  <option value="">Select status</option>
                                   <option value="COMPLETED">COMPLETED</option>
                                   <option value="PENDING">PENDING</option>
                                   <option value="REFUNDED">REFUNDED</option>
@@ -372,7 +372,7 @@ function AdminProjectManagement() {
                             ) : (
                               <div className="flex items-center justify-between">
                                 <span className={`text-sm ${hasValue(project['paypal_payment_status']) ? 'text-gray-900' : 'text-red-500 font-semibold'}`}>
-                                  {project['paypal_payment_status'] || '⚠ НЕ ЗАПОЛНЕНО'}
+                                  {project['paypal_payment_status'] || '⚠ NOT FILLED'}
                                 </span>
                                 <button 
                                   onClick={() => toggleEditMode('paypal_payment_status')}
@@ -390,9 +390,9 @@ function AdminProjectManagement() {
                       {step.documentType && (
                         <div className="bg-sky-50 rounded-lg p-3 border border-sky-200">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-sky-700">📄 Документ:</span>
+                            <span className="text-xs font-semibold text-sky-700">📄 Document:</span>
                             <span className="text-sm text-gray-900">{step.documentType}</span>
-                            <span className="text-xs text-gray-500">(генерируется автоматически из данных выше)</span>
+                            <span className="text-xs text-gray-500">(auto-generated from data above)</span>
                           </div>
                         </div>
                       )}
@@ -406,13 +406,13 @@ function AdminProjectManagement() {
 
         {/* Quick Actions */}
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Быстрые действия</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h3>
           <div className="flex gap-3">
             <Link to={`/projects/${projectId}`} className="btn-ocean">
-              Посмотреть как клиент
+              View as Client
             </Link>
             <button className="btn-ocean-outline">
-              Скачать все документы
+              Download All Documents
             </button>
           </div>
         </div>

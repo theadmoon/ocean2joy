@@ -55,10 +55,10 @@ function AdminDashboard() {
                 </div>
                 <div className="flex gap-2">
                   <Link to={`/admin/projects/${project.id}`} className="btn-ocean">
-                    <FaCog className="inline mr-2" />Управление
+                    <FaCog className="inline mr-2" />Manage
                   </Link>
                   <Link to={`/projects/${project.id}`} className="btn-ocean-outline">
-                    <FaEye className="inline mr-2" />Просмотр
+                    <FaEye className="inline mr-2" />View
                   </Link>
                 </div>
               </div>
