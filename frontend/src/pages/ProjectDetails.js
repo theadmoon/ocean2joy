@@ -189,6 +189,70 @@ function ProjectDetails() {
                 )}
               </div>
             )}
+
+            {/* Messages / Communication Thread */}
+            {messages.length > 0 && (
+              <div className="card-ocean p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 text-left flex items-center gap-2">
+                  <FaComments className="text-sky-500" />
+                  Communication History
+                </h3>
+                <p className="text-sm text-gray-600 mb-6 text-left">
+                  Complete message thread between client and production team
+                </p>
+                
+                <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                  {messages.map((msg, index) => (
+                    <div 
+                      key={msg.id} 
+                      className={`flex ${msg.sender_role === 'client' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div 
+                        className={`max-w-[80%] rounded-lg p-4 ${
+                          msg.sender_role === 'client' 
+                            ? 'bg-gradient-to-br from-sky-500 to-teal-500 text-white' 
+                            : 'bg-gray-100 text-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-semibold text-sm">
+                            {msg.sender_name}
+                          </span>
+                          <span className={`text-xs ${msg.sender_role === 'client' ? 'text-sky-100' : 'text-gray-500'}`}>
+                            {new Date(msg.created_at).toLocaleString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap text-left">
+                          {msg.message}
+                        </p>
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-white/20">
+                            <p className="text-xs mb-2 opacity-80">Attachments:</p>
+                            {msg.attachments.map((file, idx) => (
+                              <div key={idx} className="text-xs flex items-center gap-1 mt-1">
+                                📎 {file}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Visual separator for preliminary vs official communication */}
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <p className="text-xs text-gray-500 text-center italic">
+                    💬 Full communication history preserved - from initial inquiry to project completion
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-1">
