@@ -14,6 +14,8 @@ function AdminProjectManagement() {
   const [editMode, setEditMode] = useState({});
   const [editedData, setEditedData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
 
   useEffect(() => {
     if (projectId) {
@@ -84,37 +86,78 @@ function AdminProjectManagement() {
     return value !== null && value !== undefined && value !== '';
   };
 
-  // Open document in new window
+  // Open document in modal
   const openDocument = (documentType, stepKey) => {
-    const url = `/projects/${projectId}#${documentType.toLowerCase()}`;
-    window.open(url, '_blank');
+    const docContent = generateDocumentContent(documentType, stepKey);
+    setSelectedDocument({
+      type: documentType,
+      content: docContent
+    });
+    setShowDocumentModal(true);
   };
 
-  // Print operational chain
+  // Generate document content based on type
+  const generateDocumentContent = (docType, stepKey) => {
+    // This would generate the actual document content
+    // For now, return a placeholder
+    return `Document: ${docType}\n\nThis document would show detailed information for step: ${stepKey}\n\nProject: ${project?.project_number}\nClient: ${project?.user_name || 'Client'}\nAmount: $${project?.quote_amount}`;
+  };
+
+  // Print operational chain - improved version
   const handlePrint = () => {
     console.log('Print button clicked');
-    try {
-      window.print();
-    } catch (error) {
-      console.error('Print error:', error);
-      alert('Print function is not available. Please use your browser menu: File > Print');
+    
+    // Check if print is available
+    if (typeof window.print === 'function') {
+      try {
+        // Add print-friendly class
+        document.body.classList.add('printing');
+        
+        // Small delay to ensure styles apply
+        setTimeout(() => {
+          window.print();
+          document.body.classList.remove('printing');
+        }, 100);
+      } catch (error) {
+        console.error('Print error:', error);
+        alert('Unable to print. Please use Ctrl+P or File > Print in your browser menu.');
+      }
+    } else {
+      alert('Print function not available. Use Ctrl+P or browser menu.');
     }
   };
 
-  // Export as PDF (using browser print to PDF)
+  // Export as PDF - improved version
   const handleExportPDF = () => {
     console.log('Export PDF button clicked');
-    try {
-      // Add a print-specific class to body
-      document.body.classList.add('printing');
-      window.print();
-      // Remove class after print dialog closes
-      setTimeout(() => {
-        document.body.classList.remove('printing');
-      }, 1000);
-    } catch (error) {
-      console.error('Export PDF error:', error);
-      alert('PDF export not available. Please use Print and select "Save as PDF"');
+    
+    // Create a printable version
+    const printContent = document.getElementById('operational-chain-content');
+    
+    if (printContent) {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Project ${project?.project_number} - Operational Chain</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              h1 { color: #0369a1; }
+              .step { margin-bottom: 20px; padding: 15px; border-left: 4px solid #0ea5e9; background: #f0f9ff; }
+              .step-title { font-weight: bold; font-size: 18px; margin-bottom: 10px; }
+              .field { margin: 5px 0; }
+              .label { font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            ${printContent.innerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    } else {
+      alert('Content not available for export');
     }
   };
 
@@ -220,7 +263,7 @@ function AdminProjectManagement() {
         </div>
 
         {/* Operational Chain Management */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6" id="operational-chain-content">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <span>Operational Chain</span>
             <span className="text-sm font-normal text-gray-500">(All Key Parameters)</span>
@@ -466,13 +509,13 @@ function AdminProjectManagement() {
                             <span className="text-sm text-gray-900">{getDocumentForStep(step.key)}</span>
                             <span className="text-xs text-gray-500">({step.documentType ? 'auto-generated' : 'system record'})</span>
                           </div>
-                          <Link 
-                            to={`/projects/${projectId}`}
-                            target="_blank"
-                            className="text-xs text-sky-600 hover:text-sky-700 underline"
+                          <button
+                            type="button"
+                            onClick={() => openDocument(getDocumentForStep(step.key), step.key)}
+                            className="text-xs text-sky-600 hover:text-sky-700 underline cursor-pointer"
                           >
                             View →
-                          </Link>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -514,6 +557,47 @@ function AdminProjectManagement() {
           </div>
         </div>
       </div>
+
+      {/* Document View Modal */}
+      {showDocumentModal && selectedDocument && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-2xl font-bold text-gray-900">
+                📄 {selectedDocument.type}
+              </h3>
+              <button
+                onClick={() => setShowDocumentModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono bg-gray-50 p-4 rounded">
+                {selectedDocument.content}
+              </pre>
+            </div>
+            <div className="p-6 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={() => setShowDocumentModal(false)}
+                className="btn-ocean-outline"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(selectedDocument.content);
+                  alert('Document content copied to clipboard!');
+                }}
+                className="btn-ocean"
+              >
+                📋 Copy to Clipboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
