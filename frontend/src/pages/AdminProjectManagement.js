@@ -516,6 +516,9 @@ Issue Date: ${formatDate(projectData.completed_at)}
               .field { margin: 8px 0; }
               .label { font-weight: bold; }
               button { display: none !important; }
+              @media print {
+                button { display: none !important; }
+              }
             </style>
           </head>
           <body>
@@ -528,9 +531,10 @@ Issue Date: ${formatDate(projectData.completed_at)}
       printWindow.document.close();
       printWindow.focus();
       
+      // Trigger print after a delay and close only after print dialog is done
       setTimeout(() => {
         printWindow.print();
-        printWindow.close();
+        // Don't close automatically - let user close the window
       }, 500);
       
     } catch (error) {
