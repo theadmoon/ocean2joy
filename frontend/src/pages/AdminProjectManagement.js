@@ -149,7 +149,8 @@ STATUS: Request received and under review
 This quote request has been submitted to Ocean2Joy Digital Video Production.
 Our team will review the requirements and provide a detailed quote within 24-48 hours.
 
-For questions: admin@ocean2joy.com
+All communications and updates available through your client portal.
+Support: ocean2joy@gmail.com
 ═══════════════════════════════════════════════`;
 
       case 'Quote Document':
@@ -195,10 +196,11 @@ ${project.detailed_brief || 'See project brief for details'}
 
 ACCEPTANCE:
 
-To accept this quote, please confirm via email or through your client portal.
+To accept this quote, please confirm through your client portal.
 Upon acceptance, we will begin production according to the agreed timeline.
 
-Questions? Contact: admin@ocean2joy.com
+All project communications available in your client dashboard.
+Support: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════`;
 
@@ -363,9 +365,10 @@ TOTAL AMOUNT DUE:                      $${projectData.quote_amount?.toFixed(2)}
 PAYMENT INSTRUCTIONS:
 
 Payment Method: PayPal
-Please send payment to: 302335809@postbox.ge
+Send payment to: 302335809@postbox.ge
 
 Payment is due upon receipt of this invoice.
+Track payment status in your client portal.
 
 ═══════════════════════════════════════════════
 
@@ -377,8 +380,8 @@ All files delivered digitally via secure client portal.
 
 Thank you for choosing Ocean2Joy!
 
-For questions about this invoice, contact:
-admin@ocean2joy.com
+Support: ocean2joy@gmail.com
+Client Portal: www.ocean2joy.com/dashboard
 
 Ocean2Joy Digital Video Production
 Digital Services - No Physical Shipping
@@ -492,23 +495,47 @@ Issue Date: ${formatDate(projectData.completed_at)}
   const handlePrint = () => {
     console.log('Print button clicked');
     
-    // Check if print is available
-    if (typeof window.print === 'function') {
-      try {
-        // Add print-friendly class
-        document.body.classList.add('printing');
-        
-        // Small delay to ensure styles apply
-        setTimeout(() => {
-          window.print();
-          document.body.classList.remove('printing');
-        }, 100);
-      } catch (error) {
-        console.error('Print error:', error);
-        alert('Unable to print. Please use Ctrl+P or File > Print in your browser menu.');
+    try {
+      // Create a clean print version
+      const content = document.getElementById('operational-chain-content');
+      if (!content) {
+        alert('Content not available for printing');
+        return;
       }
-    } else {
-      alert('Print function not available. Use Ctrl+P or browser menu.');
+      
+      const printWindow = window.open('', 'PRINT', 'height=800,width=1000');
+      
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print - ${project?.project_number || 'Project'}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              h2 { color: #0369a1; }
+              .step { margin-bottom: 20px; padding: 15px; border-left: 4px solid #0ea5e9; background: #f9fafb; }
+              .field { margin: 8px 0; }
+              .label { font-weight: bold; }
+              button { display: none !important; }
+            </style>
+          </head>
+          <body>
+            <h1>Ocean2Joy - Project ${project?.project_number || ''}</h1>
+            ${content.innerHTML}
+          </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+      printWindow.focus();
+      
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+      
+    } catch (error) {
+      console.error('Print error:', error);
+      alert('Unable to open print dialog. Please use Ctrl+P (Cmd+P on Mac) to print this page.');
     }
   };
 

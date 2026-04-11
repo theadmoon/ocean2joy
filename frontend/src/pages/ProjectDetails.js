@@ -98,7 +98,7 @@ are ready for download.
 Thank you for choosing Ocean2Joy!
 
 For questions about this invoice, contact:
-admin@ocean2joy.com
+ocean2joy@gmail.com
 
 Ocean2Joy Digital Video Production
 Digital Services - No Physical Shipping
@@ -221,7 +221,7 @@ RECEIPT NOTES:
 ═══════════════════════════════════════════════
 
 For questions about this transaction:
-• Contact Ocean2Joy: admin@ocean2joy.com
+• Contact Ocean2Joy: ocean2joy@gmail.com
 • PayPal Support: www.paypal.com/support
 • Transaction ID: ${transactionId}
 
@@ -361,7 +361,7 @@ Certificate ID: CERT-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
 ═══════════════════════════════════════════════
 
 For verification or questions:
-admin@ocean2joy.com
+ocean2joy@gmail.com
 www.ocean2joy.com
 
 Ocean2Joy - Digital Video Services
