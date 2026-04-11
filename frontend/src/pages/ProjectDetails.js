@@ -16,8 +16,359 @@ function ProjectDetails() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [showFileModal, setShowFileModal] = useState(false);
 
-  // Mock file contents that match the comedy project
-  const fileContents = {
+  // Dynamic document generation functions
+  const generateInvoiceContent = (projectData) => {
+    if (!projectData) return '';
+    
+    const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const productionStart = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const productionEnd = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    
+    return `INVOICE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Custom Digital Video Services
+
+Invoice #: ${projectData.project_number}
+Date Issued: ${deliveredDate}
+Due Date: Upon Receipt
+
+═══════════════════════════════════════════════
+
+BILL TO:
+${projectData.client_name || 'Client'}
+Email: ${projectData.client_email || ''}
+Project: ${projectData.project_number}
+Project Title: ${projectData.project_title}
+
+═══════════════════════════════════════════════
+
+PROJECT DETAILS:
+
+Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : projectData.service_type}
+${projectData.detailed_brief ? 'Brief: ' + projectData.detailed_brief : ''}
+Production Period: ${productionStart} - ${productionEnd}
+
+═══════════════════════════════════════════════
+
+PRICING BREAKDOWN:
+
+Service Description                        Amount
+─────────────────────────────────────────────────
+${projectData.service_type === 'custom_video' ? 'Custom Video Production' : 'Service'}      $${projectData.quote_amount?.toFixed(2)}
+
+${projectData.quote_details || ''}
+
+═══════════════════════════════════════════════
+
+SUBTOTAL:                              $${projectData.quote_amount?.toFixed(2)}
+Tax:                                        $0.00
+                                       ──────────
+TOTAL AMOUNT DUE:                      $${projectData.quote_amount?.toFixed(2)}
+
+═══════════════════════════════════════════════
+
+PAYMENT INSTRUCTIONS:
+
+Payment Method: PayPal
+Please send payment to: payments@ocean2joy.com
+
+Payment is due upon receipt of this invoice.
+
+═══════════════════════════════════════════════
+
+DELIVERABLES (Included):
+
+All files delivered digitally via secure client portal.
+
+═══════════════════════════════════════════════
+
+NOTES:
+
+This invoice is for digital video production services.
+No physical goods are shipped - all deliverables are
+provided electronically through our secure platform.
+
+Files have been delivered to your client portal and
+are ready for download.
+
+═══════════════════════════════════════════════
+
+Thank you for choosing Ocean2Joy!
+
+For questions about this invoice, contact:
+admin@ocean2joy.com
+
+Ocean2Joy Digital Video Production
+Digital Services - No Physical Shipping
+www.ocean2joy.com
+
+═══════════════════════════════════════════════`;
+  };
+
+  const generateReceiptContent = (projectData) => {
+    if (!projectData) return '';
+    
+    const paymentDate = projectData.completed_at ? new Date(projectData.completed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const paymentTime = projectData.completed_at ? new Date(projectData.completed_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }) : '';
+    
+    return `PAYMENT RECEIPT
+═══════════════════════════════════════════════
+
+PayPal Payment Confirmation
+
+Transaction ID: PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
+Payment Date: ${paymentDate}
+Status: ✓ COMPLETED
+
+═══════════════════════════════════════════════
+
+TRANSACTION DETAILS:
+
+From: ${projectData.client_name || 'Client'}
+Email: ${projectData.client_email || ''}
+
+To: Ocean2Joy Digital Video Production
+Email: payments@ocean2joy.com
+
+═══════════════════════════════════════════════
+
+PAYMENT INFORMATION:
+
+Amount Paid: $${projectData.quote_amount?.toFixed(2)} USD
+Payment Method: PayPal Balance
+Currency: USD
+Transaction Type: Goods & Services Payment
+
+Invoice Reference: ${projectData.project_number}
+Project: ${projectData.project_title}
+
+═══════════════════════════════════════════════
+
+PAYMENT BREAKDOWN:
+
+Subtotal:                              $${projectData.quote_amount?.toFixed(2)}
+PayPal Fee: (paid by merchant)              $0.00
+                                       ──────────
+Total Paid by Customer:                $${projectData.quote_amount?.toFixed(2)}
+
+═══════════════════════════════════════════════
+
+PAYMENT TIMELINE:
+
+Payment Initiated: ${paymentDate} at ${paymentTime}
+Payment Processed: ${paymentDate} at ${paymentTime}
+Payment Completed: ${paymentDate}
+
+Processing Time: Instant
+
+═══════════════════════════════════════════════
+
+MERCHANT INFORMATION:
+
+Business Name: Ocean2Joy Digital Video Production
+Business Email: payments@ocean2joy.com
+Business Type: Digital Services Provider
+Service Description: Custom video production services
+
+═══════════════════════════════════════════════
+
+PURCHASE DETAILS:
+
+Item: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : 'Digital Service'}
+Project ID: ${projectData.project_number}
+Service Type: Digital video creation and delivery
+Delivery Method: Digital download (no shipping)
+
+═══════════════════════════════════════════════
+
+BUYER PROTECTION:
+
+This transaction is covered by PayPal's Purchase
+Protection program for eligible digital goods and
+services.
+
+Dispute Resolution: Available through PayPal
+Resolution Center
+
+═══════════════════════════════════════════════
+
+TRANSACTION VERIFICATION:
+
+✓ Payment verified and completed
+✓ Funds transferred to merchant account
+✓ Digital service delivered to customer
+✓ Customer access confirmed
+✓ No disputes or claims filed
+
+═══════════════════════════════════════════════
+
+RECEIPT NOTES:
+
+• This is an official PayPal payment receipt
+• Transaction completed successfully
+• Payment for digital video production services
+• No physical goods shipped
+• All deliverables provided digitally
+• Customer confirmed receipt of files
+
+═══════════════════════════════════════════════
+
+For questions about this transaction:
+• Contact Ocean2Joy: admin@ocean2joy.com
+• PayPal Support: www.paypal.com/support
+• Transaction ID: PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
+
+═══════════════════════════════════════════════
+
+This receipt confirms successful payment processing
+through PayPal for digital services rendered by
+Ocean2Joy Digital Video Production.
+
+Receipt Generated: ${paymentDate}
+Document ID: RCPT-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
+
+═══════════════════════════════════════════════`;
+  };
+
+  const generateCertificateContent = (projectData) => {
+    if (!projectData) return '';
+    
+    const submittedDate = projectData.created_at ? new Date(projectData.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const quoteSentDate = projectData.quote_sent_at ? new Date(projectData.quote_sent_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const quoteAcceptedDate = projectData.quote_accepted_at ? new Date(projectData.quote_accepted_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const productionStartDate = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const paymentDate = projectData.completed_at ? new Date(projectData.completed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    
+    // Calculate production time
+    let productionDays = '';
+    if (projectData.production_started_at && projectData.delivered_at) {
+      const start = new Date(projectData.production_started_at);
+      const end = new Date(projectData.delivered_at);
+      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+      productionDays = `${days} days`;
+    }
+    
+    return `PROJECT COMPLETION CERTIFICATE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+═══════════════════════════════════════════════
+
+This certificate confirms the successful 
+completion of the following digital service:
+
+PROJECT INFORMATION:
+─────────────────────────────────────────────
+Project Number: ${projectData.project_number}
+Project Title: ${projectData.project_title}
+Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Digital Video Production' : projectData.service_type}
+Client: ${projectData.client_name || 'Client'} (${projectData.client_email || ''})
+
+═══════════════════════════════════════════════
+
+PROJECT TIMELINE:
+─────────────────────────────────────────────
+
+Request Submitted: ${submittedDate}
+Quote Provided: ${quoteSentDate}
+Quote Accepted: ${quoteAcceptedDate}
+Production Started: ${productionStartDate}
+Production Completed: ${deliveredDate}
+Deliverables Provided: ${deliveredDate}
+Payment Received: ${paymentDate}
+Project Closed: ${paymentDate}
+
+Total Production Time: ${productionDays}
+
+═══════════════════════════════════════════════
+
+DELIVERABLES PROVIDED:
+─────────────────────────────────────────────
+
+All files delivered digitally via secure 
+client portal on ${deliveredDate}.
+
+═══════════════════════════════════════════════
+
+FINANCIAL SETTLEMENT:
+─────────────────────────────────────────────
+
+Total Project Value: $${projectData.quote_amount?.toFixed(2)} USD
+Payment Method: PayPal
+Payment Status: ✓ PAID IN FULL
+Payment Date: ${paymentDate}
+Transaction Reference: PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
+
+═══════════════════════════════════════════════
+
+CLIENT ACCEPTANCE:
+─────────────────────────────────────────────
+
+✓ Client reviewed all deliverables
+✓ Client approved final work
+✓ Payment completed via PayPal
+✓ No disputes or issues raised
+
+Client satisfaction confirmed through:
+• Successful payment completion
+• Digital delivery acceptance
+• No refund requests
+• Project marked as complete
+
+═══════════════════════════════════════════════
+
+SERVICE VERIFICATION:
+
+This was a DIGITAL-ONLY service transaction.
+
+✓ No physical products were created
+✓ No shipping or logistics involved
+✓ All deliverables provided digitally
+✓ Client accessed files via secure portal
+✓ Full transaction trace available
+✓ Communication history preserved
+
+═══════════════════════════════════════════════
+
+COMPLIANCE NOTES:
+
+This certificate serves as verification for 
+payment processors and dispute resolution:
+
+• Complete project lifecycle documented
+• All communications preserved
+• Payment processed through verified channel
+• Digital delivery confirmed by client access
+• No outstanding issues or disputes
+
+═══════════════════════════════════════════════
+
+PROJECT STATUS: ✓ SUCCESSFULLY COMPLETED
+
+Issued by: Ocean2Joy Digital Video Production
+Issue Date: ${paymentDate}
+Certificate ID: CERT-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
+
+═══════════════════════════════════════════════
+
+For verification or questions:
+admin@ocean2joy.com
+www.ocean2joy.com
+
+Ocean2Joy - Digital Video Services
+"An Ocean of Opportunities, A Sea of Joy"
+
+═══════════════════════════════════════════════
+
+END OF CERTIFICATE`;
+  };
+
+  // Mock file contents for client-uploaded materials (these are static examples)
+  const staticFileContents = {
     "Comedy_Script_v1.pdf": {
       type: "script",
       name: "Comedy Script - 'Office Chaos'",
@@ -343,369 +694,53 @@ All locations secured and ready for production.
 Insurance and permits: ✓ APPROVED
 
 END OF DOCUMENT`
-    },
-    "invoice_VAPP6_1050USD.pdf": {
-      type: "document",
-      name: "Invoice VAPP-6 - $1050 USD",
-      content: `INVOICE
-═══════════════════════════════════════════════
-
-Ocean2Joy Digital Video Production
-Custom Digital Video Services
-
-Invoice #: VAPP-6-Custom1050USD-13Mar2026
-Date Issued: March 11, 2026
-Due Date: Upon Receipt
-
-═══════════════════════════════════════════════
-
-BILL TO:
-Marcos Knight
-Email: mek110@yahoo.com
-Project: VAPP-6-Custom1050USD-13Mar2026
-Project Title: Office Chaos Comedy - Custom Video
-
-═══════════════════════════════════════════════
-
-PROJECT DETAILS:
-
-Service Type: Custom Video Production
-Duration: 30-minute comedy video
-Production Period: February 19 - March 11, 2026
-
-SCOPE OF WORK:
-✓ Pre-production planning and script review
-✓ Professional casting (2 actors)
-✓ Location scouting and setup (3 locations)
-✓ 3-day filming session (Feb 25-27, 2026)
-✓ Professional crew and equipment
-✓ Post-production editing
-✓ Special effects (2 sequences)
-✓ Color grading and audio mixing
-✓ Final export in HD format
-✓ Digital delivery via secure platform
-
-═══════════════════════════════════════════════
-
-PRICING BREAKDOWN:
-
-Service Description                        Amount
-─────────────────────────────────────────────────
-Custom Video Production (30 minutes)      $1,050.00
-  @ $35.00 per minute × 30 minutes
-
-Special Effects (2 sequences)          INCLUDED
-Professional Actors                    INCLUDED
-Location Setup                         INCLUDED
-Post-Production                        INCLUDED
-
-═══════════════════════════════════════════════
-
-SUBTOTAL:                              $1,050.00
-Tax:                                        $0.00
-                                       ──────────
-TOTAL AMOUNT DUE:                      $1,050.00
-
-═══════════════════════════════════════════════
-
-PAYMENT INSTRUCTIONS:
-
-Payment Method: PayPal
-Please send payment to: payments@ocean2joy.com
-
-Payment is due upon receipt of this invoice.
-
-═══════════════════════════════════════════════
-
-DELIVERABLES (Included):
-
-✓ Office_Chaos_Comedy_Final_HD.mp4
-  30-minute HD video (1920×1080)
-
-✓ Behind_the_Scenes_Bonus.mp4
-  5-minute bonus footage
-
-All files delivered digitally via secure client portal.
-
-═══════════════════════════════════════════════
-
-NOTES:
-
-This invoice is for digital video production services.
-No physical goods are shipped - all deliverables are
-provided electronically through our secure platform.
-
-Files have been delivered to your client portal and
-are ready for download.
-
-═══════════════════════════════════════════════
-
-Thank you for choosing Ocean2Joy!
-
-For questions about this invoice, contact:
-admin@ocean2joy.com
-
-Ocean2Joy Digital Video Production
-Digital Services - No Physical Shipping
-www.ocean2joy.com
-
-═══════════════════════════════════════════════`
-    },
-    "PayPal_Receipt_VAPP6_1050USD.pdf": {
-      type: "document",
-      name: "PayPal Payment Receipt - $1050 USD",
-      content: `PAYMENT RECEIPT
-═══════════════════════════════════════════════
-
-PayPal Payment Confirmation
-
-Transaction ID: PAYPAL-VAPP6-13MAR2026
-Payment Date: March 13, 2026
-Status: ✓ COMPLETED
-
-═══════════════════════════════════════════════
-
-TRANSACTION DETAILS:
-
-From: Marcos Knight
-Email: mek110@yahoo.com
-
-To: Ocean2Joy Digital Video Production
-Email: payments@ocean2joy.com
-
-═══════════════════════════════════════════════
-
-PAYMENT INFORMATION:
-
-Amount Paid: $1,050.00 USD
-Payment Method: PayPal Balance
-Currency: USD
-Transaction Type: Goods & Services Payment
-
-Invoice Reference: VAPP-6-Custom1050USD-13Mar2026
-Project: Office Chaos Comedy - Custom Video
-
-═══════════════════════════════════════════════
-
-PAYMENT BREAKDOWN:
-
-Subtotal:                              $1,050.00
-PayPal Fee: (paid by merchant)              $0.00
-                                       ──────────
-Total Paid by Customer:                $1,050.00
-
-═══════════════════════════════════════════════
-
-PAYMENT TIMELINE:
-
-Payment Initiated: March 13, 2026 at 10:23 AM EST
-Payment Processed: March 13, 2026 at 10:23 AM EST
-Payment Completed: March 13, 2026 at 10:24 AM EST
-
-Processing Time: Instant
-
-═══════════════════════════════════════════════
-
-MERCHANT INFORMATION:
-
-Business Name: Ocean2Joy Digital Video Production
-Business Email: payments@ocean2joy.com
-Business Type: Digital Services Provider
-Service Description: Custom video production services
-
-═══════════════════════════════════════════════
-
-PURCHASE DETAILS:
-
-Item: Custom Video Production - 30 minutes
-Project ID: VAPP-6-Custom1050USD-13Mar2026
-Service Type: Digital video creation and delivery
-Delivery Method: Digital download (no shipping)
-
-═══════════════════════════════════════════════
-
-BUYER PROTECTION:
-
-This transaction is covered by PayPal's Purchase
-Protection program for eligible digital goods and
-services.
-
-Dispute Resolution: Available through PayPal
-Resolution Center
-
-═══════════════════════════════════════════════
-
-TRANSACTION VERIFICATION:
-
-✓ Payment verified and completed
-✓ Funds transferred to merchant account
-✓ Digital service delivered to customer
-✓ Customer access confirmed
-✓ No disputes or claims filed
-
-═══════════════════════════════════════════════
-
-RECEIPT NOTES:
-
-• This is an official PayPal payment receipt
-• Transaction completed successfully
-• Payment for digital video production services
-• No physical goods shipped
-• All deliverables provided digitally
-• Customer confirmed receipt of files
-
-═══════════════════════════════════════════════
-
-For questions about this transaction:
-• Contact Ocean2Joy: admin@ocean2joy.com
-• PayPal Support: www.paypal.com/support
-• Transaction ID: PAYPAL-VAPP6-13MAR2026
-
-═══════════════════════════════════════════════
-
-This receipt confirms successful payment processing
-through PayPal for digital services rendered by
-Ocean2Joy Digital Video Production.
-
-Receipt Generated: March 13, 2026
-Document ID: RCPT-VAPP6-13MAR2026
-
-═══════════════════════════════════════════════`
-    },
-    "completion_certificate.pdf": {
-      type: "document",
-      name: "Project Completion Certificate",
-      content: `PROJECT COMPLETION CERTIFICATE
-═══════════════════════════════════════════════
-
-Ocean2Joy Digital Video Production
-
-═══════════════════════════════════════════════
-
-This certificate confirms the successful 
-completion of the following digital service:
-
-PROJECT INFORMATION:
-─────────────────────────────────────────────
-Project Number: VAPP-6-Custom1050USD-13Mar2026
-Project Title: Office Chaos Comedy - Custom Video
-Service Type: Custom Digital Video Production
-Client: Marcos Knight (mek110@yahoo.com)
-
-═══════════════════════════════════════════════
-
-PROJECT TIMELINE:
-─────────────────────────────────────────────
-
-Request Submitted: February 17, 2026
-Quote Provided: February 17, 2026
-Quote Accepted: February 18, 2026
-Production Started: February 19, 2026
-Production Completed: March 11, 2026
-Deliverables Provided: March 11, 2026
-Payment Received: March 13, 2026
-Project Closed: March 13, 2026
-
-Total Production Time: 21 days
-
-═══════════════════════════════════════════════
-
-DELIVERABLES PROVIDED:
-─────────────────────────────────────────────
-
-✓ Office_Chaos_Comedy_Final_HD.mp4
-  • 30-minute HD video (1920×1080)
-  • Professional editing and color grading
-  • Special effects (2 sequences)
-  • Audio mixing and mastering
-
-✓ Behind_the_Scenes_Bonus.mp4
-  • 5-minute bonus footage
-  • HD quality (1920×1080)
-
-All files delivered digitally via secure 
-client portal on March 11, 2026.
-
-═══════════════════════════════════════════════
-
-FINANCIAL SETTLEMENT:
-─────────────────────────────────────────────
-
-Total Project Value: $1,050.00 USD
-Payment Method: PayPal
-Payment Status: ✓ PAID IN FULL
-Payment Date: March 13, 2026
-Transaction Reference: PAYPAL-VAPP6-13MAR2026
-
-═══════════════════════════════════════════════
-
-CLIENT ACCEPTANCE:
-─────────────────────────────────────────────
-
-✓ Client reviewed all deliverables
-✓ Client approved final work
-✓ Payment completed via PayPal
-✓ No disputes or issues raised
-
-Client satisfaction confirmed through:
-• Successful payment completion
-• Digital delivery acceptance
-• No refund requests
-• Project marked as complete
-
-═══════════════════════════════════════════════
-
-SERVICE VERIFICATION:
-
-This was a DIGITAL-ONLY service transaction.
-
-✓ No physical products were created
-✓ No shipping or logistics involved
-✓ All deliverables provided digitally
-✓ Client accessed files via secure portal
-✓ Full transaction trace available
-✓ Communication history preserved
-
-═══════════════════════════════════════════════
-
-COMPLIANCE NOTES:
-
-This certificate serves as verification for 
-payment processors and dispute resolution:
-
-• Complete project lifecycle documented
-• All communications preserved
-• Payment processed through verified channel
-• Digital delivery confirmed by client access
-• No outstanding issues or disputes
-
-═══════════════════════════════════════════════
-
-PROJECT STATUS: ✓ SUCCESSFULLY COMPLETED
-
-Issued by: Ocean2Joy Digital Video Production
-Issue Date: March 13, 2026
-Certificate ID: CERT-VAPP6-13MAR2026
-
-═══════════════════════════════════════════════
-
-For verification or questions:
-admin@ocean2joy.com
-www.ocean2joy.com
-
-Ocean2Joy - Digital Video Services
-"An Ocean of Opportunities, A Sea of Joy"
-
-═══════════════════════════════════════════════
-
-END OF CERTIFICATE`
     }
   };
 
   const openFile = (fileName) => {
-    const content = fileContents[fileName];
-    if (content) {
-      setSelectedFile(content);
+    let fileContent = null;
+    
+    // Check if it's a static file (client-uploaded materials)
+    if (staticFileContents[fileName]) {
+      fileContent = staticFileContents[fileName];
+    }
+    // Generate dynamic documents based on project data
+    else if (fileName === 'invoice_VAPP6_1050USD.pdf' || fileName.includes('invoice')) {
+      fileContent = {
+        type: "document",
+        name: `Invoice ${project.project_number} - $${project.quote_amount}`,
+        content: generateInvoiceContent({
+          ...project,
+          client_name: "Marcos Knight",
+          client_email: "mek110@yahoo.com"
+        })
+      };
+    }
+    else if (fileName === 'PayPal_Receipt_VAPP6_1050USD.pdf' || fileName.includes('Receipt')) {
+      fileContent = {
+        type: "document",
+        name: `PayPal Payment Receipt - $${project.quote_amount} USD`,
+        content: generateReceiptContent({
+          ...project,
+          client_name: "Marcos Knight",
+          client_email: "mek110@yahoo.com"
+        })
+      };
+    }
+    else if (fileName === 'completion_certificate.pdf' || fileName.includes('certificate')) {
+      fileContent = {
+        type: "document",
+        name: "Project Completion Certificate",
+        content: generateCertificateContent({
+          ...project,
+          client_name: "Marcos Knight",
+          client_email: "mek110@yahoo.com"
+        })
+      };
+    }
+    
+    if (fileContent) {
+      setSelectedFile(fileContent);
       setShowFileModal(true);
     }
   };
@@ -817,7 +852,7 @@ END OF CERTIFICATE`
                 <div className="space-y-2">
                   {project.reference_materials.map((file, idx) => {
                     const fileName = file.split(' (')[0]; // Extract filename before " (uploaded by client)"
-                    const hasContent = fileContents[fileName];
+                    const hasContent = staticFileContents[fileName];
                     
                     return (
                       <div 
@@ -951,22 +986,23 @@ END OF CERTIFICATE`
                           <div className="mt-3 pt-3 border-t border-white/20">
                             <p className="text-xs mb-2 opacity-80">Attachments:</p>
                             {msg.attachments.map((file, idx) => {
-                              const hasContent = fileContents[file];
+                              // All files are viewable - either static or dynamically generated
+                              const isViewable = true;
                               return (
                                 <div 
                                   key={idx} 
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (hasContent) openFile(file);
+                                    if (isViewable) openFile(file);
                                   }}
                                   className={`text-xs flex items-center gap-2 mt-1 p-2 rounded ${
-                                    hasContent 
+                                    isViewable 
                                       ? 'cursor-pointer hover:bg-white/10 transition-colors' 
                                       : ''
                                   }`}
                                 >
                                   📎 {file}
-                                  {hasContent && (
+                                  {isViewable && (
                                     <span className="ml-auto text-[10px] bg-white/20 px-2 py-0.5 rounded">
                                       click to view
                                     </span>
