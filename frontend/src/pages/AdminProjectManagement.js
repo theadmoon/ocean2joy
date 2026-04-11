@@ -10,16 +10,20 @@ const API = `${BACKEND_URL}/api`;
 function AdminProjectManagement() {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState({});
   const [editedData, setEditedData] = useState({});
   const [saving, setSaving] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
     if (projectId) {
       fetchProjectDetails();
+      fetchMessages();
     }
   }, [projectId]);
 
@@ -44,6 +48,15 @@ function AdminProjectManagement() {
       console.error('Error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const response = await axios.get(`${API}/projects/${projectId}/messages`);
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
     }
   };
 
@@ -84,6 +97,356 @@ function AdminProjectManagement() {
   // Check if field has value
   const hasValue = (value) => {
     return value !== null && value !== undefined && value !== '';
+  };
+
+  // Static file contents (client-uploaded materials)
+  const staticFileContents = {
+    "Comedy_Script_v1.pdf": {
+      type: "script",
+      name: "Comedy Script - 'Office Chaos'",
+      content: `COMEDY SCRIPT - "OFFICE CHAOS"
+30-minute Comedy Video
+Written by Marcos Knight
+
+═══════════════════════════════════════════════
+
+CHARACTERS:
+- DAVE (Male, 35) - Overly enthusiastic office manager
+- LISA (Female, 28) - Sarcastic IT specialist
+
+SETTING: Modern office space with cubicles
+
+═══════════════════════════════════════════════
+
+SCENE 1: THE COFFEE MACHINE INCIDENT
+[INT. OFFICE - MORNING]
+
+DAVE enters the break room with exaggerated confidence, 
+holding a "World's Best Boss" mug.
+
+DAVE
+(loudly to everyone)
+Good morning team! Today is the day we revolutionize 
+our coffee break procedures!
+
+LISA
+(not looking up from laptop)
+Dave, it's just coffee.
+
+DAVE
+Just coffee?! JUST COFFEE?! Lisa, coffee is the 
+lifeblood of productivity! Watch and learn!
+
+Dave attempts to demonstrate an overly complicated 
+coffee-making procedure involving timers and charts.
+
+[SPECIAL EFFECT 1: Slow-motion coffee explosion]
+
+═══════════════════════════════════════════════
+
+SCENE 2: THE TECH SUPPORT CRISIS
+[INT. OFFICE - AFTERNOON]
+
+Dave's computer screen freezes during an important 
+presentation. He panics.
+
+DAVE
+(sweating, clicking frantically)
+No, no, no! Not now! LISA! EMERGENCY CODE RED!
+
+LISA
+(walking over calmly)
+Did you try turning it off and on again?
+
+DAVE
+That's... that's your professional advice?
+
+LISA
+(deadpan)
+I went to four years of university for this wisdom.
+
+[She presses one button. Everything works.]
+
+DAVE
+You're a wizard, Lisa.
+
+LISA
+I'm really not.
+
+═══════════════════════════════════════════════
+
+SCENE 3: THE PRESENTATION DISASTER
+[INT. CONFERENCE ROOM - LATE AFTERNOON]
+
+Dave attempts to give a motivational presentation 
+using a laser pointer. Things go wrong.
+
+[SPECIAL EFFECT 2: Laser pointer creates 
+animated chaos on screen - charts flying, 
+digital explosions]
+
+LISA
+(whispering to camera)
+This is why we can't have nice things.
+
+═══════════════════════════════════════════════
+
+[Additional 25 minutes of comedic scenes follow...]
+
+FINAL SCENE: THE RECONCILIATION
+
+Both characters share a laugh over the day's chaos.
+
+FADE OUT.
+
+═══════════════════════════════════════════════
+
+PRODUCTION NOTES:
+- 30 minutes total runtime
+- 2 special effects sequences marked above
+- Emphasis on physical comedy and timing
+- Modern office setting with minimal props
+- Natural lighting preferred
+
+END OF SCRIPT`
+    },
+    "Character_References.zip": {
+      type: "document",
+      name: "Character References & Casting",
+      content: `CHARACTER REFERENCES & CASTING NOTES
+Project: Office Chaos Comedy
+═══════════════════════════════════════════════
+
+CHARACTER 1: DAVE
+─────────────────────────────────────────────
+
+AGE: 35 years old
+ROLE: Overly enthusiastic office manager
+
+PHYSICAL DESCRIPTION:
+- Height: 5'10" - 6'0"
+- Build: Average to slightly stocky
+- Hair: Brown, slightly messy
+- Style: Business casual, slightly disheveled
+
+PERSONALITY TRAITS:
+✓ Overly confident
+✓ Enthusiastic to a fault
+✓ Well-meaning but clueless
+✓ Physically expressive
+✓ Naturally comedic timing
+
+ACTING REQUIREMENTS:
+• Strong physical comedy skills
+• Experience with improvisation
+• Comfortable with slapstick
+• Ability to deliver rapid-fire dialogue
+• Previous comedy experience preferred
+
+REFERENCE ACTORS:
+Similar energy to: Steve Carell (The Office), 
+Jason Bateman (Arrested Development)
+
+─────────────────────────────────────────────
+
+CHARACTER 2: LISA
+─────────────────────────────────────────────
+
+AGE: 28 years old
+ROLE: Sarcastic IT specialist
+
+PHYSICAL DESCRIPTION:
+- Height: 5'4" - 5'8"
+- Build: Slim to average
+- Hair: Any color, professional style
+- Style: Casual tech professional
+
+PERSONALITY TRAITS:
+✓ Dry sense of humor
+✓ Deadpan delivery
+✓ Patient but sarcastic
+✓ Intelligent and capable
+✓ Subtle reactions
+
+ACTING REQUIREMENTS:
+• Excellent deadpan comedy skills
+• Strong reaction shots
+• Comfortable with technical dialogue
+• Natural chemistry with co-star
+• Previous comedy experience required
+
+REFERENCE ACTORS:
+Similar style to: Aubrey Plaza, 
+Anna Kendrick, Rashida Jones
+
+═══════════════════════════════════════════════
+
+CASTING NOTES:
+
+CHEMISTRY:
+The two actors must have natural comedic chemistry.
+Recommend chemistry read before final casting.
+
+AVAILABILITY:
+Filming dates: February 25-27, 2026
+Rehearsal: February 24, 2026
+Post-production ADR: TBD (March 2026)
+
+COMPENSATION:
+Professional day rate + usage rights
+Screen credit guaranteed
+
+═══════════════════════════════════════════════
+
+APPROVED HEADSHOTS & RESUMES:
+
+📎 Dave_Candidate_1.pdf
+📎 Dave_Candidate_2.pdf
+📎 Lisa_Candidate_1.pdf  
+📎 Lisa_Candidate_2.pdf
+
+[Attached separately in casting folder]
+
+END OF DOCUMENT`
+    },
+    "Location_Photos.pdf": {
+      type: "document",
+      name: "Location Photos & Setup Requirements",
+      content: `LOCATION PHOTOS & PRODUCTION SETUP
+Project: Office Chaos - Comedy Video Production
+═══════════════════════════════════════════════
+
+LOCATION 1: MAIN OFFICE SPACE
+─────────────────────────────────────────────
+
+DESCRIPTION:
+Open-plan office with 6-8 cubicles, natural lighting
+from large windows, modern but slightly worn aesthetic.
+
+SETUP REQUIREMENTS:
+• Desk with computer monitors (2-3 stations)
+• Office chairs (wheeled, adjustable)
+• Filing cabinets and office supplies
+• Wall clock (visible for comedic timing)
+• Motivational posters (ironic tone)
+• Coffee mugs, papers, desk accessories
+
+SPECIAL NOTES:
+⚠ Will need power outlets for practical lights
+⚠ Carpet floor - good for sound dampening
+⚠ Windows - may need blackout for light control
+
+DIMENSIONS:
+Approximately 30ft × 40ft
+Ceiling height: 9ft
+Natural light: North-facing windows
+
+AVAILABLE DATES:
+February 25-27, 2026 (all three days)
+
+─────────────────────────────────────────────
+
+LOCATION 2: BREAK ROOM
+─────────────────────────────────────────────
+
+DESCRIPTION:
+Small break room with coffee machine, microwave,
+small table with chairs. Fluorescent overhead lighting.
+
+SETUP:
+• Coffee machine (practical - will be used)
+• Small refrigerator
+• Microwave
+• Break table with 4 chairs
+• Sink and counter space
+• Coffee supplies and mugs
+
+SPECIAL REQUIREMENTS:
+⚠ Coffee machine MUST work (SPECIAL EFFECT #1)
+  Coffee explosion scene - requires practical setup
+- Protective coverings for floor/walls
+- Multiple takes planned
+- Cleaning crew standing by
+
+LIGHTING:
+- Overhead practical lights
+- Window light from side
+- Additional fill for actor faces
+
+═══════════════════════════════════════════════
+
+LOCATION 3: CONFERENCE ROOM
+─────────────────────────────────────────────
+
+DESCRIPTION:
+Professional conference room with large table,
+presentation screen, and whiteboard.
+
+SETUP:
+• Large conference table (seats 8-10)
+• Office chairs
+• Projection screen or large monitor
+• Whiteboard with markers
+• Presentation materials
+• Water glasses and pitcher
+
+SPECIAL REQUIREMENTS:
+⚠ Laser pointer for SPECIAL EFFECT #2
+  (animated chaos on screen)
+- Green screen or practical screen
+- VFX markers for post-production
+- Multiple camera angles for coverage
+
+LIGHTING:
+- Professional conference room feel
+- Overhead recessed lighting
+- Monitor/screen glow (practical)
+- Clean, professional look
+
+═══════════════════════════════════════════════
+
+GENERAL PRODUCTION NOTES:
+
+FILMING DATES: February 25-27, 2026
+
+SCHEDULE:
+Day 1: Main office scenes (Scenes 1-4)
+Day 2: Break room + coffee explosion (Scene 5-8)
+Day 3: Conference room + VFX shots (Scene 9-12)
+
+CREW REQUIREMENTS:
+✓ Director of Photography
+✓ Gaffer + Lighting crew (3)
+✓ Sound mixer + boom op
+✓ Production assistants (2)
+✓ Set decorator
+✓ Props master
+✓ VFX supervisor (on-set for marker placement)
+
+EQUIPMENT:
+- 2 cameras (A-cam, B-cam)
+- Dolly/tracking system
+- Professional lighting kit
+- Lavalier mics for actors
+- Boom microphones
+- Monitors for director/client review
+
+═══════════════════════════════════════════════
+
+All locations secured and ready for production.
+Insurance and permits: ✓ APPROVED
+
+END OF DOCUMENT`
+    }
+  };
+
+  // Open client-uploaded file
+  const openFile = (fileName) => {
+    const fileContent = staticFileContents[fileName];
+    if (fileContent) {
+      setSelectedFile(fileContent);
+      setShowFileModal(true);
+    }
   };
 
   // Open document in modal
@@ -952,7 +1315,7 @@ Issue Date: ${formatDate(projectData.completed_at)}
                       )}
 
                       {/* Document for every step */}
-                      <div className="bg-sky-50 rounded-lg p-3 border border-sky-200">
+                      <div className="bg-sky-50 rounded-lg p-3 border border-sky-200 mb-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-sky-700">📄 Document:</span>
@@ -968,6 +1331,43 @@ Issue Date: ${formatDate(projectData.completed_at)}
                           </button>
                         </div>
                       </div>
+
+                      {/* Client Attachments Section */}
+                      {messages.length > 0 && (() => {
+                        // Find messages with attachments related to this step
+                        const stepMessages = messages.filter(msg => msg.attachments && msg.attachments.length > 0);
+                        
+                        // Show attachments for specific steps
+                        const showAttachments = step.key === 'quote_accepted' && stepMessages.length > 0;
+                        
+                        if (showAttachments) {
+                          return (
+                            <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                              <label className="text-xs font-semibold text-green-700 block mb-2">📎 Client Uploaded Files:</label>
+                              <div className="space-y-1">
+                                {stepMessages.map(msg => 
+                                  msg.attachments.map((file, idx) => (
+                                    <div 
+                                      key={`${msg.id}-${idx}`}
+                                      onClick={() => openFile(file)}
+                                      className="text-xs flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-green-100 transition-colors"
+                                    >
+                                      📎 <span className="text-gray-900">{file}</span>
+                                      <span className="ml-auto text-[10px] bg-green-200 px-2 py-0.5 rounded">
+                                        click to view
+                                      </span>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                              <p className="text-[10px] text-gray-500 mt-2 italic">
+                                Client materials uploaded on {new Date(project.quote_accepted_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -1039,6 +1439,47 @@ Issue Date: ${formatDate(projectData.completed_at)}
                 onClick={() => {
                   navigator.clipboard.writeText(selectedDocument.content);
                   alert('Document content copied to clipboard!');
+                }}
+                className="btn-ocean"
+              >
+                📋 Copy to Clipboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Client File View Modal */}
+      {showFileModal && selectedFile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-2xl font-bold text-gray-900">
+                📎 {selectedFile.name}
+              </h3>
+              <button
+                onClick={() => setShowFileModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono bg-gray-50 p-4 rounded text-left">
+                {selectedFile.content}
+              </pre>
+            </div>
+            <div className="p-6 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={() => setShowFileModal(false)}
+                className="btn-ocean-outline"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(selectedFile.content);
+                  alert('File content copied to clipboard!');
                 }}
                 className="btn-ocean"
               >
