@@ -104,8 +104,36 @@ function ProjectDetails() {
               </div>
             </div>
 
-            {/* Client Materials Upload Section */}
-            {(project.status === 'submitted' || project.status === 'quoted' || project.status === 'quote_accepted' || project.status === 'in_production') && (
+            {/* Client Materials - Always visible if files exist */}
+            {project.reference_materials && project.reference_materials.length > 0 && (
+              <div className="card-ocean p-6 bg-gradient-to-br from-teal-50 to-sky-50">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">
+                  📎 Client Materials
+                </h3>
+                <p className="text-gray-700 mb-4 text-left">
+                  Materials uploaded by client for this project:
+                </p>
+                <div className="space-y-2">
+                  {project.reference_materials.map((file, idx) => (
+                    <div key={idx} className="flex items-center gap-3 text-sm bg-white p-3 rounded-lg border border-sky-200">
+                      <svg className="w-5 h-5 text-sky-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-gray-700 text-left flex-1">{file}</span>
+                      <span className="text-xs text-teal-600 font-medium">✓</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 bg-white p-3 rounded-lg border border-teal-200">
+                  <p className="text-xs text-teal-800 text-left">
+                    <strong>Note:</strong> These materials were used for custom production. All deliverables created based on client's specifications.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Upload Materials - Only for active projects */}
+            {!project.reference_materials?.length && (project.status === 'submitted' || project.status === 'quoted' || project.status === 'quote_accepted' || project.status === 'in_production') && (
               <div className="card-ocean p-6 bg-gradient-to-br from-teal-50 to-sky-50">
                 <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">Upload Materials</h3>
                 <p className="text-gray-700 mb-4 text-left">
@@ -126,21 +154,6 @@ function ProjectDetails() {
                   <p className="text-xs text-gray-500">PDF, DOC, DOCX, TXT, ZIP up to 100MB</p>
                   <input id="file-upload" name="file-upload" type="file" className="hidden" accept=".pdf,.doc,.docx,.txt,.zip" />
                 </div>
-                {project.reference_materials && project.reference_materials.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-sm font-semibold text-gray-900 mb-2 text-left">Uploaded Files:</p>
-                    <div className="space-y-2">
-                      {project.reference_materials.map((file, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 bg-white p-2 rounded">
-                          <svg className="w-4 h-4 text-sky-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
-                          </svg>
-                          <span>{file}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
