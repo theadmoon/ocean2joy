@@ -86,29 +86,29 @@ function ProjectDetails() {
         
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <h1 className="text-4xl font-bold text-gray-900">{project.project_title}</h1>
+            <h1 className="text-4xl font-bold text-gray-900 text-left">{project.project_title}</h1>
             <span className={`status-badge status-${project.status}`}>{project.status.replace('_', ' ')}</span>
           </div>
-          <p className="text-gray-600">Project #{project.project_number}</p>
+          <p className="text-gray-600 text-left">Project #{project.project_number}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <div className="card-ocean p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Project Details</h2>
-              <div className="space-y-3">
-                <div><span className="font-semibold">Service:</span> {project.service_type}</div>
-                <div><span className="font-semibold">Brief:</span> <p className="mt-1">{project.detailed_brief}</p></div>
-                <div><span className="font-semibold">Objectives:</span> <p className="mt-1">{project.objectives}</p></div>
-                {project.special_instructions && <div><span className="font-semibold">Special Instructions:</span> <p className="mt-1">{project.special_instructions}</p></div>}
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 text-left">Project Details</h2>
+              <div className="space-y-3 text-left">
+                <div className="text-left"><span className="font-semibold">Service:</span> {project.service_type}</div>
+                <div className="text-left"><span className="font-semibold">Brief:</span> <p className="mt-1 text-left">{project.detailed_brief}</p></div>
+                <div className="text-left"><span className="font-semibold">Objectives:</span> <p className="mt-1 text-left">{project.objectives}</p></div>
+                {project.special_instructions && <div className="text-left"><span className="font-semibold">Special Instructions:</span> <p className="mt-1 text-left">{project.special_instructions}</p></div>}
               </div>
             </div>
 
             {project.quote_amount && (
               <div className="card-ocean p-6 bg-gradient-to-br from-sky-50 to-teal-50">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Quote</h3>
-                <div className="text-3xl font-bold text-sky-600 mb-2">${project.quote_amount}</div>
-                <p className="text-gray-700 mb-4">{project.quote_details}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">Quote</h3>
+                <div className="text-3xl font-bold text-sky-600 mb-2 text-left">${project.quote_amount}</div>
+                <p className="text-gray-700 mb-4 text-left">{project.quote_details}</p>
                 {project.status === 'quoted' && (
                   <button onClick={handleAcceptQuote} className="btn-ocean">Accept Quote & Start Production</button>
                 )}
@@ -117,13 +117,13 @@ function ProjectDetails() {
 
             {deliverables.length > 0 && (
               <div className="card-ocean p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Deliverables</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">Deliverables</h3>
                 <div className="space-y-3">
                   {deliverables.map((file) => (
                     <div key={file.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-                      <div>
-                        <p className="font-semibold">{file.file_name}</p>
-                        <p className="text-sm text-gray-600">{file.description}</p>
+                      <div className="text-left">
+                        <p className="font-semibold text-left">{file.file_name}</p>
+                        <p className="text-sm text-gray-600 text-left">{file.description}</p>
                       </div>
                       <a href={file.file_url} target="_blank" rel="noopener noreferrer" className="btn-ocean-outline">
                         <FaDownload className="inline mr-2" />Download
@@ -140,8 +140,8 @@ function ProjectDetails() {
 
           <div className="lg:col-span-1">
             <div className="card-ocean p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Project Status</h3>
-              <div className="space-y-2 text-sm">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">Project Status</h3>
+              <div className="space-y-2 text-sm text-left">
                 <div className="flex justify-between"><span>Created:</span><span>{new Date(project.created_at).toLocaleDateString()}</span></div>
                 {project.quote_sent_at && <div className="flex justify-between"><span>Quote Sent:</span><span>{new Date(project.quote_sent_at).toLocaleDateString()}</span></div>}
                 {project.production_started_at && <div className="flex justify-between"><span>Production Started:</span><span>{new Date(project.production_started_at).toLocaleDateString()}</span></div>}
