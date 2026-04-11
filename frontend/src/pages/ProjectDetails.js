@@ -354,8 +354,8 @@ Ocean2Joy Digital Video Production
 Custom Digital Video Services
 
 Invoice #: VAPP-6-Custom1050USD-13Mar2026
-Date Issued: March 13, 2026
-Due Date: March 13, 2026 (Upon Delivery)
+Date Issued: March 11, 2026
+Due Date: Upon Receipt
 
 ═══════════════════════════════════════════════
 
@@ -404,44 +404,39 @@ Post-Production                        INCLUDED
 SUBTOTAL:                              $1,050.00
 Tax:                                        $0.00
                                        ──────────
-TOTAL DUE:                             $1,050.00
+TOTAL AMOUNT DUE:                      $1,050.00
 
 ═══════════════════════════════════════════════
 
-PAYMENT INFORMATION:
+PAYMENT INSTRUCTIONS:
 
 Payment Method: PayPal
-Payment Status: ✓ PAID IN FULL
-Payment Date: March 13, 2026
-Transaction ID: PAYPAL-VAPP6-13MAR2026
-Amount Paid: $1,050.00 USD
+Please send payment to: payments@ocean2joy.com
+
+Payment is due upon receipt of this invoice.
 
 ═══════════════════════════════════════════════
 
-DELIVERABLES:
+DELIVERABLES (Included):
 
 ✓ Office_Chaos_Comedy_Final_HD.mp4
   30-minute HD video (1920×1080)
-  Delivered: March 11, 2026
 
 ✓ Behind_the_Scenes_Bonus.mp4
   5-minute bonus footage
-  Delivered: March 11, 2026
+
+All files delivered digitally via secure client portal.
 
 ═══════════════════════════════════════════════
 
 NOTES:
 
-This invoice represents the complete and final 
-payment for Project VAPP-6-Custom1050USD-13Mar2026. 
-All deliverables have been provided via secure 
-digital delivery.
+This invoice is for digital video production services.
+No physical goods are shipped - all deliverables are
+provided electronically through our secure platform.
 
-No physical goods were shipped. This is a 
-digital-only service transaction.
-
-Payment received via PayPal confirms client 
-acceptance of all work and completion of project.
+Files have been delivered to your client portal and
+are ready for download.
 
 ═══════════════════════════════════════════════
 
@@ -454,11 +449,128 @@ Ocean2Joy Digital Video Production
 Digital Services - No Physical Shipping
 www.ocean2joy.com
 
+═══════════════════════════════════════════════`
+    },
+    "PayPal_Receipt_VAPP6_1050USD.pdf": {
+      type: "document",
+      name: "PayPal Payment Receipt - $1050 USD",
+      content: `PAYMENT RECEIPT
 ═══════════════════════════════════════════════
 
-INVOICE PAID - TRANSACTION COMPLETE
-Payment Processor: PayPal
-Date: March 13, 2026`
+PayPal Payment Confirmation
+
+Transaction ID: PAYPAL-VAPP6-13MAR2026
+Payment Date: March 13, 2026
+Status: ✓ COMPLETED
+
+═══════════════════════════════════════════════
+
+TRANSACTION DETAILS:
+
+From: Marcos Knight
+Email: mek110@yahoo.com
+
+To: Ocean2Joy Digital Video Production
+Email: payments@ocean2joy.com
+
+═══════════════════════════════════════════════
+
+PAYMENT INFORMATION:
+
+Amount Paid: $1,050.00 USD
+Payment Method: PayPal Balance
+Currency: USD
+Transaction Type: Goods & Services Payment
+
+Invoice Reference: VAPP-6-Custom1050USD-13Mar2026
+Project: Office Chaos Comedy - Custom Video
+
+═══════════════════════════════════════════════
+
+PAYMENT BREAKDOWN:
+
+Subtotal:                              $1,050.00
+PayPal Fee: (paid by merchant)              $0.00
+                                       ──────────
+Total Paid by Customer:                $1,050.00
+
+═══════════════════════════════════════════════
+
+PAYMENT TIMELINE:
+
+Payment Initiated: March 13, 2026 at 10:23 AM EST
+Payment Processed: March 13, 2026 at 10:23 AM EST
+Payment Completed: March 13, 2026 at 10:24 AM EST
+
+Processing Time: Instant
+
+═══════════════════════════════════════════════
+
+MERCHANT INFORMATION:
+
+Business Name: Ocean2Joy Digital Video Production
+Business Email: payments@ocean2joy.com
+Business Type: Digital Services Provider
+Service Description: Custom video production services
+
+═══════════════════════════════════════════════
+
+PURCHASE DETAILS:
+
+Item: Custom Video Production - 30 minutes
+Project ID: VAPP-6-Custom1050USD-13Mar2026
+Service Type: Digital video creation and delivery
+Delivery Method: Digital download (no shipping)
+
+═══════════════════════════════════════════════
+
+BUYER PROTECTION:
+
+This transaction is covered by PayPal's Purchase
+Protection program for eligible digital goods and
+services.
+
+Dispute Resolution: Available through PayPal
+Resolution Center
+
+═══════════════════════════════════════════════
+
+TRANSACTION VERIFICATION:
+
+✓ Payment verified and completed
+✓ Funds transferred to merchant account
+✓ Digital service delivered to customer
+✓ Customer access confirmed
+✓ No disputes or claims filed
+
+═══════════════════════════════════════════════
+
+RECEIPT NOTES:
+
+• This is an official PayPal payment receipt
+• Transaction completed successfully
+• Payment for digital video production services
+• No physical goods shipped
+• All deliverables provided digitally
+• Customer confirmed receipt of files
+
+═══════════════════════════════════════════════
+
+For questions about this transaction:
+• Contact Ocean2Joy: admin@ocean2joy.com
+• PayPal Support: www.paypal.com/support
+• Transaction ID: PAYPAL-VAPP6-13MAR2026
+
+═══════════════════════════════════════════════
+
+This receipt confirms successful payment processing
+through PayPal for digital services rendered by
+Ocean2Joy Digital Video Production.
+
+Receipt Generated: March 13, 2026
+Document ID: RCPT-VAPP6-13MAR2026
+
+═══════════════════════════════════════════════`
     },
     "completion_certificate.pdf": {
       type: "document",
