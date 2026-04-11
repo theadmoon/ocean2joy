@@ -92,12 +92,30 @@ function AdminProjectManagement() {
 
   // Print operational chain
   const handlePrint = () => {
-    window.print();
+    console.log('Print button clicked');
+    try {
+      window.print();
+    } catch (error) {
+      console.error('Print error:', error);
+      alert('Print function is not available. Please use your browser menu: File > Print');
+    }
   };
 
   // Export as PDF (using browser print to PDF)
   const handleExportPDF = () => {
-    window.print(); // User can choose "Save as PDF" in print dialog
+    console.log('Export PDF button clicked');
+    try {
+      // Add a print-specific class to body
+      document.body.classList.add('printing');
+      window.print();
+      // Remove class after print dialog closes
+      setTimeout(() => {
+        document.body.classList.remove('printing');
+      }, 1000);
+    } catch (error) {
+      console.error('Export PDF error:', error);
+      alert('PDF export not available. Please use Print and select "Save as PDF"');
+    }
   };
 
   // Map step keys to document types
@@ -472,13 +490,25 @@ function AdminProjectManagement() {
             <Link to={`/projects/${projectId}`} className="btn-ocean">
               📊 View as Client
             </Link>
-            <button onClick={handlePrint} className="btn-ocean">
+            <button 
+              type="button"
+              onClick={handlePrint} 
+              className="btn-ocean"
+            >
               🖨️ Print Log
             </button>
-            <button onClick={handleExportPDF} className="btn-ocean">
+            <button 
+              type="button"
+              onClick={handleExportPDF} 
+              className="btn-ocean"
+            >
               📄 Export PDF
             </button>
-            <button className="btn-ocean-outline">
+            <button 
+              type="button"
+              className="btn-ocean-outline"
+              onClick={() => alert('Download All Documents feature coming soon!')}
+            >
               💾 Download All Documents
             </button>
           </div>
