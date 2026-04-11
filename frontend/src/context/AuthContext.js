@@ -74,12 +74,26 @@ export function AuthProvider({ children }) {
     delete axios.defaults.headers.common['Authorization'];
   };
 
+  // Quick switch for testing (TEMPORARY - for development only)
+  const quickSwitch = async (role) => {
+    const credentials = {
+      admin: { email: 'admin@ocean2joy.com', password: 'admin123' },
+      client: { email: 'mek110@yahoo.com', password: 'marcos2026' }
+    };
+    
+    const creds = credentials[role];
+    if (creds) {
+      await login(creds.email, creds.password);
+    }
+  };
+
   const value = {
     user,
     token,
     login,
     register,
     logout,
+    quickSwitch,
     loading,
     isAuthenticated: !!token
   };
