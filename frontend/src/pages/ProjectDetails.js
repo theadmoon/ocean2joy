@@ -353,16 +353,16 @@ END OF DOCUMENT`
 Ocean2Joy Digital Video Production
 Custom Digital Video Services
 
-Invoice #: VAPP-6-INV-2026-03
-Date Issued: March 20, 2026
-Due Date: March 20, 2026 (Upon Delivery)
+Invoice #: VAPP-6-Custom1050USD-13Mar2026
+Date Issued: March 13, 2026
+Due Date: March 13, 2026 (Upon Delivery)
 
 ═══════════════════════════════════════════════
 
 BILL TO:
 Marcos Knight
 Email: mek110@yahoo.com
-Project: VAPP-6
+Project: VAPP-6-Custom1050USD-13Mar2026
 Project Title: Office Chaos Comedy - Custom Video
 
 ═══════════════════════════════════════════════
@@ -371,7 +371,7 @@ PROJECT DETAILS:
 
 Service Type: Custom Video Production
 Duration: 30-minute comedy video
-Production Period: February 22 - March 18, 2026
+Production Period: February 19 - March 11, 2026
 
 SCOPE OF WORK:
 ✓ Pre-production planning and script review
@@ -412,8 +412,8 @@ PAYMENT INFORMATION:
 
 Payment Method: PayPal
 Payment Status: ✓ PAID IN FULL
-Payment Date: March 20, 2026
-Transaction ID: PAYPAL-VAPP6-20260320
+Payment Date: March 13, 2026
+Transaction ID: PAYPAL-VAPP6-13MAR2026
 Amount Paid: $1,050.00 USD
 
 ═══════════════════════════════════════════════
@@ -422,19 +422,20 @@ DELIVERABLES:
 
 ✓ Office_Chaos_Comedy_Final_HD.mp4
   30-minute HD video (1920×1080)
-  Delivered: March 20, 2026
+  Delivered: March 11, 2026
 
 ✓ Behind_the_Scenes_Bonus.mp4
   5-minute bonus footage
-  Delivered: March 20, 2026
+  Delivered: March 11, 2026
 
 ═══════════════════════════════════════════════
 
 NOTES:
 
 This invoice represents the complete and final 
-payment for Project VAPP-6. All deliverables have 
-been provided via secure digital delivery.
+payment for Project VAPP-6-Custom1050USD-13Mar2026. 
+All deliverables have been provided via secure 
+digital delivery.
 
 No physical goods were shipped. This is a 
 digital-only service transaction.
@@ -457,7 +458,7 @@ www.ocean2joy.com
 
 INVOICE PAID - TRANSACTION COMPLETE
 Payment Processor: PayPal
-Date: March 20, 2026`
+Date: March 13, 2026`
     },
     "completion_certificate.pdf": {
       type: "document",
@@ -474,7 +475,7 @@ completion of the following digital service:
 
 PROJECT INFORMATION:
 ─────────────────────────────────────────────
-Project Number: VAPP-6
+Project Number: VAPP-6-Custom1050USD-13Mar2026
 Project Title: Office Chaos Comedy - Custom Video
 Service Type: Custom Digital Video Production
 Client: Marcos Knight (mek110@yahoo.com)
@@ -484,16 +485,16 @@ Client: Marcos Knight (mek110@yahoo.com)
 PROJECT TIMELINE:
 ─────────────────────────────────────────────
 
-Request Submitted: February 8, 2026
-Quote Provided: February 10, 2026
-Quote Accepted: February 12, 2026
-Production Started: February 22, 2026
-Production Completed: March 18, 2026
-Deliverables Provided: March 20, 2026
-Payment Received: March 20, 2026
-Project Closed: March 20, 2026
+Request Submitted: February 17, 2026
+Quote Provided: February 17, 2026
+Quote Accepted: February 18, 2026
+Production Started: February 19, 2026
+Production Completed: March 11, 2026
+Deliverables Provided: March 11, 2026
+Payment Received: March 13, 2026
+Project Closed: March 13, 2026
 
-Total Production Time: 25 days
+Total Production Time: 21 days
 
 ═══════════════════════════════════════════════
 
@@ -511,7 +512,7 @@ DELIVERABLES PROVIDED:
   • HD quality (1920×1080)
 
 All files delivered digitally via secure 
-client portal on March 20, 2026.
+client portal on March 11, 2026.
 
 ═══════════════════════════════════════════════
 
@@ -521,8 +522,8 @@ FINANCIAL SETTLEMENT:
 Total Project Value: $1,050.00 USD
 Payment Method: PayPal
 Payment Status: ✓ PAID IN FULL
-Payment Date: March 20, 2026
-Transaction Reference: PAYPAL-VAPP6-20260320
+Payment Date: March 13, 2026
+Transaction Reference: PAYPAL-VAPP6-13MAR2026
 
 ═══════════════════════════════════════════════
 
@@ -571,8 +572,8 @@ payment processors and dispute resolution:
 PROJECT STATUS: ✓ SUCCESSFULLY COMPLETED
 
 Issued by: Ocean2Joy Digital Video Production
-Issue Date: March 20, 2026
-Certificate ID: CERT-VAPP6-20260320
+Issue Date: March 13, 2026
+Certificate ID: CERT-VAPP6-13MAR2026
 
 ═══════════════════════════════════════════════
 
