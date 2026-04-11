@@ -98,9 +98,394 @@ function AdminProjectManagement() {
 
   // Generate document content based on type
   const generateDocumentContent = (docType, stepKey) => {
-    // This would generate the actual document content
-    // For now, return a placeholder
-    return `Document: ${docType}\n\nThis document would show detailed information for step: ${stepKey}\n\nProject: ${project?.project_number}\nClient: ${project?.user_name || 'Client'}\nAmount: $${project?.quote_amount}`;
+    if (!project) return 'Loading...';
+    
+    const formatDate = (dateStr) => {
+      if (!dateStr) return 'Not set';
+      return new Date(dateStr).toLocaleDateString('en-US', { 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+    };
+    
+    switch(docType) {
+      case 'Quote Request':
+        return `QUOTE REQUEST
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Project Request Form
+
+═══════════════════════════════════════════════
+
+REQUEST INFORMATION:
+
+Request ID: ${project.project_number}
+Submitted: ${formatDate(project.created_at)}
+Client: ${project.user_name || 'Client'}
+Email: ${project.user_email || 'Not provided'}
+
+═══════════════════════════════════════════════
+
+PROJECT DETAILS:
+
+Title: ${project.project_title}
+Service Type: ${project.service_type === 'custom_video' ? 'Custom Video Production' : project.service_type}
+
+DETAILED BRIEF:
+${project.detailed_brief || 'No details provided'}
+
+OBJECTIVES:
+${project.objectives || 'Not specified'}
+
+SPECIAL INSTRUCTIONS:
+${project.special_instructions || 'None'}
+
+═══════════════════════════════════════════════
+
+STATUS: Request received and under review
+
+This quote request has been submitted to Ocean2Joy Digital Video Production.
+Our team will review the requirements and provide a detailed quote within 24-48 hours.
+
+For questions: admin@ocean2joy.com
+═══════════════════════════════════════════════`;
+
+      case 'Quote Document':
+        return `OFFICIAL QUOTE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+═══════════════════════════════════════════════
+
+QUOTE INFORMATION:
+
+Quote Number: ${project.project_number}
+Date Issued: ${formatDate(project.quote_sent_at)}
+Valid Until: ${formatDate(project.quote_accepted_at || project.quote_sent_at)}
+
+Client: ${project.user_name || 'Client'}
+Project: ${project.project_title}
+
+═══════════════════════════════════════════════
+
+QUOTED SERVICES:
+
+Service Type: ${project.service_type === 'custom_video' ? 'Custom Video Production' : project.service_type}
+
+${project.quote_details || 'Details not specified'}
+
+═══════════════════════════════════════════════
+
+PRICING:
+
+Total Amount: $${project.quote_amount?.toFixed(2) || '0.00'} USD
+
+Payment Terms: ${project.payment_terms || 'Payment due upon delivery'}
+
+═══════════════════════════════════════════════
+
+SCOPE OF WORK:
+
+${project.detailed_brief || 'See project brief for details'}
+
+═══════════════════════════════════════════════
+
+ACCEPTANCE:
+
+To accept this quote, please confirm via email or through your client portal.
+Upon acceptance, we will begin production according to the agreed timeline.
+
+Questions? Contact: admin@ocean2joy.com
+
+═══════════════════════════════════════════════`;
+
+      case 'Acceptance Confirmation':
+        return `QUOTE ACCEPTANCE CONFIRMATION
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+═══════════════════════════════════════════════
+
+CONFIRMATION DETAILS:
+
+Project: ${project.project_number}
+Client: ${project.user_name || 'Client'}
+Date Accepted: ${formatDate(project.quote_accepted_at)}
+
+═══════════════════════════════════════════════
+
+ACCEPTED QUOTE:
+
+Service: ${project.project_title}
+Amount: $${project.quote_amount?.toFixed(2)} USD
+Payment Terms: ${project.payment_terms || 'Upon delivery'}
+
+═══════════════════════════════════════════════
+
+NEXT STEPS:
+
+✓ Quote has been accepted
+✓ Production will begin on: ${formatDate(project.production_started_at)}
+✓ Client will be notified of progress updates
+✓ Expected delivery: ${formatDate(project.delivered_at)}
+
+═══════════════════════════════════════════════
+
+This document confirms that the client has reviewed and accepted
+the quote for the above-mentioned project. Production will proceed
+according to the agreed terms and timeline.
+
+═══════════════════════════════════════════════`;
+
+      case 'Production Order':
+        return `PRODUCTION ORDER
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Internal Production Document
+
+═══════════════════════════════════════════════
+
+ORDER INFORMATION:
+
+Project ID: ${project.project_number}
+Client: ${project.user_name || 'Client'}
+Production Start: ${formatDate(project.production_started_at)}
+Expected Delivery: ${formatDate(project.delivered_at)}
+
+═══════════════════════════════════════════════
+
+PROJECT SPECIFICATIONS:
+
+Title: ${project.project_title}
+Type: ${project.service_type}
+Budget: $${project.quote_amount?.toFixed(2)}
+
+${project.detailed_brief || ''}
+
+${project.special_instructions || ''}
+
+═══════════════════════════════════════════════
+
+PRODUCTION STATUS:
+
+Status: ${project.status === 'in_progress' ? 'Work in Progress' : 'Completed'}
+Started: ${formatDate(project.production_started_at)}
+
+═══════════════════════════════════════════════
+
+DELIVERABLES:
+
+Final video files will be delivered digitally through client portal.
+
+═══════════════════════════════════════════════`;
+
+      case 'Invoice':
+      case 'Receipt':
+      case 'Certificate':
+        // Use existing generation functions from ProjectDetails
+        const clientData = {
+          ...project,
+          client_name: project.user_name || 'Client',
+          client_email: project.user_email || ''
+        };
+        
+        if (docType === 'Invoice') {
+          return generateInvoiceContent(clientData);
+        } else if (docType === 'Receipt') {
+          return generateReceiptContent(clientData);
+        } else {
+          return generateCertificateContent(clientData);
+        }
+        
+      default:
+        return `Document: ${docType}\n\nProject: ${project.project_number}\nClient: ${project.user_name}\nAmount: $${project.quote_amount}`;
+    }
+  };
+  
+  // Helper functions for Invoice, Receipt, Certificate (same as in ProjectDetails.js)
+  const generateInvoiceContent = (projectData) => {
+    if (!projectData) return '';
+    
+    const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const productionStart = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const productionEnd = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    
+    return `INVOICE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Custom Digital Video Services
+
+Invoice #: ${projectData.project_number}
+Date Issued: ${deliveredDate}
+Due Date: Upon Receipt
+
+═══════════════════════════════════════════════
+
+BILL TO:
+${projectData.client_name || 'Client'}
+Email: ${projectData.client_email || ''}
+Project: ${projectData.project_number}
+Project Title: ${projectData.project_title}
+
+═══════════════════════════════════════════════
+
+PROJECT DETAILS:
+
+Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : projectData.service_type}
+${projectData.detailed_brief ? 'Brief: ' + projectData.detailed_brief : ''}
+Production Period: ${productionStart} - ${productionEnd}
+
+═══════════════════════════════════════════════
+
+PRICING BREAKDOWN:
+
+Service Description                        Amount
+─────────────────────────────────────────────────
+${projectData.service_type === 'custom_video' ? 'Custom Video Production' : 'Service'}      $${projectData.quote_amount?.toFixed(2)}
+
+${projectData.quote_details || ''}
+
+═══════════════════════════════════════════════
+
+SUBTOTAL:                              $${projectData.quote_amount?.toFixed(2)}
+Tax:                                        $0.00
+                                       ──────────
+TOTAL AMOUNT DUE:                      $${projectData.quote_amount?.toFixed(2)}
+
+═══════════════════════════════════════════════
+
+PAYMENT INSTRUCTIONS:
+
+Payment Method: PayPal
+Please send payment to: payments@ocean2joy.com
+
+Payment is due upon receipt of this invoice.
+
+═══════════════════════════════════════════════
+
+DELIVERABLES (Included):
+
+All files delivered digitally via secure client portal.
+
+═══════════════════════════════════════════════
+
+Thank you for choosing Ocean2Joy!
+
+For questions about this invoice, contact:
+admin@ocean2joy.com
+
+Ocean2Joy Digital Video Production
+Digital Services - No Physical Shipping
+www.ocean2joy.com
+
+═══════════════════════════════════════════════`;
+  };
+
+  const generateReceiptContent = (projectData) => {
+    if (!projectData) return '';
+    
+    const paymentDate = projectData.completed_at ? new Date(projectData.completed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const transactionId = projectData.paypal_transaction_id || `PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}`;
+    const payerEmail = projectData.paypal_payer_email || projectData.client_email || '';
+    const paymentStatus = projectData.paypal_payment_status || 'COMPLETED';
+    
+    return `PAYMENT RECEIPT
+═══════════════════════════════════════════════
+
+PayPal Payment Confirmation
+
+Transaction ID: ${transactionId}
+Payment Date: ${paymentDate}
+Status: ✓ ${paymentStatus}
+
+═══════════════════════════════════════════════
+
+TRANSACTION DETAILS:
+
+From: ${projectData.client_name || 'Client'}
+Email: ${payerEmail}
+
+To: Ocean2Joy Digital Video Production
+Email: payments@ocean2joy.com
+
+═══════════════════════════════════════════════
+
+PAYMENT INFORMATION:
+
+Amount Paid: $${projectData.quote_amount?.toFixed(2)} USD
+Payment Method: PayPal
+Currency: USD
+Transaction Type: Goods & Services Payment
+
+Invoice Reference: ${projectData.project_number}
+Project: ${projectData.project_title}
+
+═══════════════════════════════════════════════
+
+This receipt confirms successful payment processing
+through PayPal for digital services rendered by
+Ocean2Joy Digital Video Production.
+
+═══════════════════════════════════════════════`;
+  };
+
+  const generateCertificateContent = (projectData) => {
+    if (!projectData) return '';
+    
+    const formatDate = (dateStr) => {
+      if (!dateStr) return 'Not set';
+      return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    };
+    
+    return `PROJECT COMPLETION CERTIFICATE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+═══════════════════════════════════════════════
+
+PROJECT INFORMATION:
+
+Project Number: ${projectData.project_number}
+Project Title: ${projectData.project_title}
+Service Type: Custom Digital Video Production
+Client: ${projectData.client_name || 'Client'} (${projectData.client_email || ''})
+
+═══════════════════════════════════════════════
+
+PROJECT TIMELINE:
+
+Request Submitted: ${formatDate(projectData.created_at)}
+Quote Provided: ${formatDate(projectData.quote_sent_at)}
+Quote Accepted: ${formatDate(projectData.quote_accepted_at)}
+Production Started: ${formatDate(projectData.production_started_at)}
+Deliverables Provided: ${formatDate(projectData.delivered_at)}
+Payment Received: ${formatDate(projectData.completed_at)}
+Project Closed: ${formatDate(projectData.completed_at)}
+
+═══════════════════════════════════════════════
+
+FINANCIAL SETTLEMENT:
+
+Total Project Value: $${projectData.quote_amount?.toFixed(2)} USD
+Payment Method: PayPal
+Payment Status: ✓ PAID IN FULL
+Payment Date: ${formatDate(projectData.completed_at)}
+
+═══════════════════════════════════════════════
+
+PROJECT STATUS: ✓ SUCCESSFULLY COMPLETED
+
+Issued by: Ocean2Joy Digital Video Production
+Issue Date: ${formatDate(projectData.completed_at)}
+
+═══════════════════════════════════════════════`;
   };
 
   // Print operational chain - improved version
@@ -159,6 +544,40 @@ function AdminProjectManagement() {
     } else {
       alert('Content not available for export');
     }
+  };
+
+  // Download all documents
+  const handleDownloadAllDocuments = () => {
+    console.log('Download All Documents clicked');
+    
+    const steps = operationalSteps;
+    let allDocs = `OCEAN2JOY DIGITAL VIDEO PRODUCTION\nPROJECT DOCUMENTATION PACKAGE\n\n`;
+    allDocs += `Project: ${project.project_number}\n`;
+    allDocs += `Client: ${project.user_name || 'Client'}\n`;
+    allDocs += `Generated: ${new Date().toLocaleString()}\n\n`;
+    allDocs += `${'='.repeat(80)}\n\n`;
+    
+    steps.forEach((step, index) => {
+      const docType = getDocumentForStep(step.key);
+      const content = generateDocumentContent(docType, step.key);
+      allDocs += `\n\nDOCUMENT ${index + 1}: ${docType.toUpperCase()}\n`;
+      allDocs += `${'='.repeat(80)}\n\n`;
+      allDocs += content;
+      allDocs += `\n\n${'='.repeat(80)}\n`;
+    });
+    
+    // Create downloadable text file
+    const blob = new Blob([allDocs], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${project.project_number}_AllDocuments.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    alert('All documents downloaded successfully!');
   };
 
   // Map step keys to document types
@@ -550,7 +969,7 @@ function AdminProjectManagement() {
             <button 
               type="button"
               className="btn-ocean-outline"
-              onClick={() => alert('Download All Documents feature coming soon!')}
+              onClick={handleDownloadAllDocuments}
             >
               💾 Download All Documents
             </button>
@@ -574,7 +993,7 @@ function AdminProjectManagement() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto flex-1">
-              <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono bg-gray-50 p-4 rounded">
+              <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono bg-gray-50 p-4 rounded text-left">
                 {selectedDocument.content}
               </pre>
             </div>
