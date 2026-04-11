@@ -170,45 +170,56 @@ function Homepage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {/* Demo Video 1 - Custom Production */}
             <div className="card-ocean">
-              <div className="aspect-video bg-gray-900 relative overflow-hidden group">
+              <div className="aspect-video bg-gray-900 relative overflow-hidden">
                 <iframe
+                  src="https://player.vimeo.com/video/115098447?background=1&autoplay=0&loop=0&byline=0&title=0"
                   className="w-full h-full"
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=example"
-                  title="Custom Video Production Demo"
                   frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allow="autoplay; fullscreen; picture-in-picture"
                   allowFullScreen
+                  title="Custom Video Production Demo"
                 ></iframe>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end p-4">
-                  <p className="text-white text-sm">Click to play demo</p>
-                </div>
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Professional Custom Video</h3>
-                <p className="text-gray-600">Example of our custom video production with professional actors</p>
+                <p className="text-gray-600">Example of our custom video production with professional actors and crew</p>
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">Drama</span>
+                  <span className="bg-teal-100 text-teal-800 text-xs px-2 py-1 rounded">Professional</span>
+                  <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">HD Quality</span>
+                </div>
               </div>
             </div>
 
-            {/* Demo Video 2 - AI Generated */}
+            {/* Demo Video 2 - AI Generated / Tech Demo */}
             <div className="card-ocean">
-              <div className="aspect-video bg-gray-900 relative overflow-hidden group">
+              <div className="aspect-video bg-gray-900 relative overflow-hidden">
                 <iframe
+                  src="https://player.vimeo.com/video/342333493?background=1&autoplay=0&loop=0&byline=0&title=0"
                   className="w-full h-full"
-                  src="https://www.youtube.com/embed/jNQXAC9IVRw?si=example"
-                  title="AI-Generated Video Demo"
                   frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allow="autoplay; fullscreen; picture-in-picture"
                   allowFullScreen
+                  title="AI-Generated Video Demo"
                 ></iframe>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end p-4">
-                  <p className="text-white text-sm">Click to play demo</p>
-                </div>
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">AI-Powered Creation</h3>
-                <p className="text-gray-600">Example of our cutting-edge AI-generated video content</p>
+                <p className="text-gray-600">Example of our cutting-edge AI-generated video content with digital effects</p>
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">AI Tech</span>
+                  <span className="bg-teal-100 text-teal-800 text-xs px-2 py-1 rounded">Innovative</span>
+                  <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Digital</span>
+                </div>
               </div>
             </div>
+          </div>
+
+          {/* Note about demo videos */}
+          <div className="text-center mt-8">
+            <p className="text-sm text-gray-500 italic">
+              * Demo videos are representative examples. Your custom project will be created specifically for your needs.
+            </p>
           </div>
         </div>
       </section>
