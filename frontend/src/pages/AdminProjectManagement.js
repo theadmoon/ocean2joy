@@ -23,8 +23,20 @@ function AdminProjectManagement() {
   const fetchProjectDetails = async () => {
     try {
       const response = await axios.get(`${API}/projects/${projectId}`);
-      setProject(response.data);
-      setEditedData(response.data);
+      const projectData = response.data;
+      
+      // Auto-fill PayPal payer email if not set
+      if (!projectData.paypal_payer_email && projectData.user_email) {
+        projectData.paypal_payer_email = projectData.user_email;
+      }
+      
+      // Auto-fill payment status based on project status
+      if (!projectData.paypal_payment_status && projectData.status === 'completed') {
+        projectData.paypal_payment_status = 'COMPLETED';
+      }
+      
+      setProject(projectData);
+      setEditedData(projectData);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -69,6 +81,26 @@ function AdminProjectManagement() {
   // Check if field has value
   const hasValue = (value) => {
     return value !== null && value !== undefined && value !== '';
+  };
+
+  // Open document in new window
+  const openDocument = (documentType, stepKey) => {
+    const url = `/projects/${projectId}#${documentType.toLowerCase()}`;
+    window.open(url, '_blank');
+  };
+
+  // Map step keys to document types
+  const getDocumentForStep = (stepKey) => {
+    const docMap = {
+      'submitted': 'Quote Request',
+      'quote_sent': 'Quote Document',
+      'quote_accepted': 'Acceptance Confirmation',
+      'production_started': 'Production Order',
+      'delivered': 'Invoice',
+      'payment_received': 'Receipt',
+      'project_completed': 'Certificate'
+    };
+    return docMap[stepKey];
   };
 
   // Operational chain steps
@@ -386,16 +418,23 @@ function AdminProjectManagement() {
                         </div>
                       )}
 
-                      {/* Document indicator */}
-                      {step.documentType && (
-                        <div className="bg-sky-50 rounded-lg p-3 border border-sky-200">
+                      {/* Document for every step */}
+                      <div className="bg-sky-50 rounded-lg p-3 border border-sky-200">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-sky-700">📄 Document:</span>
-                            <span className="text-sm text-gray-900">{step.documentType}</span>
-                            <span className="text-xs text-gray-500">(auto-generated from data above)</span>
+                            <span className="text-sm text-gray-900">{getDocumentForStep(step.key)}</span>
+                            <span className="text-xs text-gray-500">({step.documentType ? 'auto-generated' : 'system record'})</span>
                           </div>
+                          <Link 
+                            to={`/projects/${projectId}`}
+                            target="_blank"
+                            className="text-xs text-sky-600 hover:text-sky-700 underline"
+                          >
+                            View →
+                          </Link>
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
