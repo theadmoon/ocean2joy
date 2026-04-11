@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { FaEye } from 'react-icons/fa';
+import { FaEye, FaCog } from 'react-icons/fa';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -53,7 +53,14 @@ function AdminDashboard() {
                   </div>
                   <p className="text-gray-700">{project.detailed_brief.substring(0, 150)}...</p>
                 </div>
-                <Link to={`/projects/${project.id}`} className="btn-ocean-outline"><FaEye className="inline mr-2" />View</Link>
+                <div className="flex gap-2">
+                  <Link to={`/admin/projects/${project.id}`} className="btn-ocean">
+                    <FaCog className="inline mr-2" />Управление
+                  </Link>
+                  <Link to={`/projects/${project.id}`} className="btn-ocean-outline">
+                    <FaEye className="inline mr-2" />Просмотр
+                  </Link>
+                </div>
               </div>
             </div>
           ))}

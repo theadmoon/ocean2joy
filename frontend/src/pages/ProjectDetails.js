@@ -113,21 +113,26 @@ www.ocean2joy.com
     const paymentDate = projectData.completed_at ? new Date(projectData.completed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
     const paymentTime = projectData.completed_at ? new Date(projectData.completed_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }) : '';
     
+    // Use real PayPal data if available, otherwise generate from project_number
+    const transactionId = projectData.paypal_transaction_id || `PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}`;
+    const payerEmail = projectData.paypal_payer_email || projectData.client_email || '';
+    const paymentStatus = projectData.paypal_payment_status || 'COMPLETED';
+    
     return `PAYMENT RECEIPT
 ═══════════════════════════════════════════════
 
 PayPal Payment Confirmation
 
-Transaction ID: PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
+Transaction ID: ${transactionId}
 Payment Date: ${paymentDate}
-Status: ✓ COMPLETED
+Status: ✓ ${paymentStatus}
 
 ═══════════════════════════════════════════════
 
 TRANSACTION DETAILS:
 
 From: ${projectData.client_name || 'Client'}
-Email: ${projectData.client_email || ''}
+Email: ${payerEmail}
 
 To: Ocean2Joy Digital Video Production
 Email: payments@ocean2joy.com
@@ -218,7 +223,7 @@ RECEIPT NOTES:
 For questions about this transaction:
 • Contact Ocean2Joy: admin@ocean2joy.com
 • PayPal Support: www.paypal.com/support
-• Transaction ID: PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
+• Transaction ID: ${transactionId}
 
 ═══════════════════════════════════════════════
 

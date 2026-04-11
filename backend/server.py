@@ -179,6 +179,11 @@ class Project(BaseModel):
     acceptance_status: Optional[str] = None  # approved, revision_requested
     client_feedback: Optional[str] = None
     
+    # PayPal Transaction Data (for real transaction tracking)
+    paypal_transaction_id: Optional[str] = None
+    paypal_payer_email: Optional[str] = None
+    paypal_payment_status: Optional[str] = None  # COMPLETED, PENDING, REFUNDED
+    
     # Status tracking
     status: str = ProjectStatus.SUBMITTED
     status_history: List[Dict[str, Any]] = []
@@ -193,6 +198,19 @@ class ProjectUpdate(BaseModel):
     production_notes: Optional[str] = None
     acceptance_status: Optional[str] = None
     client_feedback: Optional[str] = None
+    
+    # Date fields (for admin to manually set)
+    created_at: Optional[str] = None
+    quote_sent_at: Optional[str] = None
+    quote_accepted_at: Optional[str] = None
+    production_started_at: Optional[str] = None
+    delivered_at: Optional[str] = None
+    completed_at: Optional[str] = None
+    
+    # PayPal transaction data
+    paypal_transaction_id: Optional[str] = None
+    paypal_payer_email: Optional[str] = None
+    paypal_payment_status: Optional[str] = None
 
 # Message Models
 class Message(BaseModel):

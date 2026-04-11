@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import ClientDashboard from './pages/ClientDashboard';
 import ProjectDetails from './pages/ProjectDetails';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminProjectManagement from './pages/AdminProjectManagement';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
@@ -55,6 +56,14 @@ function App() {
                 element={
                   <ProtectedRoute roles={['manager', 'admin']}>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/projects/:projectId" 
+                element={
+                  <ProtectedRoute roles={['manager', 'admin']}>
+                    <AdminProjectManagement />
                   </ProtectedRoute>
                 } 
               />
