@@ -168,12 +168,19 @@ function Homepage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Demo Video 1 - Custom Production */}
             <div className="card-ocean">
-              <div className="aspect-video bg-gray-200 flex items-center justify-center">
-                <div className="text-center p-6">
-                  <FaPlay className="text-6xl text-sky-500 mx-auto mb-4" />
-                  <p className="text-gray-600">Demo Video 1</p>
-                  <p className="text-sm text-gray-500 mt-2">Custom Video Production Sample</p>
+              <div className="aspect-video bg-gray-900 relative overflow-hidden group">
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=example"
+                  title="Custom Video Production Demo"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end p-4">
+                  <p className="text-white text-sm">Click to play demo</p>
                 </div>
               </div>
               <div className="p-6">
@@ -182,17 +189,19 @@ function Homepage() {
               </div>
             </div>
 
+            {/* Demo Video 2 - AI Generated */}
             <div className="card-ocean">
-              <div 
-                className="aspect-video bg-cover bg-center flex items-center justify-center"
-                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1764664282125-f9bbeedd9479')` }}
-              >
-                <div className="bg-black/50 w-full h-full flex items-center justify-center backdrop-blur-sm">
-                  <div className="text-center p-6 text-white">
-                    <FaPlay className="text-6xl mx-auto mb-4" />
-                    <p>Demo Video 2</p>
-                    <p className="text-sm mt-2">AI-Generated Video Sample</p>
-                  </div>
+              <div className="aspect-video bg-gray-900 relative overflow-hidden group">
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/jNQXAC9IVRw?si=example"
+                  title="AI-Generated Video Demo"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end p-4">
+                  <p className="text-white text-sm">Click to play demo</p>
                 </div>
               </div>
               <div className="p-6">
