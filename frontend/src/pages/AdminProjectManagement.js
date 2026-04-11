@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaSave, FaExclamationTriangle, FaCheckCircle, FaEdit } from 'react-icons/fa';
+import './AdminProjectManagement.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -87,6 +88,16 @@ function AdminProjectManagement() {
   const openDocument = (documentType, stepKey) => {
     const url = `/projects/${projectId}#${documentType.toLowerCase()}`;
     window.open(url, '_blank');
+  };
+
+  // Print operational chain
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // Export as PDF (using browser print to PDF)
+  const handleExportPDF = () => {
+    window.print(); // User can choose "Save as PDF" in print dialog
   };
 
   // Map step keys to document types
@@ -227,19 +238,30 @@ function AdminProjectManagement() {
                       
                       {/* Date Field */}
                       <div className="bg-white rounded-lg p-3 mb-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-start">
                           <div className="flex-1">
-                            <label className="text-xs font-semibold text-gray-700 block mb-1">Date:</label>
+                            <label className="text-xs font-semibold text-gray-700 block mb-1 text-left">Date:</label>
                             {isEditing ? (
                               <input
                                 type="datetime-local"
                                 value={editedData[step.dateField] ? new Date(editedData[step.dateField]).toISOString().slice(0, 16) : ''}
                                 onChange={(e) => handleFieldChange(step.dateField, e.target.value)}
-                                className="border border-gray-300 rounded px-3 py-1 text-sm w-full"
+                                className="border border-gray-300 rounded px-3 py-1 text-sm w-full text-left"
                               />
                             ) : (
-                              <span className={`text-sm ${hasDate ? 'text-gray-900' : 'text-red-500 font-semibold'}`}>
-                                {hasDate ? new Date(dateValue).toLocaleString('en-US') : '⚠ NOT FILLED'}
+                              <span className={`text-sm block text-left ${hasDate ? 'text-gray-900' : 'text-red-500 font-semibold'}`}>
+                                {hasDate ? (() => {
+                                  const d = new Date(dateValue);
+                                  const month = String(d.getMonth() + 1).padStart(2, '0');
+                                  const day = String(d.getDate()).padStart(2, '0');
+                                  const year = d.getFullYear();
+                                  let hours = d.getHours();
+                                  const minutes = String(d.getMinutes()).padStart(2, '0');
+                                  const seconds = String(d.getSeconds()).padStart(2, '0');
+                                  const ampm = hours >= 12 ? 'PM' : 'AM';
+                                  hours = hours % 12 || 12;
+                                  return `${month}/${day}/${year}, ${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+                                })() : '⚠ NOT FILLED'}
                               </span>
                             )}
                           </div>
@@ -267,19 +289,19 @@ function AdminProjectManagement() {
                       {/* Amount field (for quote_sent step) */}
                       {step.valueField && (
                         <div className="bg-white rounded-lg p-3 mb-3">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-start">
                             <div className="flex-1">
-                              <label className="text-xs font-semibold text-gray-700 block mb-1">Amount:</label>
+                              <label className="text-xs font-semibold text-gray-700 block mb-1 text-left">Amount:</label>
                               {editMode[step.valueField] ? (
                                 <input
                                   type="number"
                                   step="0.01"
                                   value={editedData[step.valueField] || ''}
                                   onChange={(e) => handleFieldChange(step.valueField, parseFloat(e.target.value))}
-                                  className="border border-gray-300 rounded px-3 py-1 text-sm w-full"
+                                  className="border border-gray-300 rounded px-3 py-1 text-sm w-full text-left"
                                 />
                               ) : (
-                                <span className="text-sm text-gray-900">
+                                <span className="text-sm text-gray-900 block text-left">
                                   ${project[step.valueField] || '0.00'}
                                 </span>
                               )}
@@ -446,12 +468,18 @@ function AdminProjectManagement() {
         {/* Quick Actions */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h3>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Link to={`/projects/${projectId}`} className="btn-ocean">
-              View as Client
+              📊 View as Client
             </Link>
+            <button onClick={handlePrint} className="btn-ocean">
+              🖨️ Print Log
+            </button>
+            <button onClick={handleExportPDF} className="btn-ocean">
+              📄 Export PDF
+            </button>
             <button className="btn-ocean-outline">
-              Download All Documents
+              💾 Download All Documents
             </button>
           </div>
         </div>

@@ -1,0 +1,32 @@
+/* Print styles for Admin Project Management */
+@media print {
+  /* Hide navigation, buttons, and unnecessary UI elements */
+  nav,
+  .quick-actions,
+  button,
+  a[href*="admin"],
+  .navbar,
+  footer {
+    display: none !important;
+  }
+
+  /* Ensure content is visible */
+  body {
+    background: white;
+  }
+
+  /* Adjust page breaks */
+  .operational-step {
+    page-break-inside: avoid;
+  }
+
+  /* Remove shadows and borders for cleaner print */
+  .bg-white {
+    box-shadow: none !important;
+  }
+
+  /* Keep operational chain visible */
+  .operational-chain {
+    display: block !important;
+  }
+}
