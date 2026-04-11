@@ -77,14 +77,25 @@ function Policies() {
 
         {/* Policy Content */}
         <div className="card-ocean p-8 md:p-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-6">
+          <h1 className="text-4xl font-bold text-gray-900 mb-6 text-left">
             {policy.title}
           </h1>
-          <div className="text-sm text-gray-500 mb-8">
+          <div className="text-sm text-gray-500 mb-8 text-left">
             Last updated: {new Date(policy.updated_at).toLocaleDateString()}
           </div>
-          <div className="prose prose-lg max-w-none">
-            <ReactMarkdown>
+          <div className="prose prose-lg max-w-none text-left">
+            <ReactMarkdown
+              components={{
+                h1: ({node, ...props}) => <h1 className="text-3xl font-bold text-gray-900 mb-4 mt-8 text-left" {...props} />,
+                h2: ({node, ...props}) => <h2 className="text-2xl font-bold text-gray-900 mb-3 mt-6 text-left" {...props} />,
+                h3: ({node, ...props}) => <h3 className="text-xl font-semibold text-gray-900 mb-2 mt-4 text-left" {...props} />,
+                p: ({node, ...props}) => <p className="text-gray-700 mb-4 leading-relaxed text-left" {...props} />,
+                ul: ({node, ...props}) => <ul className="list-disc list-inside mb-4 space-y-2 text-left" {...props} />,
+                ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-4 space-y-2 text-left" {...props} />,
+                li: ({node, ...props}) => <li className="text-gray-700 text-left" {...props} />,
+                strong: ({node, ...props}) => <strong className="font-semibold text-gray-900" {...props} />
+              }}
+            >
               {policy.content}
             </ReactMarkdown>
           </div>
