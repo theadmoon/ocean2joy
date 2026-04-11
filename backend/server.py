@@ -1,15 +1,17 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from pydantic import BaseModel, Field, EmailStr, ConfigDict
+from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
+from passlib.context import CryptContext
+import jwt
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,52 +21,743 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
+# Security
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+security = HTTPBearer()
+SECRET_KEY = os.environ.get('JWT_SECRET', 'ocean2joy-secret-key-change-in-production')
+
+# Create the main app
 app = FastAPI()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# ==================== MODELS ====================
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
+# User Models
+class UserRole(str):
+    CLIENT = "client"
+    MANAGER = "manager"
+    ADMIN = "admin"
+
+class User(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    email: EmailStr
+    name: str
+    role: str = UserRole.CLIENT
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: Optional[str] = None  # manager/admin who created this user
+    is_active: bool = True
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    role: str = UserRole.CLIENT
 
-# Add your routes to the router instead of directly to app
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: User
+
+# Service Models
+class ServiceType(str):
+    CUSTOM_VIDEO = "custom_video"
+    VIDEO_EDITING = "video_editing"
+    AI_VIDEO = "ai_video"
+
+class Service(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str
+    title: str
+    description: str
+    deliverable_type: str
+    output_format: List[str]
+    pricing_model: str  # "per_minute" or "per_project" or "custom"
+    base_price: float
+    price_description: str
+    revision_policy: str
+    turnaround_time: str
+    features: List[str]
+    genres: Optional[List[str]] = []
+    image_url: Optional[str] = None
+
+# Request/Intake Models
+class QuickRequest(BaseModel):
+    name: str
+    email: EmailStr
+    service_type: str
+    phone: Optional[str] = None
+    brief_description: str
+    deadline: Optional[str] = None
+
+class QuickRequestResponse(BaseModel):
+    request_id: str
+    message: str
+    email: str
+    next_steps: str
+
+class DetailedRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    service_type: str
+    project_title: str
+    detailed_brief: str
+    objectives: str
+    reference_materials: Optional[List[str]] = []  # file URLs
+    special_instructions: Optional[str] = None
+    expected_duration: Optional[str] = None
+    deadline_preference: Optional[str] = None
+    budget_range: Optional[str] = None
+    status: str = "submitted"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class DetailedRequestCreate(BaseModel):
+    service_type: str
+    project_title: str
+    detailed_brief: str
+    objectives: str
+    special_instructions: Optional[str] = None
+    expected_duration: Optional[str] = None
+    deadline_preference: Optional[str] = None
+    budget_range: Optional[str] = None
+
+# Project Models
+class ProjectStatus(str):
+    SUBMITTED = "submitted"
+    QUOTED = "quoted"
+    QUOTE_ACCEPTED = "quote_accepted"
+    IN_PRODUCTION = "in_production"
+    IN_REVIEW = "in_review"
+    REVISION_REQUESTED = "revision_requested"
+    DELIVERED = "delivered"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+class Project(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_number: str  # Human-readable like "OCN-2025-001"
+    user_id: str
+    user_name: str
+    user_email: str
+    service_type: str
+    project_title: str
+    detailed_brief: str
+    objectives: str
+    reference_materials: List[str] = []
+    special_instructions: Optional[str] = None
+    expected_duration: Optional[str] = None
+    deadline_preference: Optional[str] = None
+    budget_range: Optional[str] = None
+    
+    # Transaction framing
+    quote_amount: Optional[float] = None
+    quote_details: Optional[str] = None
+    quote_sent_at: Optional[datetime] = None
+    quote_accepted_at: Optional[datetime] = None
+    
+    # Fulfillment
+    production_started_at: Optional[datetime] = None
+    production_notes: Optional[str] = None
+    revision_count: int = 0
+    
+    # Delivery
+    delivered_at: Optional[datetime] = None
+    delivery_method: Optional[str] = "portal"  # portal, email, both
+    deliverable_files: List[str] = []
+    
+    # Completion
+    completed_at: Optional[datetime] = None
+    acceptance_status: Optional[str] = None  # approved, revision_requested
+    client_feedback: Optional[str] = None
+    
+    # Status tracking
+    status: str = ProjectStatus.SUBMITTED
+    status_history: List[Dict[str, Any]] = []
+    
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ProjectUpdate(BaseModel):
+    status: Optional[str] = None
+    quote_amount: Optional[float] = None
+    quote_details: Optional[str] = None
+    production_notes: Optional[str] = None
+    acceptance_status: Optional[str] = None
+    client_feedback: Optional[str] = None
+
+# Message Models
+class Message(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str
+    sender_id: str
+    sender_name: str
+    sender_role: str
+    message: str
+    attachments: List[str] = []
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    is_read: bool = False
+
+class MessageCreate(BaseModel):
+    message: str
+    attachments: List[str] = []
+
+# Deliverable Models
+class Deliverable(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str
+    file_name: str
+    file_url: str
+    file_type: str
+    file_size: Optional[int] = None
+    description: Optional[str] = None
+    uploaded_by: str
+    uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    is_final: bool = False
+
+# Policy Models
+class Policy(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str  # terms, digital_delivery, refund, revision, privacy
+    title: str
+    content: str
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# Contact Models
+class ContactMessage(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    email: EmailStr
+    subject: Optional[str] = None
+    message: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    is_handled: bool = False
+
+class ContactMessageCreate(BaseModel):
+    name: str
+    email: EmailStr
+    subject: Optional[str] = None
+    message: str
+
+# ==================== HELPER FUNCTIONS ====================
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(days=30)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm="HMAC256")
+    return encoded_jwt
+
+def verify_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HMAC256"])
+        return payload
+    except:
+        return None
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    payload = verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+    
+    user = await db.users.find_one({"id": payload.get("user_id")}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    return User(**user)
+
+def generate_project_number():
+    """Generate unique project number like OCN-2025-001"""
+    now = datetime.now(timezone.utc)
+    year = now.year
+    random_suffix = str(uuid.uuid4())[:8].upper()
+    return f"OCN-{year}-{random_suffix}"
+
+# ==================== PUBLIC ROUTES ====================
+
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Ocean2joy API - Where Video Dreams Come True"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+@api_router.get("/services", response_model=List[Service])
+async def get_services():
+    """Get all available services"""
+    services = await db.services.find({}, {"_id": 0}).to_list(100)
+    return services
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+@api_router.get("/services/{service_id}", response_model=Service)
+async def get_service(service_id: str):
+    """Get service details"""
+    service = await db.services.find_one({"id": service_id}, {"_id": 0})
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return service
+
+@api_router.post("/quick-request", response_model=QuickRequestResponse)
+async def create_quick_request(request: QuickRequest):
+    """Quick request form - no registration needed"""
+    # Check if user exists
+    existing_user = await db.users.find_one({"email": request.email}, {"_id": 0})
     
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
+    if not existing_user:
+        # Create a minimal user account
+        temp_password = str(uuid.uuid4())[:8]
+        hashed_password = pwd_context.hash(temp_password)
+        
+        new_user = User(
+            email=request.email,
+            name=request.name,
+            role=UserRole.CLIENT
+        )
+        user_doc = new_user.model_dump()
+        user_doc['hashed_password'] = hashed_password
+        user_doc['created_at'] = user_doc['created_at'].isoformat()
+        await db.users.insert_one(user_doc)
+        user_id = new_user.id
+    else:
+        user_id = existing_user['id']
     
-    return status_checks
+    # Create project from quick request
+    project = Project(
+        project_number=generate_project_number(),
+        user_id=user_id,
+        user_name=request.name,
+        user_email=request.email,
+        service_type=request.service_type,
+        project_title=f"Quick Request - {request.service_type}",
+        detailed_brief=request.brief_description,
+        objectives=request.brief_description,
+        deadline_preference=request.deadline,
+        status=ProjectStatus.SUBMITTED
+    )
+    
+    project_doc = project.model_dump()
+    project_doc['created_at'] = project_doc['created_at'].isoformat()
+    project_doc['updated_at'] = project_doc['updated_at'].isoformat()
+    await db.projects.insert_one(project_doc)
+    
+    return QuickRequestResponse(
+        request_id=project.id,
+        message="Your request has been received!",
+        email=request.email,
+        next_steps="Our team will review your request and send you a quote within 24 hours. Check your email for updates."
+    )
+
+@api_router.post("/contact", response_model=ContactMessage)
+async def create_contact_message(contact: ContactMessageCreate):
+    """Contact form"""
+    message = ContactMessage(**contact.model_dump())
+    doc = message.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.contact_messages.insert_one(doc)
+    return message
+
+@api_router.get("/policies", response_model=List[Policy])
+async def get_policies():
+    """Get all policies"""
+    policies = await db.policies.find({}, {"_id": 0}).to_list(100)
+    return policies
+
+@api_router.get("/policies/{policy_type}", response_model=Policy)
+async def get_policy(policy_type: str):
+    """Get specific policy"""
+    policy = await db.policies.find_one({"type": policy_type}, {"_id": 0})
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    return policy
+
+# ==================== AUTH ROUTES ====================
+
+@api_router.post("/auth/register", response_model=TokenResponse)
+async def register(user_data: UserCreate):
+    """Full registration"""
+    # Check if user exists
+    existing = await db.users.find_one({"email": user_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create user
+    hashed_password = pwd_context.hash(user_data.password)
+    new_user = User(
+        email=user_data.email,
+        name=user_data.name,
+        role=user_data.role
+    )
+    
+    user_doc = new_user.model_dump()
+    user_doc['hashed_password'] = hashed_password
+    user_doc['created_at'] = user_doc['created_at'].isoformat()
+    await db.users.insert_one(user_doc)
+    
+    # Create token
+    token = create_access_token({"user_id": new_user.id, "email": new_user.email})
+    
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user=new_user
+    )
+
+@api_router.post("/auth/login", response_model=TokenResponse)
+async def login(credentials: UserLogin):
+    """Login"""
+    user_doc = await db.users.find_one({"email": credentials.email})
+    if not user_doc:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    if not pwd_context.verify(credentials.password, user_doc['hashed_password']):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Convert datetime strings back to datetime objects
+    if isinstance(user_doc.get('created_at'), str):
+        user_doc['created_at'] = datetime.fromisoformat(user_doc['created_at'])
+    
+    user = User(**{k: v for k, v in user_doc.items() if k != 'hashed_password'})
+    token = create_access_token({"user_id": user.id, "email": user.email})
+    
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user=user
+    )
+
+# ==================== PROTECTED CLIENT ROUTES ====================
+
+@api_router.post("/requests", response_model=DetailedRequest)
+async def create_detailed_request(
+    request: DetailedRequestCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create detailed request (authenticated)"""
+    detailed_req = DetailedRequest(
+        user_id=current_user.id,
+        **request.model_dump()
+    )
+    
+    # Also create a project from this request
+    project = Project(
+        project_number=generate_project_number(),
+        user_id=current_user.id,
+        user_name=current_user.name,
+        user_email=current_user.email,
+        **request.model_dump(),
+        status=ProjectStatus.SUBMITTED
+    )
+    
+    # Save request
+    req_doc = detailed_req.model_dump()
+    req_doc['created_at'] = req_doc['created_at'].isoformat()
+    await db.requests.insert_one(req_doc)
+    
+    # Save project
+    project_doc = project.model_dump()
+    project_doc['created_at'] = project_doc['created_at'].isoformat()
+    project_doc['updated_at'] = project_doc['updated_at'].isoformat()
+    await db.projects.insert_one(project_doc)
+    
+    return detailed_req
+
+@api_router.get("/projects", response_model=List[Project])
+async def get_my_projects(current_user: User = Depends(get_current_user)):
+    """Get user's projects"""
+    projects = await db.projects.find({"user_id": current_user.id}, {"_id": 0}).to_list(1000)
+    
+    # Convert datetime strings back
+    for proj in projects:
+        for field in ['created_at', 'updated_at', 'quote_sent_at', 'quote_accepted_at', 
+                      'production_started_at', 'delivered_at', 'completed_at']:
+            if field in proj and isinstance(proj[field], str):
+                proj[field] = datetime.fromisoformat(proj[field])
+    
+    return projects
+
+@api_router.get("/projects/{project_id}", response_model=Project)
+async def get_project_details(project_id: str, current_user: User = Depends(get_current_user)):
+    """Get project details"""
+    project = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Authorization check
+    if current_user.role == UserRole.CLIENT and project['user_id'] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Convert datetime strings back
+    for field in ['created_at', 'updated_at', 'quote_sent_at', 'quote_accepted_at', 
+                  'production_started_at', 'delivered_at', 'completed_at']:
+        if field in project and isinstance(project[field], str):
+            project[field] = datetime.fromisoformat(project[field])
+    
+    return project
+
+@api_router.patch("/projects/{project_id}/accept-quote")
+async def accept_quote(project_id: str, current_user: User = Depends(get_current_user)):
+    """Client accepts quote"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project or project['user_id'] != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if project['status'] != ProjectStatus.QUOTED:
+        raise HTTPException(status_code=400, detail="Project must be in quoted status")
+    
+    update_data = {
+        "status": ProjectStatus.QUOTE_ACCEPTED,
+        "quote_accepted_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one({"id": project_id}, {"$set": update_data})
+    return {"message": "Quote accepted", "status": ProjectStatus.QUOTE_ACCEPTED}
+
+@api_router.patch("/projects/{project_id}/request-revision")
+async def request_revision(
+    project_id: str, 
+    feedback: str = Form(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Client requests revision"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project or project['user_id'] != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    update_data = {
+        "status": ProjectStatus.REVISION_REQUESTED,
+        "acceptance_status": "revision_requested",
+        "client_feedback": feedback,
+        "revision_count": project.get('revision_count', 0) + 1,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one({"id": project_id}, {"$set": update_data})
+    return {"message": "Revision requested", "status": ProjectStatus.REVISION_REQUESTED}
+
+@api_router.patch("/projects/{project_id}/approve")
+async def approve_project(project_id: str, current_user: User = Depends(get_current_user)):
+    """Client approves final deliverables"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project or project['user_id'] != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    update_data = {
+        "status": ProjectStatus.COMPLETED,
+        "acceptance_status": "approved",
+        "completed_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one({"id": project_id}, {"$set": update_data})
+    return {"message": "Project completed", "status": ProjectStatus.COMPLETED}
+
+@api_router.get("/projects/{project_id}/messages", response_model=List[Message])
+async def get_project_messages(project_id: str, current_user: User = Depends(get_current_user)):
+    """Get project messages"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if current_user.role == UserRole.CLIENT and project['user_id'] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    messages = await db.messages.find({"project_id": project_id}, {"_id": 0}).to_list(1000)
+    
+    # Convert datetime strings
+    for msg in messages:
+        if isinstance(msg.get('created_at'), str):
+            msg['created_at'] = datetime.fromisoformat(msg['created_at'])
+    
+    return messages
+
+@api_router.post("/projects/{project_id}/messages", response_model=Message)
+async def send_message(
+    project_id: str,
+    message_data: MessageCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Send message in project"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if current_user.role == UserRole.CLIENT and project['user_id'] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    message = Message(
+        project_id=project_id,
+        sender_id=current_user.id,
+        sender_name=current_user.name,
+        sender_role=current_user.role,
+        message=message_data.message,
+        attachments=message_data.attachments
+    )
+    
+    doc = message.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.messages.insert_one(doc)
+    
+    return message
+
+@api_router.get("/projects/{project_id}/deliverables", response_model=List[Deliverable])
+async def get_project_deliverables(project_id: str, current_user: User = Depends(get_current_user)):
+    """Get project deliverables"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if current_user.role == UserRole.CLIENT and project['user_id'] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    deliverables = await db.deliverables.find({"project_id": project_id}, {"_id": 0}).to_list(1000)
+    
+    # Convert datetime strings
+    for deliv in deliverables:
+        if isinstance(deliv.get('uploaded_at'), str):
+            deliv['uploaded_at'] = datetime.fromisoformat(deliv['uploaded_at'])
+    
+    return deliverables
+
+# ==================== MANAGER/ADMIN ROUTES ====================
+
+@api_router.post("/admin/users", response_model=User)
+async def create_user_by_manager(
+    user_data: UserCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Manager creates user account"""
+    if current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Check if user exists
+    existing = await db.users.find_one({"email": user_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create user with auto-generated password
+    temp_password = str(uuid.uuid4())[:10]
+    hashed_password = pwd_context.hash(temp_password)
+    
+    new_user = User(
+        email=user_data.email,
+        name=user_data.name,
+        role=user_data.role,
+        created_by=current_user.id
+    )
+    
+    user_doc = new_user.model_dump()
+    user_doc['hashed_password'] = hashed_password
+    user_doc['temp_password'] = temp_password  # Store temporarily for manager to send
+    user_doc['created_at'] = user_doc['created_at'].isoformat()
+    await db.users.insert_one(user_doc)
+    
+    return new_user
+
+@api_router.get("/admin/projects", response_model=List[Project])
+async def get_all_projects(current_user: User = Depends(get_current_user)):
+    """Manager/Admin gets all projects"""
+    if current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    projects = await db.projects.find({}, {"_id": 0}).to_list(1000)
+    
+    # Convert datetime strings
+    for proj in projects:
+        for field in ['created_at', 'updated_at', 'quote_sent_at', 'quote_accepted_at', 
+                      'production_started_at', 'delivered_at', 'completed_at']:
+            if field in proj and isinstance(proj[field], str):
+                proj[field] = datetime.fromisoformat(proj[field])
+    
+    return projects
+
+@api_router.patch("/admin/projects/{project_id}", response_model=Project)
+async def update_project_by_manager(
+    project_id: str,
+    update_data: ProjectUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Manager updates project"""
+    if current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
+    update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    # Handle status changes with timestamps
+    if 'status' in update_dict:
+        if update_dict['status'] == ProjectStatus.QUOTED and 'quote_amount' in update_dict:
+            update_dict['quote_sent_at'] = datetime.now(timezone.utc).isoformat()
+        elif update_dict['status'] == ProjectStatus.IN_PRODUCTION:
+            update_dict['production_started_at'] = datetime.now(timezone.utc).isoformat()
+        elif update_dict['status'] == ProjectStatus.DELIVERED:
+            update_dict['delivered_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.projects.update_one({"id": project_id}, {"$set": update_dict})
+    
+    # Get updated project
+    updated_project = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    
+    # Convert datetime strings
+    for field in ['created_at', 'updated_at', 'quote_sent_at', 'quote_accepted_at', 
+                  'production_started_at', 'delivered_at', 'completed_at']:
+        if field in updated_project and isinstance(updated_project[field], str):
+            updated_project[field] = datetime.fromisoformat(updated_project[field])
+    
+    return updated_project
+
+@api_router.post("/admin/projects/{project_id}/deliverables")
+async def upload_deliverable(
+    project_id: str,
+    file_name: str = Form(...),
+    file_url: str = Form(...),
+    file_type: str = Form(...),
+    description: str = Form(None),
+    is_final: bool = Form(False),
+    current_user: User = Depends(get_current_user)
+):
+    """Manager uploads deliverable"""
+    if current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    deliverable = Deliverable(
+        project_id=project_id,
+        file_name=file_name,
+        file_url=file_url,
+        file_type=file_type,
+        description=description,
+        uploaded_by=current_user.id,
+        is_final=is_final
+    )
+    
+    doc = deliverable.model_dump()
+    doc['uploaded_at'] = doc['uploaded_at'].isoformat()
+    await db.deliverables.insert_one(doc)
+    
+    # Update project deliverable_files list
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$push": {"deliverable_files": file_url}}
+    )
+    
+    return {"message": "Deliverable uploaded", "deliverable": deliverable}
 
 # Include the router in the main app
 app.include_router(api_router)
@@ -87,3 +780,319 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# ==================== SEED DATA ON STARTUP ====================
+
+@app.on_event("startup")
+async def seed_initial_data():
+    """Seed initial services and policies"""
+    
+    # Check if services exist
+    existing_services = await db.services.count_documents({})
+    if existing_services == 0:
+        services_data = [
+            {
+                "id": str(uuid.uuid4()),
+                "type": ServiceType.CUSTOM_VIDEO,
+                "title": "Custom Video Production with Actors",
+                "description": "Professional video production with real actors, custom scripts, and high-quality filming. Perfect for commercials, short films, educational content, and brand stories.",
+                "deliverable_type": "Custom digital video files",
+                "output_format": ["MP4", "MOV", "ProRes"],
+                "pricing_model": "per_minute",
+                "base_price": 25.0,
+                "price_description": "$25-35 per minute, calculated based on duration and complexity",
+                "revision_policy": "Up to 2 revisions included, additional revisions available",
+                "turnaround_time": "2-4 weeks depending on project scope",
+                "features": [
+                    "Professional actors and crew",
+                    "Custom script development",
+                    "Location scouting and setup",
+                    "Professional equipment and lighting",
+                    "Post-production editing",
+                    "Sound design and music",
+                    "Color grading"
+                ],
+                "genres": ["Comedy", "Drama", "Fantasy", "Sports", "Educational", "Commercial", "Superhero"],
+                "image_url": "https://images.unsplash.com/photo-1768483534260-1b440d8044e8"
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "type": ServiceType.VIDEO_EDITING,
+                "title": "Professional Video Editing & Special Effects",
+                "description": "Expert video editing and post-production services for your existing footage. From basic cuts to advanced special effects and motion graphics.",
+                "deliverable_type": "Edited digital video files",
+                "output_format": ["MP4", "MOV", "AVI", "custom formats"],
+                "pricing_model": "per_project",
+                "base_price": 10.99,
+                "price_description": "Starting at $10.99 per element, full project pricing calculated based on complexity",
+                "revision_policy": "Up to 3 revision rounds included",
+                "turnaround_time": "3-10 days depending on project complexity",
+                "features": [
+                    "Professional video editing",
+                    "Advanced special effects (VFX)",
+                    "Motion graphics and animations",
+                    "Color correction and grading",
+                    "Audio mixing and enhancement",
+                    "Text and title design",
+                    "Green screen compositing",
+                    "3D elements integration"
+                ],
+                "genres": [],
+                "image_url": "https://images.unsplash.com/photo-1764557175375-9e2bea91530e"
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "type": ServiceType.AI_VIDEO,
+                "title": "AI-Generated Video Content",
+                "description": "Cutting-edge AI-powered video creation with digital characters and environments. Perfect for creative projects, explainer videos, and unique visual content.",
+                "deliverable_type": "AI-generated digital video files",
+                "output_format": ["MP4", "MOV", "GIF"],
+                "pricing_model": "custom",
+                "base_price": 20.0,
+                "price_description": "Custom pricing based on video length, complexity, and AI features used",
+                "revision_policy": "Up to 2 revisions included",
+                "turnaround_time": "1-2 weeks depending on project scope",
+                "features": [
+                    "AI-generated characters",
+                    "Synthetic voice-over",
+                    "Automated scene generation",
+                    "Style transfer and effects",
+                    "Text-to-video conversion",
+                    "Custom AI model training available",
+                    "Fast turnaround time"
+                ],
+                "genres": ["Animation", "Explainer Videos", "Educational", "Marketing", "Social Media"],
+                "image_url": "https://images.unsplash.com/photo-1764664282125-f9bbeedd9479"
+            }
+        ]
+        
+        await db.services.insert_many(services_data)
+        logger.info("Services seeded successfully")
+    
+    # Check if policies exist
+    existing_policies = await db.policies.count_documents({})
+    if existing_policies == 0:
+        policies_data = [
+            {
+                "id": str(uuid.uuid4()),
+                "type": "terms",
+                "title": "Terms of Service",
+                "content": """
+# Terms of Service - Ocean2joy.com
+
+## Digital Service Model
+
+Ocean2joy.com provides **custom digital video production services**. All deliverables are digital files created specifically for each client and delivered electronically.
+
+## Service Types
+
+1. **Custom Video Production**: Videos filmed with real actors based on your script
+2. **Video Editing**: Professional editing of your existing footage
+3. **AI-Generated Videos**: AI-powered video content creation
+
+## How It Works
+
+1. Submit your project request with detailed brief
+2. Receive custom quote within 24 hours
+3. Accept quote and provide any additional materials
+4. Production begins after confirmation
+5. Receive deliverables electronically via client portal
+6. Request revisions if needed (within policy limits)
+7. Approve final deliverables
+
+## Delivery
+
+All services are delivered **electronically** through:
+- Secure client portal download
+- Email delivery (for smaller files)
+- Cloud storage links
+
+**No physical shipment is involved**. All deliverables are digital files.
+
+## Custom Work
+
+Every project is custom-made based on your specific requirements. Production is performed in-house by our professional team.
+
+## Accepted Content
+
+We only produce content in publicly acceptable genres: comedy, drama, fantasy, sports, educational, commercial, superhero, etc. **Adult content is strictly prohibited**.
+                """,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "type": "digital_delivery",
+                "title": "Digital Delivery Policy",
+                "content": """
+# Digital Delivery Policy
+
+## Electronic Delivery Only
+
+Ocean2joy.com operates as a **digital-first service**. All video deliverables are:
+
+- Created digitally in-house
+- Delivered electronically
+- No physical media or shipment involved
+
+## Delivery Methods
+
+**Primary**: Secure client portal with download access
+**Secondary**: Direct email (for files under 25MB)
+**Alternative**: Secure cloud storage links (Google Drive, Dropbox, WeTransfer)
+
+## File Formats
+
+Standard formats include:
+- MP4 (most common)
+- MOV
+- ProRes (for professional use)
+- Custom formats upon request
+
+## Delivery Timeline
+
+- Files uploaded to portal within 24 hours of completion
+- Email notification sent immediately
+- Files remain accessible for 90 days
+- Extended access available upon request
+
+## File Ownership
+
+Once delivered and payment confirmed, you receive full rights to the deliverables as agreed in project terms.
+                """,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "type": "refund",
+                "title": "Refund & Cancellation Policy",
+                "content": """
+# Refund & Cancellation Policy
+
+## Cancellation
+
+**Before production starts**: Full refund minus 10% administrative fee
+**During production**: Partial refund based on work completed
+**After delivery**: No refunds, revisions available per revision policy
+
+## Refund Process
+
+Refunds processed within 7-10 business days to original payment method.
+
+## Disputes
+
+We aim to resolve all issues through revisions first. If you're not satisfied, contact us before requesting a refund.
+
+## Custom Work Nature
+
+Since all projects are custom-made specifically for you, we cannot resell or reuse content. This affects our refund policy.
+                """,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "type": "revision",
+                "title": "Revision Policy",
+                "content": """
+# Revision Policy
+
+## Included Revisions
+
+- **Custom Video Production**: 2 revision rounds
+- **Video Editing**: 3 revision rounds
+- **AI-Generated Video**: 2 revision rounds
+
+## What Counts as a Revision
+
+A revision round includes reasonable changes to:
+- Editing cuts and timing
+- Color grading adjustments
+- Audio mixing
+- Text/graphics changes
+- Minor scene adjustments
+
+## What's NOT Included
+
+- Complete re-shoots (quoted separately)
+- Major script changes after filming
+- Additional footage requests
+- Scope expansion
+
+## Revision Process
+
+1. Review deliverables in your portal
+2. Click "Request Revision"
+3. Provide specific, detailed feedback
+4. Receive revised version within 3-5 days
+5. Approve or request additional changes (if rounds remain)
+
+## Additional Revisions
+
+Available at $49.99-$199.99 depending on complexity.
+                """,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "type": "privacy",
+                "title": "Privacy Policy",
+                "content": """
+# Privacy Policy
+
+## Information We Collect
+
+- Name, email, contact information
+- Project briefs and materials you upload
+- Communication history
+- Payment information (processed securely)
+
+## How We Use Information
+
+- To fulfill your video production requests
+- To communicate about your projects
+- To improve our services
+- For legal and compliance purposes
+
+## Data Security
+
+- All data encrypted in transit and at rest
+- Secure cloud storage
+- Limited access by authorized personnel only
+
+## Your Rights
+
+You can request:
+- Access to your data
+- Correction of inaccuracies
+- Deletion of your account and data
+
+## File Retention
+
+- Active projects: Duration + 90 days
+- Completed projects: 1 year unless extended
+- You can download and backup anytime
+                """,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        ]
+        
+        await db.policies.insert_many(policies_data)
+        logger.info("Policies seeded successfully")
+    
+    # Create default admin user if not exists
+    admin_exists = await db.users.find_one({"role": UserRole.ADMIN})
+    if not admin_exists:
+        admin_password = "admin123"  # Change this in production!
+        hashed = pwd_context.hash(admin_password)
+        
+        admin_user = {
+            "id": str(uuid.uuid4()),
+            "email": "admin@ocean2joy.com",
+            "name": "Admin User",
+            "role": UserRole.ADMIN,
+            "hashed_password": hashed,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "is_active": True
+        }
+        
+        await db.users.insert_one(admin_user)
+        logger.info("Admin user created: admin@ocean2joy.com / admin123")
