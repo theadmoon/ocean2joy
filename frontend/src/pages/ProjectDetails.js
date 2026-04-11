@@ -72,7 +72,7 @@ TOTAL AMOUNT DUE:                      $${projectData.quote_amount?.toFixed(2)}
 PAYMENT INSTRUCTIONS:
 
 Payment Method: PayPal
-Please send payment to: payments@ocean2joy.com
+Please send payment to: 302335809@postbox.ge
 
 Payment is due upon receipt of this invoice.
 
@@ -135,7 +135,7 @@ From: ${projectData.client_name || 'Client'}
 Email: ${payerEmail}
 
 To: Ocean2Joy Digital Video Production
-Email: payments@ocean2joy.com
+Email: 302335809@postbox.ge
 
 ═══════════════════════════════════════════════
 
@@ -173,7 +173,7 @@ Processing Time: Instant
 MERCHANT INFORMATION:
 
 Business Name: Ocean2Joy Digital Video Production
-Business Email: payments@ocean2joy.com
+Business Email: 302335809@postbox.ge
 Business Type: Digital Services Provider
 Service Description: Custom video production services
 
