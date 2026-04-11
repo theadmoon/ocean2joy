@@ -343,6 +343,249 @@ All locations secured and ready for production.
 Insurance and permits: ✓ APPROVED
 
 END OF DOCUMENT`
+    },
+    "invoice_VAPP6_1050USD.pdf": {
+      type: "document",
+      name: "Invoice VAPP-6 - $1050 USD",
+      content: `INVOICE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Custom Digital Video Services
+
+Invoice #: VAPP-6-INV-2026-03
+Date Issued: March 20, 2026
+Due Date: March 20, 2026 (Upon Delivery)
+
+═══════════════════════════════════════════════
+
+BILL TO:
+Marcos Knight
+Email: mek110@yahoo.com
+Project: VAPP-6
+Project Title: Office Chaos Comedy - Custom Video
+
+═══════════════════════════════════════════════
+
+PROJECT DETAILS:
+
+Service Type: Custom Video Production
+Duration: 30-minute comedy video
+Production Period: February 22 - March 18, 2026
+
+SCOPE OF WORK:
+✓ Pre-production planning and script review
+✓ Professional casting (2 actors)
+✓ Location scouting and setup (3 locations)
+✓ 3-day filming session (Feb 25-27, 2026)
+✓ Professional crew and equipment
+✓ Post-production editing
+✓ Special effects (2 sequences)
+✓ Color grading and audio mixing
+✓ Final export in HD format
+✓ Digital delivery via secure platform
+
+═══════════════════════════════════════════════
+
+PRICING BREAKDOWN:
+
+Service Description                        Amount
+─────────────────────────────────────────────────
+Custom Video Production (30 minutes)      $1,050.00
+  @ $35.00 per minute × 30 minutes
+
+Special Effects (2 sequences)          INCLUDED
+Professional Actors                    INCLUDED
+Location Setup                         INCLUDED
+Post-Production                        INCLUDED
+
+═══════════════════════════════════════════════
+
+SUBTOTAL:                              $1,050.00
+Tax:                                        $0.00
+                                       ──────────
+TOTAL DUE:                             $1,050.00
+
+═══════════════════════════════════════════════
+
+PAYMENT INFORMATION:
+
+Payment Method: PayPal
+Payment Status: ✓ PAID IN FULL
+Payment Date: March 20, 2026
+Transaction ID: PAYPAL-VAPP6-20260320
+Amount Paid: $1,050.00 USD
+
+═══════════════════════════════════════════════
+
+DELIVERABLES:
+
+✓ Office_Chaos_Comedy_Final_HD.mp4
+  30-minute HD video (1920×1080)
+  Delivered: March 20, 2026
+
+✓ Behind_the_Scenes_Bonus.mp4
+  5-minute bonus footage
+  Delivered: March 20, 2026
+
+═══════════════════════════════════════════════
+
+NOTES:
+
+This invoice represents the complete and final 
+payment for Project VAPP-6. All deliverables have 
+been provided via secure digital delivery.
+
+No physical goods were shipped. This is a 
+digital-only service transaction.
+
+Payment received via PayPal confirms client 
+acceptance of all work and completion of project.
+
+═══════════════════════════════════════════════
+
+Thank you for choosing Ocean2Joy!
+
+For questions about this invoice, contact:
+admin@ocean2joy.com
+
+Ocean2Joy Digital Video Production
+Digital Services - No Physical Shipping
+www.ocean2joy.com
+
+═══════════════════════════════════════════════
+
+INVOICE PAID - TRANSACTION COMPLETE
+Payment Processor: PayPal
+Date: March 20, 2026`
+    },
+    "completion_certificate.pdf": {
+      type: "document",
+      name: "Project Completion Certificate",
+      content: `PROJECT COMPLETION CERTIFICATE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+═══════════════════════════════════════════════
+
+This certificate confirms the successful 
+completion of the following digital service:
+
+PROJECT INFORMATION:
+─────────────────────────────────────────────
+Project Number: VAPP-6
+Project Title: Office Chaos Comedy - Custom Video
+Service Type: Custom Digital Video Production
+Client: Marcos Knight (mek110@yahoo.com)
+
+═══════════════════════════════════════════════
+
+PROJECT TIMELINE:
+─────────────────────────────────────────────
+
+Request Submitted: February 8, 2026
+Quote Provided: February 10, 2026
+Quote Accepted: February 12, 2026
+Production Started: February 22, 2026
+Production Completed: March 18, 2026
+Deliverables Provided: March 20, 2026
+Payment Received: March 20, 2026
+Project Closed: March 20, 2026
+
+Total Production Time: 25 days
+
+═══════════════════════════════════════════════
+
+DELIVERABLES PROVIDED:
+─────────────────────────────────────────────
+
+✓ Office_Chaos_Comedy_Final_HD.mp4
+  • 30-minute HD video (1920×1080)
+  • Professional editing and color grading
+  • Special effects (2 sequences)
+  • Audio mixing and mastering
+
+✓ Behind_the_Scenes_Bonus.mp4
+  • 5-minute bonus footage
+  • HD quality (1920×1080)
+
+All files delivered digitally via secure 
+client portal on March 20, 2026.
+
+═══════════════════════════════════════════════
+
+FINANCIAL SETTLEMENT:
+─────────────────────────────────────────────
+
+Total Project Value: $1,050.00 USD
+Payment Method: PayPal
+Payment Status: ✓ PAID IN FULL
+Payment Date: March 20, 2026
+Transaction Reference: PAYPAL-VAPP6-20260320
+
+═══════════════════════════════════════════════
+
+CLIENT ACCEPTANCE:
+─────────────────────────────────────────────
+
+✓ Client reviewed all deliverables
+✓ Client approved final work
+✓ Payment completed via PayPal
+✓ No disputes or issues raised
+
+Client satisfaction confirmed through:
+• Successful payment completion
+• Digital delivery acceptance
+• No refund requests
+• Project marked as complete
+
+═══════════════════════════════════════════════
+
+SERVICE VERIFICATION:
+
+This was a DIGITAL-ONLY service transaction.
+
+✓ No physical products were created
+✓ No shipping or logistics involved
+✓ All deliverables provided digitally
+✓ Client accessed files via secure portal
+✓ Full transaction trace available
+✓ Communication history preserved
+
+═══════════════════════════════════════════════
+
+COMPLIANCE NOTES:
+
+This certificate serves as verification for 
+payment processors and dispute resolution:
+
+• Complete project lifecycle documented
+• All communications preserved
+• Payment processed through verified channel
+• Digital delivery confirmed by client access
+• No outstanding issues or disputes
+
+═══════════════════════════════════════════════
+
+PROJECT STATUS: ✓ SUCCESSFULLY COMPLETED
+
+Issued by: Ocean2Joy Digital Video Production
+Issue Date: March 20, 2026
+Certificate ID: CERT-VAPP6-20260320
+
+═══════════════════════════════════════════════
+
+For verification or questions:
+admin@ocean2joy.com
+www.ocean2joy.com
+
+Ocean2Joy - Digital Video Services
+"An Ocean of Opportunities, A Sea of Joy"
+
+═══════════════════════════════════════════════
+
+END OF CERTIFICATE`
     }
   };
 
