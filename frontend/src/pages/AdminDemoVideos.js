@@ -303,11 +303,11 @@ function AdminDemoVideos() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      alert('Video deleted successfully!');
+      // Refresh the list immediately
       fetchVideos();
     } catch (error) {
       console.error('Delete error:', error);
-      alert('Failed to delete video');
+      alert(`Failed to delete video: ${error.response?.data?.detail || error.message}`);
     }
   };
 
