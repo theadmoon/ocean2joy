@@ -79,10 +79,20 @@ function AdminDemoVideos() {
       }
     }
 
-    if (!uploadForm.title || !uploadForm.description) {
-      alert('Please fill in title and description');
-      return;
-    }
+    // Use placeholder values as defaults if fields are empty
+    const defaultTitles = {
+      1: 'Professional Custom Video',
+      2: 'AI-Powered Creation'
+    };
+    
+    const defaultDescriptions = {
+      1: 'Example of our custom video production with professional actors and crew',
+      2: 'Example of our cutting-edge AI-generated video content with digital effects'
+    };
+
+    const finalTitle = uploadForm.title.trim() || defaultTitles[uploadForm.position];
+    const finalDescription = uploadForm.description.trim() || defaultDescriptions[uploadForm.position];
+    const finalTags = uploadForm.tags.trim() || 'Demo, Sample';
 
     setUploading(true);
     
@@ -93,9 +103,9 @@ function AdminDemoVideos() {
         // Upload file
         const formData = new FormData();
         formData.append('position', uploadForm.position);
-        formData.append('title', uploadForm.title);
-        formData.append('description', uploadForm.description);
-        formData.append('tags', uploadForm.tags);
+        formData.append('title', finalTitle);
+        formData.append('description', finalDescription);
+        formData.append('tags', finalTags);
         formData.append('video', uploadForm.videoFile);
 
         await axios.post(`${API}/admin/demo-videos/upload`, formData, {
@@ -108,9 +118,9 @@ function AdminDemoVideos() {
         // Upload URL
         const formData = new FormData();
         formData.append('position', uploadForm.position);
-        formData.append('title', uploadForm.title);
-        formData.append('description', uploadForm.description);
-        formData.append('tags', uploadForm.tags);
+        formData.append('title', finalTitle);
+        formData.append('description', finalDescription);
+        formData.append('tags', finalTags);
         formData.append('video_url', uploadForm.videoUrl);
 
         await axios.post(`${API}/admin/demo-videos/upload-url`, formData, {
@@ -285,9 +295,9 @@ function AdminDemoVideos() {
                   value={uploadForm.title}
                   onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                  placeholder="Professional Custom Video"
-                  required
+                  placeholder={uploadForm.position === 1 ? "Professional Custom Video" : "AI-Powered Creation"}
                 />
+                <p className="text-xs text-gray-500 mt-1">Leave empty to use default title</p>
               </div>
 
               <div>
@@ -297,9 +307,11 @@ function AdminDemoVideos() {
                   onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2"
                   rows="3"
-                  placeholder="Example of our custom video production with professional actors and crew"
-                  required
+                  placeholder={uploadForm.position === 1 
+                    ? "Example of our custom video production with professional actors and crew"
+                    : "Example of our cutting-edge AI-generated video content with digital effects"}
                 />
+                <p className="text-xs text-gray-500 mt-1">Leave empty to use default description</p>
               </div>
 
               <div>
@@ -311,6 +323,7 @@ function AdminDemoVideos() {
                   className="w-full border border-gray-300 rounded-lg px-4 py-2"
                   placeholder="Drama, Professional, HD Quality"
                 />
+                <p className="text-xs text-gray-500 mt-1">Leave empty to use default tags</p>
               </div>
 
               {/* Upload Method Toggle */}
