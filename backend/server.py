@@ -1008,6 +1008,47 @@ async def update_demo_video(
     updated_video = await db.demo_videos.find_one({"id": video_id}, {"_id": 0})
     return DemoVideo(**updated_video)
 
+@api_router.post("/admin/demo-videos/{video_id}/upload-thumbnail")
+async def upload_demo_video_thumbnail(
+    video_id: str,
+    thumbnail: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload thumbnail for existing video"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    video = await db.demo_videos.find_one({"id": video_id}, {"_id": 0})
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    
+    # Validate thumbnail file type
+    allowed_thumb_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+    if thumbnail.content_type not in allowed_thumb_types:
+        raise HTTPException(status_code=400, detail="Invalid thumbnail type. Only JPG, PNG, WebP allowed")
+    
+    # Save thumbnail file
+    thumb_extension = thumbnail.filename.split('.')[-1]
+    thumb_unique_filename = f"{str(uuid.uuid4())}.{thumb_extension}"
+    thumb_file_path = Path("/app/backend/uploads/thumbnails") / thumb_unique_filename
+    
+    try:
+        with open(thumb_file_path, "wb") as f:
+            thumb_content = await thumbnail.read()
+            f.write(thumb_content)
+        
+        thumbnail_url = f"/uploads/thumbnails/{thumb_unique_filename}"
+        
+        # Update video with new thumbnail
+        await db.demo_videos.update_one(
+            {"id": video_id},
+            {"$set": {"thumbnail_url": thumbnail_url, "updated_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {"thumbnail_url": thumbnail_url, "message": "Thumbnail uploaded successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save thumbnail: {str(e)}")
+
 @api_router.delete("/admin/demo-videos/{video_id}")
 async def delete_demo_video(
     video_id: str,

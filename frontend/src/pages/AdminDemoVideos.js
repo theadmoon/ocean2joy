@@ -11,6 +11,9 @@ function AdminDemoVideos() {
   const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
+  const [editThumbnailMethod, setEditThumbnailMethod] = useState('url');
+  const [editThumbnailFile, setEditThumbnailFile] = useState(null);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   
   // Upload form state
   const [uploadForm, setUploadForm] = useState({
@@ -204,6 +207,64 @@ function AdminDemoVideos() {
   const cancelEdit = () => {
     setEditingId(null);
     setEditData({});
+    setEditThumbnailMethod('url');
+    setEditThumbnailFile(null);
+  };
+
+  const handleEditThumbnailFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Thumbnail file size must be less than 5MB');
+        return;
+      }
+      
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        alert('Invalid file type. Please upload JPG, PNG, or WebP');
+        return;
+      }
+      
+      setEditThumbnailFile(file);
+    }
+  };
+
+  const uploadEditThumbnail = async (videoId) => {
+    if (!editThumbnailFile) {
+      alert('Please select a thumbnail file');
+      return;
+    }
+
+    setUploadingThumbnail(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('thumbnail', editThumbnailFile);
+
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/demo-videos/${videoId}/upload-thumbnail`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      // Update editData with new thumbnail URL
+      setEditData({ ...editData, thumbnail_url: response.data.thumbnail_url });
+      setEditThumbnailFile(null);
+      alert('Thumbnail uploaded successfully!');
+    } catch (error) {
+      console.error('Thumbnail upload error:', error);
+      alert(error.response?.data?.detail || 'Failed to upload thumbnail');
+    } finally {
+      setUploadingThumbnail(false);
+    }
   };
 
   const saveEdit = async (videoId) => {
@@ -628,13 +689,79 @@ function AdminDemoVideos() {
                           className="w-full border border-gray-300 rounded px-3 py-2"
                           placeholder="Tags (comma-separated)"
                         />
-                        <input
-                          type="url"
-                          value={editData.thumbnail_url}
-                          onChange={(e) => setEditData({ ...editData, thumbnail_url: e.target.value })}
-                          className="w-full border border-gray-300 rounded px-3 py-2"
-                          placeholder="Preview Image URL (optional)"
-                        />
+                        
+                        {/* Thumbnail Section in Edit */}
+                        <div className="border-t pt-3">
+                          <label className="block text-sm font-semibold mb-2">Preview Image</label>
+                          
+                          {/* Thumbnail Method Toggle */}
+                          <div className="flex gap-4 mb-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                value="url"
+                                checked={editThumbnailMethod === 'url'}
+                                onChange={(e) => setEditThumbnailMethod(e.target.value)}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-sm">Image URL</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                value="file"
+                                checked={editThumbnailMethod === 'file'}
+                                onChange={(e) => setEditThumbnailMethod(e.target.value)}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-sm">Upload File</span>
+                            </label>
+                          </div>
+
+                          {/* Conditional: Thumbnail URL */}
+                          {editThumbnailMethod === 'url' && (
+                            <input
+                              type="url"
+                              value={editData.thumbnail_url}
+                              onChange={(e) => setEditData({ ...editData, thumbnail_url: e.target.value })}
+                              className="w-full border border-gray-300 rounded px-3 py-2"
+                              placeholder="Preview Image URL (optional)"
+                            />
+                          )}
+
+                          {/* Conditional: Thumbnail File */}
+                          {editThumbnailMethod === 'file' && (
+                            <div className="space-y-2">
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png,image/webp"
+                                onChange={handleEditThumbnailFileSelect}
+                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                              />
+                              {editThumbnailFile && (
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm text-green-600">
+                                    Selected: {editThumbnailFile.name}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() => uploadEditThumbnail(video.id)}
+                                    disabled={uploadingThumbnail}
+                                    className="text-xs bg-sky-500 hover:bg-sky-600 text-white px-3 py-1 rounded"
+                                  >
+                                    {uploadingThumbnail ? 'Uploading...' : 'Upload'}
+                                  </button>
+                                </div>
+                              )}
+                              {editData.thumbnail_url && (
+                                <p className="text-xs text-gray-500">
+                                  Current: {editData.thumbnail_url.substring(0, 50)}...
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
