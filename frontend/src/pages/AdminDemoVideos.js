@@ -21,6 +21,8 @@ function AdminDemoVideos() {
     videoFile: null,
     videoUrl: '',
     thumbnailUrl: '', // Preview image URL
+    thumbnailFile: null, // Preview image file
+    thumbnailMethod: 'url', // 'url' or 'file'
     uploadMethod: 'file' // 'file' or 'url'
   });
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -61,6 +63,26 @@ function AdminDemoVideos() {
       }
       
       setUploadForm({ ...uploadForm, videoFile: file });
+    }
+  };
+
+  const handleThumbnailFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (max 5MB for images)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Thumbnail file size must be less than 5MB');
+        return;
+      }
+      
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        alert('Invalid file type. Please upload JPG, PNG, or WebP');
+        return;
+      }
+      
+      setUploadForm({ ...uploadForm, thumbnailFile: file });
     }
   };
 
@@ -108,8 +130,12 @@ function AdminDemoVideos() {
         formData.append('description', finalDescription);
         formData.append('tags', finalTags);
         formData.append('video', uploadForm.videoFile);
-        if (uploadForm.thumbnailUrl) {
+        
+        // Add thumbnail (URL or File)
+        if (uploadForm.thumbnailMethod === 'url' && uploadForm.thumbnailUrl) {
           formData.append('thumbnail_url', uploadForm.thumbnailUrl);
+        } else if (uploadForm.thumbnailMethod === 'file' && uploadForm.thumbnailFile) {
+          formData.append('thumbnail', uploadForm.thumbnailFile);
         }
 
         await axios.post(`${API}/admin/demo-videos/upload`, formData, {
@@ -126,8 +152,12 @@ function AdminDemoVideos() {
         formData.append('description', finalDescription);
         formData.append('tags', finalTags);
         formData.append('video_url', uploadForm.videoUrl);
-        if (uploadForm.thumbnailUrl) {
+        
+        // Add thumbnail (URL or File)
+        if (uploadForm.thumbnailMethod === 'url' && uploadForm.thumbnailUrl) {
           formData.append('thumbnail_url', uploadForm.thumbnailUrl);
+        } else if (uploadForm.thumbnailMethod === 'file' && uploadForm.thumbnailFile) {
+          formData.append('thumbnail', uploadForm.thumbnailFile);
         }
 
         await axios.post(`${API}/admin/demo-videos/upload-url`, formData, {
@@ -147,6 +177,8 @@ function AdminDemoVideos() {
         videoFile: null,
         videoUrl: '',
         thumbnailUrl: '',
+        thumbnailFile: null,
+        thumbnailMethod: 'url',
         uploadMethod: 'file'
       });
       fetchVideos();
@@ -434,21 +466,71 @@ function AdminDemoVideos() {
                 </div>
               )}
 
-              {/* Thumbnail URL (optional for all videos) */}
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Preview Image URL (optional)
+              {/* Thumbnail Section */}
+              <div className="border-t pt-4">
+                <label className="block text-sm font-semibold mb-3">
+                  Preview Image (optional)
                 </label>
-                <input
-                  type="url"
-                  value={uploadForm.thumbnailUrl}
-                  onChange={(e) => setUploadForm({ ...uploadForm, thumbnailUrl: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                  placeholder="https://example.com/thumbnail.jpg"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  💡 Add a preview image URL to show instead of black screen. Recommended size: 1280x720px
-                </p>
+                
+                {/* Thumbnail Method Toggle */}
+                <div className="flex gap-4 mb-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="url"
+                      checked={uploadForm.thumbnailMethod === 'url'}
+                      onChange={(e) => setUploadForm({ ...uploadForm, thumbnailMethod: e.target.value })}
+                      className="w-4 h-4"
+                    />
+                    <span>Image URL</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="file"
+                      checked={uploadForm.thumbnailMethod === 'file'}
+                      onChange={(e) => setUploadForm({ ...uploadForm, thumbnailMethod: e.target.value })}
+                      className="w-4 h-4"
+                    />
+                    <span>Upload Image File</span>
+                  </label>
+                </div>
+
+                {/* Conditional: Thumbnail URL */}
+                {uploadForm.thumbnailMethod === 'url' && (
+                  <div>
+                    <input
+                      type="url"
+                      value={uploadForm.thumbnailUrl}
+                      onChange={(e) => setUploadForm({ ...uploadForm, thumbnailUrl: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                      placeholder="https://example.com/thumbnail.jpg"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      💡 Paste image URL from Unsplash, Imgur, or any direct link
+                    </p>
+                  </div>
+                )}
+
+                {/* Conditional: Thumbnail File */}
+                {uploadForm.thumbnailMethod === 'file' && (
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleThumbnailFileSelect}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    />
+                    {uploadForm.thumbnailFile && (
+                      <p className="text-sm text-green-600 mt-2">
+                        Selected: {uploadForm.thumbnailFile.name} ({(uploadForm.thumbnailFile.size / 1024).toFixed(2)} KB)
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-2">
+                      💡 Upload JPG, PNG, or WebP (Max 5MB). Recommended: 1280x720px
+                    </p>
+                  </div>
+                )}
               </div>
 
               <button

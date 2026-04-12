@@ -828,8 +828,9 @@ async def upload_demo_video(
     title: str = Form(...),
     description: str = Form(...),
     tags: str = Form(""),  # comma-separated
-    thumbnail_url: str = Form(""),  # optional preview image
+    thumbnail_url: str = Form(""),  # optional preview image URL
     video: UploadFile = File(...),
+    thumbnail: UploadFile = File(None),  # optional preview image file
     current_user: User = Depends(get_current_user)
 ):
     """Upload a new demo video"""
@@ -850,13 +851,36 @@ async def upload_demo_video(
     unique_filename = f"{str(uuid.uuid4())}.{file_extension}"
     file_path = Path("/app/backend/uploads/demo-videos") / unique_filename
     
-    # Save file
+    # Save video file
     try:
         with open(file_path, "wb") as f:
             content = await video.read()
             f.write(content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save video: {str(e)}")
+    
+    # Handle thumbnail
+    final_thumbnail_url = thumbnail_url if thumbnail_url else None
+    
+    if thumbnail:
+        # Validate thumbnail file type
+        allowed_thumb_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+        if thumbnail.content_type not in allowed_thumb_types:
+            raise HTTPException(status_code=400, detail="Invalid thumbnail type. Only JPG, PNG, WebP allowed")
+        
+        # Save thumbnail file
+        thumb_extension = thumbnail.filename.split('.')[-1]
+        thumb_unique_filename = f"{str(uuid.uuid4())}.{thumb_extension}"
+        thumb_file_path = Path("/app/backend/uploads/thumbnails") / thumb_unique_filename
+        
+        try:
+            with open(thumb_file_path, "wb") as f:
+                thumb_content = await thumbnail.read()
+                f.write(thumb_content)
+            
+            final_thumbnail_url = f"/uploads/thumbnails/{thumb_unique_filename}"
+        except Exception as e:
+            logger.error(f"Failed to save thumbnail: {e}")
     
     # Parse tags
     tags_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
@@ -878,7 +902,7 @@ async def upload_demo_video(
         video_type="file",
         video_filename=unique_filename,
         video_url=f"/uploads/demo-videos/{unique_filename}",
-        thumbnail_url=thumbnail_url if thumbnail_url else None
+        thumbnail_url=final_thumbnail_url
     )
     
     await db.demo_videos.insert_one(demo_video.model_dump())
@@ -892,7 +916,8 @@ async def upload_demo_video_url(
     description: str = Form(...),
     tags: str = Form(""),
     video_url: str = Form(...),
-    thumbnail_url: str = Form(""),  # optional preview image
+    thumbnail_url: str = Form(""),  # optional preview image URL
+    thumbnail: UploadFile = File(None),  # optional preview image file
     current_user: User = Depends(get_current_user)
 ):
     """Add a demo video from external URL (Yandex Disk, Google Drive, direct link)"""
@@ -909,6 +934,29 @@ async def upload_demo_video_url(
     
     # Parse tags
     tags_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+    
+    # Handle thumbnail
+    final_thumbnail_url = thumbnail_url if thumbnail_url else None
+    
+    if thumbnail:
+        # Validate thumbnail file type
+        allowed_thumb_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+        if thumbnail.content_type not in allowed_thumb_types:
+            raise HTTPException(status_code=400, detail="Invalid thumbnail type. Only JPG, PNG, WebP allowed")
+        
+        # Save thumbnail file
+        thumb_extension = thumbnail.filename.split('.')[-1]
+        thumb_unique_filename = f"{str(uuid.uuid4())}.{thumb_extension}"
+        thumb_file_path = Path("/app/backend/uploads/thumbnails") / thumb_unique_filename
+        
+        try:
+            with open(thumb_file_path, "wb") as f:
+                thumb_content = await thumbnail.read()
+                f.write(thumb_content)
+            
+            final_thumbnail_url = f"/uploads/thumbnails/{thumb_unique_filename}"
+        except Exception as e:
+            logger.error(f"Failed to save thumbnail: {e}")
     
     # Check if video already exists for this position and deactivate it
     existing_video = await db.demo_videos.find_one({"position": position, "is_active": True}, {"_id": 0})
@@ -927,7 +975,7 @@ async def upload_demo_video_url(
         video_type="url",
         video_filename=None,
         video_url=video_url,
-        thumbnail_url=thumbnail_url if thumbnail_url else None
+        thumbnail_url=final_thumbnail_url
     )
     
     await db.demo_videos.insert_one(demo_video.model_dump())
