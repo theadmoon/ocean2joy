@@ -18,7 +18,9 @@ function AdminDemoVideos() {
     title: '',
     description: '',
     tags: '',
-    videoFile: null
+    videoFile: null,
+    videoUrl: '',
+    uploadMethod: 'file' // 'file' or 'url'
   });
   const [showUploadForm, setShowUploadForm] = useState(false);
 
@@ -64,9 +66,17 @@ function AdminDemoVideos() {
   const handleUpload = async (e) => {
     e.preventDefault();
     
-    if (!uploadForm.videoFile) {
-      alert('Please select a video file');
-      return;
+    // Validate based on upload method
+    if (uploadForm.uploadMethod === 'file') {
+      if (!uploadForm.videoFile) {
+        alert('Please select a video file');
+        return;
+      }
+    } else {
+      if (!uploadForm.videoUrl) {
+        alert('Please enter a video URL');
+        return;
+      }
     }
 
     if (!uploadForm.title || !uploadForm.description) {
@@ -77,34 +87,54 @@ function AdminDemoVideos() {
     setUploading(true);
     
     try {
-      const formData = new FormData();
-      formData.append('position', uploadForm.position);
-      formData.append('title', uploadForm.title);
-      formData.append('description', uploadForm.description);
-      formData.append('tags', uploadForm.tags);
-      formData.append('video', uploadForm.videoFile);
-
       const token = localStorage.getItem('token');
-      await axios.post(`${API}/admin/demo-videos/upload`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      
+      if (uploadForm.uploadMethod === 'file') {
+        // Upload file
+        const formData = new FormData();
+        formData.append('position', uploadForm.position);
+        formData.append('title', uploadForm.title);
+        formData.append('description', uploadForm.description);
+        formData.append('tags', uploadForm.tags);
+        formData.append('video', uploadForm.videoFile);
 
-      alert('Video uploaded successfully!');
+        await axios.post(`${API}/admin/demo-videos/upload`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      } else {
+        // Upload URL
+        const formData = new FormData();
+        formData.append('position', uploadForm.position);
+        formData.append('title', uploadForm.title);
+        formData.append('description', uploadForm.description);
+        formData.append('tags', uploadForm.tags);
+        formData.append('video_url', uploadForm.videoUrl);
+
+        await axios.post(`${API}/admin/demo-videos/upload-url`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        });
+      }
+
+      alert('Video added successfully!');
       setShowUploadForm(false);
       setUploadForm({
         position: 1,
         title: '',
         description: '',
         tags: '',
-        videoFile: null
+        videoFile: null,
+        videoUrl: '',
+        uploadMethod: 'file'
       });
       fetchVideos();
     } catch (error) {
       console.error('Upload error:', error);
-      alert(error.response?.data?.detail || 'Failed to upload video');
+      alert(error.response?.data?.detail || 'Failed to add video');
     } finally {
       setUploading(false);
     }
@@ -166,6 +196,46 @@ function AdminDemoVideos() {
       console.error('Delete error:', error);
       alert('Failed to delete video');
     }
+  };
+
+  // Render video preview
+  const renderVideoPreview = (video) => {
+    if (video.video_type === 'url') {
+      // For URL videos, show iframe or video tag
+      if (video.video_url.includes('disk.yandex') || video.video_url.includes('drive.google')) {
+        return (
+          <div className="w-full rounded-lg bg-gray-900 flex items-center justify-center" style={{ height: '200px' }}>
+            <p className="text-white text-sm text-center px-4">
+              🎥 External Video<br />
+              <span className="text-xs text-gray-400">{video.video_url.substring(0, 50)}...</span>
+            </p>
+          </div>
+        );
+      }
+      
+      return (
+        <video
+          controls
+          className="w-full rounded-lg"
+          style={{ maxHeight: '200px' }}
+        >
+          <source src={video.video_url} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      );
+    }
+    
+    // For uploaded files
+    return (
+      <video
+        controls
+        className="w-full rounded-lg"
+        style={{ maxHeight: '200px' }}
+      >
+        <source src={`${BACKEND_URL}${video.video_url}`} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    );
   };
 
   if (loading) {
@@ -243,28 +313,76 @@ function AdminDemoVideos() {
                 />
               </div>
 
+              {/* Upload Method Toggle */}
               <div>
-                <label className="block text-sm font-semibold mb-2">Video File (Max 100MB)</label>
-                <input
-                  type="file"
-                  accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
-                  onChange={handleFileSelect}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                  required
-                />
-                {uploadForm.videoFile && (
-                  <p className="text-sm text-green-600 mt-2">
-                    Selected: {uploadForm.videoFile.name} ({(uploadForm.videoFile.size / 1024 / 1024).toFixed(2)} MB)
-                  </p>
-                )}
+                <label className="block text-sm font-semibold mb-2">Upload Method</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="file"
+                      checked={uploadForm.uploadMethod === 'file'}
+                      onChange={(e) => setUploadForm({ ...uploadForm, uploadMethod: e.target.value })}
+                      className="w-4 h-4"
+                    />
+                    <span>Upload File</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="url"
+                      checked={uploadForm.uploadMethod === 'url'}
+                      onChange={(e) => setUploadForm({ ...uploadForm, uploadMethod: e.target.value })}
+                      className="w-4 h-4"
+                    />
+                    <span>Video URL</span>
+                  </label>
+                </div>
               </div>
+
+              {/* Conditional: File Upload */}
+              {uploadForm.uploadMethod === 'file' && (
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Video File (Max 100MB)</label>
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
+                    onChange={handleFileSelect}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    required={uploadForm.uploadMethod === 'file'}
+                  />
+                  {uploadForm.videoFile && (
+                    <p className="text-sm text-green-600 mt-2">
+                      Selected: {uploadForm.videoFile.name} ({(uploadForm.videoFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Conditional: URL Input */}
+              {uploadForm.uploadMethod === 'url' && (
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Video URL</label>
+                  <input
+                    type="url"
+                    value={uploadForm.videoUrl}
+                    onChange={(e) => setUploadForm({ ...uploadForm, videoUrl: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    placeholder="https://disk.yandex.ru/i/... or direct .mp4 link"
+                    required={uploadForm.uploadMethod === 'url'}
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    💡 Supported: Яндекс.Диск, Google Drive, Direct MP4/WebM links
+                  </p>
+                </div>
+              )}
 
               <button
                 type="submit"
                 disabled={uploading}
                 className="btn-ocean w-full"
               >
-                {uploading ? 'Uploading...' : 'Upload Video'}
+                {uploading ? 'Adding Video...' : 'Add Video'}
               </button>
             </form>
           </div>
@@ -285,16 +403,9 @@ function AdminDemoVideos() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Video Preview */}
                   <div>
-                    <video
-                      controls
-                      className="w-full rounded-lg"
-                      style={{ maxHeight: '200px' }}
-                    >
-                      <source src={`${BACKEND_URL}${video.video_url}`} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
+                    {renderVideoPreview(video)}
                     <p className="text-xs text-gray-500 mt-2">
-                      Position: {video.position} | Status: {video.is_active ? '✓ Active' : '✗ Inactive'}
+                      Position: {video.position} | Type: {video.video_type === 'url' ? '🔗 URL' : '📁 File'} | Status: {video.is_active ? '✓ Active' : '✗ Inactive'}
                     </p>
                   </div>
 

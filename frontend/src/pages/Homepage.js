@@ -33,6 +33,80 @@ function Homepage() {
     }
   };
 
+  // Helper function to render video player based on video type
+  const renderVideoPlayer = (video) => {
+    if (video.video_type === 'url') {
+      // Check if it's Yandex Disk
+      if (video.video_url.includes('disk.yandex')) {
+        // Convert Yandex Disk URL to iframe embed
+        let embedUrl = video.video_url;
+        
+        // If it's a share link, convert to iframe format
+        if (video.video_url.includes('/d/')) {
+          const fileId = video.video_url.split('/d/')[1].split('?')[0];
+          embedUrl = `https://disk.yandex.ru/i/${fileId}`;
+        }
+        
+        return (
+          <iframe
+            src={embedUrl}
+            className="w-full h-full"
+            frameBorder="0"
+            allow="autoplay; fullscreen"
+            allowFullScreen
+            title={video.title}
+          ></iframe>
+        );
+      }
+      
+      // Check if it's Google Drive
+      if (video.video_url.includes('drive.google.com')) {
+        let embedUrl = video.video_url;
+        
+        // Convert Google Drive URL to embed format
+        if (video.video_url.includes('/file/d/')) {
+          const fileId = video.video_url.split('/file/d/')[1].split('/')[0];
+          embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+        }
+        
+        return (
+          <iframe
+            src={embedUrl}
+            className="w-full h-full"
+            frameBorder="0"
+            allow="autoplay"
+            allowFullScreen
+            title={video.title}
+          ></iframe>
+        );
+      }
+      
+      // Direct video URL (mp4, webm, etc.)
+      return (
+        <video
+          controls
+          className="w-full h-full object-cover"
+          poster={video.thumbnail_url || undefined}
+        >
+          <source src={video.video_url} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      );
+    }
+    
+    // File uploaded to server
+    return (
+      <video
+        controls
+        className="w-full h-full object-cover"
+        poster={video.thumbnail_url || undefined}
+      >
+        <source src={`${BACKEND_URL}${video.video_url}`} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    );
+  };
+
   return (
     <div className="homepage">
       {/* Hero Section with Ocean Theme */}
@@ -183,14 +257,7 @@ function Homepage() {
               demoVideos.map((video) => (
                 <div key={video.id} className="card-ocean">
                   <div className="aspect-video bg-gray-900 relative overflow-hidden">
-                    <video
-                      controls
-                      className="w-full h-full object-cover"
-                      poster={video.thumbnail_url || undefined}
-                    >
-                      <source src={`${BACKEND_URL}${video.video_url}`} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
+                    {renderVideoPlayer(video)}
                   </div>
                   <div className="p-6">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">{video.title}</h3>

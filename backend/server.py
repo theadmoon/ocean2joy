@@ -277,8 +277,9 @@ class DemoVideo(BaseModel):
     title: str
     description: str
     tags: List[str] = []
-    video_filename: str
-    video_url: str  # server path to video file
+    video_type: str = "file"  # "file" or "url"
+    video_filename: Optional[str] = None  # For uploaded files
+    video_url: str  # server path to video file OR external URL
     thumbnail_url: Optional[str] = None
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -873,8 +874,56 @@ async def upload_demo_video(
         title=title,
         description=description,
         tags=tags_list,
+        video_type="file",
         video_filename=unique_filename,
         video_url=f"/uploads/demo-videos/{unique_filename}"
+    )
+    
+    await db.demo_videos.insert_one(demo_video.model_dump())
+    
+    return demo_video
+
+@api_router.post("/admin/demo-videos/upload-url")
+async def upload_demo_video_url(
+    position: int = Form(...),
+    title: str = Form(...),
+    description: str = Form(...),
+    tags: str = Form(""),
+    video_url: str = Form(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Add a demo video from external URL (Yandex Disk, Google Drive, direct link)"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Validate position
+    if position not in [1, 2]:
+        raise HTTPException(status_code=400, detail="Position must be 1 or 2")
+    
+    # Validate URL
+    if not video_url or not video_url.startswith(('http://', 'https://')):
+        raise HTTPException(status_code=400, detail="Invalid URL")
+    
+    # Parse tags
+    tags_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+    
+    # Check if video already exists for this position and deactivate it
+    existing_video = await db.demo_videos.find_one({"position": position, "is_active": True}, {"_id": 0})
+    if existing_video:
+        await db.demo_videos.update_one(
+            {"id": existing_video["id"]},
+            {"$set": {"is_active": False, "updated_at": datetime.now(timezone.utc)}}
+        )
+    
+    # Create demo video record with URL
+    demo_video = DemoVideo(
+        position=position,
+        title=title,
+        description=description,
+        tags=tags_list,
+        video_type="url",
+        video_filename=None,
+        video_url=video_url
     )
     
     await db.demo_videos.insert_one(demo_video.model_dump())
