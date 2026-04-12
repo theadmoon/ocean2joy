@@ -8,9 +8,11 @@ const API = `${BACKEND_URL}/api`;
 
 function Homepage() {
   const [services, setServices] = useState([]);
+  const [demoVideos, setDemoVideos] = useState([]);
 
   useEffect(() => {
     fetchServices();
+    fetchDemoVideos();
   }, []);
 
   const fetchServices = async () => {
@@ -19,6 +21,15 @@ function Homepage() {
       setServices(response.data);
     } catch (error) {
       console.error('Error fetching services:', error);
+    }
+  };
+
+  const fetchDemoVideos = async () => {
+    try {
+      const response = await axios.get(`${API}/demo-videos`);
+      setDemoVideos(response.data);
+    } catch (error) {
+      console.error('Error fetching demo videos:', error);
     }
   };
 
@@ -168,51 +179,87 @@ function Homepage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Demo Video 1 - Custom Production */}
-            <div className="card-ocean">
-              <div className="aspect-video bg-gray-900 relative overflow-hidden">
-                <iframe
-                  src="https://player.vimeo.com/video/115098447?background=1&autoplay=0&loop=0&byline=0&title=0"
-                  className="w-full h-full"
-                  frameBorder="0"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
-                  title="Custom Video Production Demo"
-                ></iframe>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Professional Custom Video</h3>
-                <p className="text-gray-600">Example of our custom video production with professional actors and crew</p>
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">Drama</span>
-                  <span className="bg-teal-100 text-teal-800 text-xs px-2 py-1 rounded">Professional</span>
-                  <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">HD Quality</span>
+            {demoVideos.length > 0 ? (
+              demoVideos.map((video) => (
+                <div key={video.id} className="card-ocean">
+                  <div className="aspect-video bg-gray-900 relative overflow-hidden">
+                    <video
+                      controls
+                      className="w-full h-full object-cover"
+                      poster={video.thumbnail_url || undefined}
+                    >
+                      <source src={`${BACKEND_URL}${video.video_url}`} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{video.title}</h3>
+                    <p className="text-gray-600">{video.description}</p>
+                    {video.tags.length > 0 && (
+                      <div className="mt-3 flex items-center gap-2 flex-wrap">
+                        {video.tags.map((tag, idx) => (
+                          <span 
+                            key={idx} 
+                            className="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
+              ))
+            ) : (
+              // Fallback to default Vimeo videos if no uploaded videos
+              <>
+                {/* Demo Video 1 - Custom Production */}
+                <div className="card-ocean">
+                  <div className="aspect-video bg-gray-900 relative overflow-hidden">
+                    <iframe
+                      src="https://player.vimeo.com/video/115098447?background=1&autoplay=0&loop=0&byline=0&title=0"
+                      className="w-full h-full"
+                      frameBorder="0"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      title="Custom Video Production Demo"
+                    ></iframe>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Professional Custom Video</h3>
+                    <p className="text-gray-600">Example of our custom video production with professional actors and crew</p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">Drama</span>
+                      <span className="bg-teal-100 text-teal-800 text-xs px-2 py-1 rounded">Professional</span>
+                      <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">HD Quality</span>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Demo Video 2 - AI Generated / Tech Demo */}
-            <div className="card-ocean">
-              <div className="aspect-video bg-gray-900 relative overflow-hidden">
-                <iframe
-                  src="https://player.vimeo.com/video/342333493?background=1&autoplay=0&loop=0&byline=0&title=0"
-                  className="w-full h-full"
-                  frameBorder="0"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
-                  title="AI-Generated Video Demo"
-                ></iframe>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">AI-Powered Creation</h3>
-                <p className="text-gray-600">Example of our cutting-edge AI-generated video content with digital effects</p>
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">AI Tech</span>
-                  <span className="bg-teal-100 text-teal-800 text-xs px-2 py-1 rounded">Innovative</span>
-                  <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Digital</span>
+                {/* Demo Video 2 - AI Generated / Tech Demo */}
+                <div className="card-ocean">
+                  <div className="aspect-video bg-gray-900 relative overflow-hidden">
+                    <iframe
+                      src="https://player.vimeo.com/video/342333493?background=1&autoplay=0&loop=0&byline=0&title=0"
+                      className="w-full h-full"
+                      frameBorder="0"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      title="AI-Generated Video Demo"
+                    ></iframe>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">AI-Powered Creation</h3>
+                    <p className="text-gray-600">Example of our cutting-edge AI-generated video content with digital effects</p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">AI Tech</span>
+                      <span className="bg-teal-100 text-teal-800 text-xs px-2 py-1 rounded">Innovative</span>
+                      <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Digital</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
           {/* Note about demo videos */}

@@ -269,6 +269,33 @@ class ContactMessageCreate(BaseModel):
     subject: Optional[str] = None
     message: str
 
+# Demo Video Models
+class DemoVideo(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    position: int  # 1 or 2
+    title: str
+    description: str
+    tags: List[str] = []
+    video_filename: str
+    video_url: str  # server path to video file
+    thumbnail_url: Optional[str] = None
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class DemoVideoCreate(BaseModel):
+    position: int
+    title: str
+    description: str
+    tags: List[str] = []
+
+class DemoVideoUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
+    is_active: Optional[bool] = None
+
 # ==================== HELPER FUNCTIONS ====================
 
 def create_access_token(data: dict):
@@ -777,6 +804,134 @@ async def upload_deliverable(
     
     return {"message": "Deliverable uploaded", "deliverable": deliverable}
 
+# ==================== DEMO VIDEOS ENDPOINTS ====================
+
+@api_router.get("/demo-videos", response_model=List[DemoVideo])
+async def get_demo_videos():
+    """Get all demo videos (public endpoint)"""
+    videos = await db.demo_videos.find({"is_active": True}, {"_id": 0}).sort("position", 1).to_list(10)
+    return videos
+
+@api_router.get("/admin/demo-videos", response_model=List[DemoVideo])
+async def admin_get_all_demo_videos(current_user: User = Depends(get_current_user)):
+    """Get all demo videos for admin (including inactive)"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    videos = await db.demo_videos.find({}, {"_id": 0}).sort("position", 1).to_list(10)
+    return videos
+
+@api_router.post("/admin/demo-videos/upload")
+async def upload_demo_video(
+    position: int = Form(...),
+    title: str = Form(...),
+    description: str = Form(...),
+    tags: str = Form(""),  # comma-separated
+    video: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload a new demo video"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Validate position
+    if position not in [1, 2]:
+        raise HTTPException(status_code=400, detail="Position must be 1 or 2")
+    
+    # Validate file type
+    allowed_types = ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"]
+    if video.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only MP4, WebM, MOV, AVI are allowed")
+    
+    # Generate unique filename
+    file_extension = video.filename.split('.')[-1]
+    unique_filename = f"{str(uuid.uuid4())}.{file_extension}"
+    file_path = Path("/app/backend/uploads/demo-videos") / unique_filename
+    
+    # Save file
+    try:
+        with open(file_path, "wb") as f:
+            content = await video.read()
+            f.write(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save video: {str(e)}")
+    
+    # Parse tags
+    tags_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+    
+    # Check if video already exists for this position and deactivate it
+    existing_video = await db.demo_videos.find_one({"position": position, "is_active": True}, {"_id": 0})
+    if existing_video:
+        await db.demo_videos.update_one(
+            {"id": existing_video["id"]},
+            {"$set": {"is_active": False, "updated_at": datetime.now(timezone.utc)}}
+        )
+    
+    # Create demo video record
+    demo_video = DemoVideo(
+        position=position,
+        title=title,
+        description=description,
+        tags=tags_list,
+        video_filename=unique_filename,
+        video_url=f"/uploads/demo-videos/{unique_filename}"
+    )
+    
+    await db.demo_videos.insert_one(demo_video.model_dump())
+    
+    return demo_video
+
+@api_router.patch("/admin/demo-videos/{video_id}", response_model=DemoVideo)
+async def update_demo_video(
+    video_id: str,
+    update_data: DemoVideoUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Update demo video metadata"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    video = await db.demo_videos.find_one({"id": video_id}, {"_id": 0})
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    
+    update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
+    update_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.demo_videos.update_one(
+        {"id": video_id},
+        {"$set": update_dict}
+    )
+    
+    updated_video = await db.demo_videos.find_one({"id": video_id}, {"_id": 0})
+    return DemoVideo(**updated_video)
+
+@api_router.delete("/admin/demo-videos/{video_id}")
+async def delete_demo_video(
+    video_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a demo video"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    video = await db.demo_videos.find_one({"id": video_id}, {"_id": 0})
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    
+    # Delete file from filesystem
+    try:
+        file_path = Path("/app/backend/uploads/demo-videos") / video["video_filename"]
+        if file_path.exists():
+            file_path.unlink()
+    except Exception as e:
+        logger.error(f"Failed to delete video file: {e}")
+    
+    # Delete from database
+    await db.demo_videos.delete_one({"id": video_id})
+    
+    return {"message": "Video deleted successfully"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
@@ -787,6 +942,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve uploaded files (videos)
+from fastapi.staticfiles import StaticFiles
+app.mount("/uploads", StaticFiles(directory="/app/backend/uploads"), name="uploads")
 
 # Configure logging
 logging.basicConfig(

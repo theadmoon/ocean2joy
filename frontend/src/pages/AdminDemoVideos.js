@@ -1,0 +1,375 @@
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { FaUpload, FaTrash, FaEdit, FaSave, FaTimes, FaVideo } from 'react-icons/fa';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+function AdminDemoVideos() {
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
+  
+  // Upload form state
+  const [uploadForm, setUploadForm] = useState({
+    position: 1,
+    title: '',
+    description: '',
+    tags: '',
+    videoFile: null
+  });
+  const [showUploadForm, setShowUploadForm] = useState(false);
+
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  const fetchVideos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/demo-videos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVideos(response.data);
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+      alert('Failed to load videos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (max 100MB)
+      if (file.size > 100 * 1024 * 1024) {
+        alert('File size must be less than 100MB');
+        return;
+      }
+      
+      // Validate file type
+      const validTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
+      if (!validTypes.includes(file.type)) {
+        alert('Invalid file type. Please upload MP4, WebM, MOV, or AVI');
+        return;
+      }
+      
+      setUploadForm({ ...uploadForm, videoFile: file });
+    }
+  };
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    
+    if (!uploadForm.videoFile) {
+      alert('Please select a video file');
+      return;
+    }
+
+    if (!uploadForm.title || !uploadForm.description) {
+      alert('Please fill in title and description');
+      return;
+    }
+
+    setUploading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('position', uploadForm.position);
+      formData.append('title', uploadForm.title);
+      formData.append('description', uploadForm.description);
+      formData.append('tags', uploadForm.tags);
+      formData.append('video', uploadForm.videoFile);
+
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/demo-videos/upload`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      alert('Video uploaded successfully!');
+      setShowUploadForm(false);
+      setUploadForm({
+        position: 1,
+        title: '',
+        description: '',
+        tags: '',
+        videoFile: null
+      });
+      fetchVideos();
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert(error.response?.data?.detail || 'Failed to upload video');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const startEdit = (video) => {
+    setEditingId(video.id);
+    setEditData({
+      title: video.title,
+      description: video.description,
+      tags: video.tags.join(', '),
+      is_active: video.is_active
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditData({});
+  };
+
+  const saveEdit = async (videoId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const updatePayload = {
+        title: editData.title,
+        description: editData.description,
+        tags: editData.tags.split(',').map(t => t.trim()).filter(t => t),
+        is_active: editData.is_active
+      };
+
+      await axios.patch(`${API}/admin/demo-videos/${videoId}`, updatePayload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      alert('Video updated successfully!');
+      setEditingId(null);
+      setEditData({});
+      fetchVideos();
+    } catch (error) {
+      console.error('Update error:', error);
+      alert('Failed to update video');
+    }
+  };
+
+  const handleDelete = async (videoId) => {
+    if (!window.confirm('Are you sure you want to delete this video?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/admin/demo-videos/${videoId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      alert('Video deleted successfully!');
+      fetchVideos();
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Failed to delete video');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl text-sky-600">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="admin-demo-videos py-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-4xl font-bold text-gray-900">Manage Demo Videos</h1>
+          <button
+            onClick={() => setShowUploadForm(!showUploadForm)}
+            className="btn-ocean flex items-center gap-2"
+          >
+            <FaUpload />
+            {showUploadForm ? 'Cancel Upload' : 'Upload New Video'}
+          </button>
+        </div>
+
+        {/* Upload Form */}
+        {showUploadForm && (
+          <div className="card-ocean p-6 mb-8">
+            <h2 className="text-2xl font-bold mb-4">Upload Demo Video</h2>
+            <form onSubmit={handleUpload} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Position</label>
+                <select
+                  value={uploadForm.position}
+                  onChange={(e) => setUploadForm({ ...uploadForm, position: parseInt(e.target.value) })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  required
+                >
+                  <option value={1}>Position 1 (Left - Professional Custom Video)</option>
+                  <option value={2}>Position 2 (Right - AI-Powered Creation)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Title</label>
+                <input
+                  type="text"
+                  value={uploadForm.title}
+                  onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  placeholder="Professional Custom Video"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Description</label>
+                <textarea
+                  value={uploadForm.description}
+                  onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  rows="3"
+                  placeholder="Example of our custom video production with professional actors and crew"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Tags (comma-separated)</label>
+                <input
+                  type="text"
+                  value={uploadForm.tags}
+                  onChange={(e) => setUploadForm({ ...uploadForm, tags: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  placeholder="Drama, Professional, HD Quality"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Video File (Max 100MB)</label>
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
+                  onChange={handleFileSelect}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  required
+                />
+                {uploadForm.videoFile && (
+                  <p className="text-sm text-green-600 mt-2">
+                    Selected: {uploadForm.videoFile.name} ({(uploadForm.videoFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={uploading}
+                className="btn-ocean w-full"
+              >
+                {uploading ? 'Uploading...' : 'Upload Video'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Videos List */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-900">Current Videos</h2>
+          
+          {videos.length === 0 ? (
+            <div className="card-ocean p-8 text-center">
+              <FaVideo className="mx-auto text-6xl text-gray-300 mb-4" />
+              <p className="text-gray-500">No videos uploaded yet. Upload your first demo video!</p>
+            </div>
+          ) : (
+            videos.map((video) => (
+              <div key={video.id} className="card-ocean p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Video Preview */}
+                  <div>
+                    <video
+                      controls
+                      className="w-full rounded-lg"
+                      style={{ maxHeight: '200px' }}
+                    >
+                      <source src={`${BACKEND_URL}${video.video_url}`} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Position: {video.position} | Status: {video.is_active ? '✓ Active' : '✗ Inactive'}
+                    </p>
+                  </div>
+
+                  {/* Video Details */}
+                  <div className="lg:col-span-2">
+                    {editingId === video.id ? (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={editData.title}
+                          onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                          className="w-full border border-gray-300 rounded px-3 py-2"
+                        />
+                        <textarea
+                          value={editData.description}
+                          onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                          className="w-full border border-gray-300 rounded px-3 py-2"
+                          rows="2"
+                        />
+                        <input
+                          type="text"
+                          value={editData.tags}
+                          onChange={(e) => setEditData({ ...editData, tags: e.target.value })}
+                          className="w-full border border-gray-300 rounded px-3 py-2"
+                          placeholder="Tags (comma-separated)"
+                        />
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={editData.is_active}
+                            onChange={(e) => setEditData({ ...editData, is_active: e.target.checked })}
+                          />
+                          <span className="text-sm">Active</span>
+                        </label>
+                        <div className="flex gap-2">
+                          <button onClick={() => saveEdit(video.id)} className="btn-ocean text-sm">
+                            <FaSave className="inline mr-1" /> Save
+                          </button>
+                          <button onClick={cancelEdit} className="btn-ocean-outline text-sm">
+                            <FaTimes className="inline mr-1" /> Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{video.title}</h3>
+                        <p className="text-gray-600 mb-3">{video.description}</p>
+                        {video.tags.length > 0 && (
+                          <div className="flex gap-2 mb-4">
+                            {video.tags.map((tag, idx) => (
+                              <span key={idx} className="text-xs bg-sky-100 text-sky-600 px-3 py-1 rounded-full">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <button onClick={() => startEdit(video)} className="btn-ocean text-sm">
+                            <FaEdit className="inline mr-1" /> Edit
+                          </button>
+                          <button onClick={() => handleDelete(video.id)} className="btn-ocean-outline text-sm text-red-600 border-red-600 hover:bg-red-50">
+                            <FaTrash className="inline mr-1" /> Delete
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default AdminDemoVideos;

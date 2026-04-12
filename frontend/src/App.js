@@ -13,6 +13,7 @@ import ClientDashboard from './pages/ClientDashboard';
 import ProjectDetails from './pages/ProjectDetails';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminProjectManagement from './pages/AdminProjectManagement';
+import AdminDemoVideos from './pages/AdminDemoVideos';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
@@ -64,6 +65,14 @@ function App() {
                 element={
                   <ProtectedRoute roles={['manager', 'admin']}>
                     <AdminProjectManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/demo-videos" 
+                element={
+                  <ProtectedRoute roles={['manager', 'admin']}>
+                    <AdminDemoVideos />
                   </ProtectedRoute>
                 } 
               />
