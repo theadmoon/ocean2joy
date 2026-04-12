@@ -196,7 +196,8 @@ function AdminDemoVideos() {
       title: video.title,
       description: video.description,
       tags: video.tags.join(', '),
-      is_active: video.is_active
+      is_active: video.is_active,
+      thumbnail_url: video.thumbnail_url || ''
     });
   };
 
@@ -212,7 +213,8 @@ function AdminDemoVideos() {
         title: editData.title,
         description: editData.description,
         tags: editData.tags.split(',').map(t => t.trim()).filter(t => t),
-        is_active: editData.is_active
+        is_active: editData.is_active,
+        thumbnail_url: editData.thumbnail_url || null
       };
 
       await axios.patch(`${API}/admin/demo-videos/${videoId}`, updatePayload, {
@@ -610,12 +612,14 @@ function AdminDemoVideos() {
                           value={editData.title}
                           onChange={(e) => setEditData({ ...editData, title: e.target.value })}
                           className="w-full border border-gray-300 rounded px-3 py-2"
+                          placeholder="Title"
                         />
                         <textarea
                           value={editData.description}
                           onChange={(e) => setEditData({ ...editData, description: e.target.value })}
                           className="w-full border border-gray-300 rounded px-3 py-2"
                           rows="2"
+                          placeholder="Description"
                         />
                         <input
                           type="text"
@@ -623,6 +627,13 @@ function AdminDemoVideos() {
                           onChange={(e) => setEditData({ ...editData, tags: e.target.value })}
                           className="w-full border border-gray-300 rounded px-3 py-2"
                           placeholder="Tags (comma-separated)"
+                        />
+                        <input
+                          type="url"
+                          value={editData.thumbnail_url}
+                          onChange={(e) => setEditData({ ...editData, thumbnail_url: e.target.value })}
+                          className="w-full border border-gray-300 rounded px-3 py-2"
+                          placeholder="Preview Image URL (optional)"
                         />
                         <label className="flex items-center gap-2">
                           <input

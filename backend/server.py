@@ -296,6 +296,7 @@ class DemoVideoUpdate(BaseModel):
     description: Optional[str] = None
     tags: Optional[List[str]] = None
     is_active: Optional[bool] = None
+    thumbnail_url: Optional[str] = None
 
 # ==================== HELPER FUNCTIONS ====================
 
