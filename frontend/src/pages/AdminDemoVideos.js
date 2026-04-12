@@ -208,21 +208,70 @@ function AdminDemoVideos() {
     }
   };
 
+  const toggleActive = async (videoId, currentStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/admin/demo-videos/${videoId}`, 
+        { is_active: !currentStatus },
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+
+      fetchVideos();
+    } catch (error) {
+      console.error('Toggle error:', error);
+      alert('Failed to update video status');
+    }
+  };
+
   // Render video preview
   const renderVideoPreview = (video) => {
     if (video.video_type === 'url') {
-      // For URL videos, show iframe or video tag
-      if (video.video_url.includes('disk.yandex') || video.video_url.includes('drive.google')) {
+      // For URL videos, show iframe preview
+      if (video.video_url.includes('disk.yandex')) {
+        // Yandex Disk iframe
+        let embedUrl = video.video_url;
+        if (video.video_url.includes('/d/')) {
+          const fileId = video.video_url.split('/d/')[1].split('?')[0];
+          embedUrl = `https://disk.yandex.ru/i/${fileId}`;
+        }
+        
         return (
-          <div className="w-full rounded-lg bg-gray-900 flex items-center justify-center" style={{ height: '200px' }}>
-            <p className="text-white text-sm text-center px-4">
-              🎥 External Video<br />
-              <span className="text-xs text-gray-400">{video.video_url.substring(0, 50)}...</span>
-            </p>
+          <div className="w-full rounded-lg overflow-hidden" style={{ height: '200px' }}>
+            <iframe
+              src={embedUrl}
+              className="w-full h-full"
+              frameBorder="0"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+              title={video.title}
+            ></iframe>
           </div>
         );
       }
       
+      if (video.video_url.includes('drive.google')) {
+        // Google Drive iframe
+        let embedUrl = video.video_url;
+        if (video.video_url.includes('/file/d/')) {
+          const fileId = video.video_url.split('/file/d/')[1].split('/')[0];
+          embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+        }
+        
+        return (
+          <div className="w-full rounded-lg overflow-hidden" style={{ height: '200px' }}>
+            <iframe
+              src={embedUrl}
+              className="w-full h-full"
+              frameBorder="0"
+              allow="autoplay"
+              allowFullScreen
+              title={video.title}
+            ></iframe>
+          </div>
+        );
+      }
+      
+      // Direct video URL
       return (
         <video
           controls
@@ -403,7 +452,25 @@ function AdminDemoVideos() {
 
         {/* Videos List */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900">Current Videos</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900">Current Videos</h2>
+            
+            {/* Active Videos Info */}
+            <div className="flex gap-4 text-sm">
+              <div className="bg-green-50 px-4 py-2 rounded-lg border border-green-200">
+                <span className="font-semibold text-green-700">Position 1:</span>{' '}
+                <span className="text-green-900">
+                  {videos.filter(v => v.position === 1 && v.is_active).length} active
+                </span>
+              </div>
+              <div className="bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                <span className="font-semibold text-blue-700">Position 2:</span>{' '}
+                <span className="text-blue-900">
+                  {videos.filter(v => v.position === 2 && v.is_active).length} active
+                </span>
+              </div>
+            </div>
+          </div>
           
           {videos.length === 0 ? (
             <div className="card-ocean p-8 text-center">
@@ -412,14 +479,32 @@ function AdminDemoVideos() {
             </div>
           ) : (
             videos.map((video) => (
-              <div key={video.id} className="card-ocean p-6">
+              <div 
+                key={video.id} 
+                className={`card-ocean p-6 ${video.is_active ? 'border-2 border-green-500' : 'opacity-75'}`}
+              >
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Video Preview */}
                   <div>
                     {renderVideoPreview(video)}
                     <p className="text-xs text-gray-500 mt-2">
-                      Position: {video.position} | Type: {video.video_type === 'url' ? '🔗 URL' : '📁 File'} | Status: {video.is_active ? '✓ Active' : '✗ Inactive'}
+                      Position: {video.position} | Type: {video.video_type === 'url' ? '🔗 URL' : '📁 File'}
                     </p>
+                    
+                    {/* Active/Inactive Toggle */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={video.is_active}
+                          onChange={() => toggleActive(video.id, video.is_active)}
+                          className="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+                        />
+                        <span className={`text-sm font-semibold ${video.is_active ? 'text-green-600' : 'text-gray-500'}`}>
+                          {video.is_active ? '✓ Active (Showing on Homepage)' : '✗ Inactive (Hidden)'}
+                        </span>
+                      </label>
+                    </div>
                   </div>
 
                   {/* Video Details */}
