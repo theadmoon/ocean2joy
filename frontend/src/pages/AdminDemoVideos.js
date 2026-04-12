@@ -349,16 +349,21 @@ function AdminDemoVideos() {
         return (
           <div 
             className="w-full rounded-lg flex flex-col items-center justify-center cursor-pointer hover:opacity-90 transition-all relative overflow-hidden"
-            style={{ 
-              height: '200px',
-              backgroundImage: fullThumbnailUrl
-                ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${fullThumbnailUrl})`
-                : 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
+            style={{ height: '200px' }}
             onClick={() => window.open(video.video_url, '_blank')}
           >
+            {/* Thumbnail as img instead of background-image */}
+            {fullThumbnailUrl && (
+              <img 
+                src={fullThumbnailUrl} 
+                alt={video.title}
+                className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                style={{ filter: 'brightness(0.7)' }}
+              />
+            )}
+            {!fullThumbnailUrl && (
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg"></div>
+            )}
             <div className="text-center p-4 relative z-10">
               <div className="text-4xl mb-3">🎥</div>
               <p className="text-white font-semibold mb-2">External Video</p>

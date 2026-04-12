@@ -1062,11 +1062,19 @@ async def delete_demo_video(
     if not video:
         raise HTTPException(status_code=404, detail="Video not found")
     
-    # Delete file from filesystem
+    # Delete file from filesystem (only for uploaded files)
     try:
-        file_path = Path("/app/backend/uploads/demo-videos") / video["video_filename"]
-        if file_path.exists():
-            file_path.unlink()
+        if video.get("video_filename"):
+            file_path = Path("/app/backend/uploads/demo-videos") / video["video_filename"]
+            if file_path.exists():
+                file_path.unlink()
+        
+        # Delete thumbnail if it's an uploaded file
+        if video.get("thumbnail_url") and video["thumbnail_url"].startswith("/uploads/thumbnails/"):
+            thumb_filename = video["thumbnail_url"].split("/")[-1]
+            thumb_path = Path("/app/backend/uploads/thumbnails") / thumb_filename
+            if thumb_path.exists():
+                thumb_path.unlink()
     except Exception as e:
         logger.error(f"Failed to delete video file: {e}")
     
@@ -1086,25 +1094,54 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve uploaded files (videos and thumbnails)
-from fastapi.staticfiles import StaticFiles
-from starlette.middleware.base import BaseHTTPMiddleware
+# Serve uploaded files (videos and thumbnails) with proper CORS headers
+from fastapi.responses import FileResponse
+import mimetypes
 
-class StaticFilesCORSMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        response = await call_next(request)
-        
-        # Add CORS headers for /uploads/ paths
-        if request.url.path.startswith('/uploads/'):
-            response.headers['Access-Control-Allow-Origin'] = '*'
-            response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
-            response.headers['Access-Control-Allow-Headers'] = '*'
-            response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
-        
-        return response
-
-app.mount("/uploads", StaticFiles(directory="/app/backend/uploads"), name="uploads")
-app.add_middleware(StaticFilesCORSMiddleware)
+@app.get("/uploads/{file_type}/{filename}")
+async def serve_uploaded_file(file_type: str, filename: str):
+    """Serve uploaded files with proper CORS headers"""
+    if file_type not in ["demo-videos", "thumbnails"]:
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    file_path = Path(f"/app/backend/uploads/{file_type}") / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Get MIME type
+    mime_type, _ = mimetypes.guess_type(str(file_path))
+    if not mime_type:
+        # Fallback MIME types
+        ext = filename.split('.')[-1].lower()
+        mime_map = {
+            'mp4': 'video/mp4',
+            'webm': 'video/webm',
+            'mov': 'video/quicktime',
+            'avi': 'video/x-msvideo',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'webp': 'image/webp'
+        }
+        mime_type = mime_map.get(ext, 'application/octet-stream')
+    
+    # Create response with proper headers
+    response = FileResponse(
+        path=str(file_path),
+        media_type=mime_type,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+            "Cross-Origin-Resource-Policy": "cross-origin",
+            "Cross-Origin-Embedder-Policy": "unsafe-none",
+            "Cache-Control": "public, max-age=3600",
+            "X-Content-Type-Options": "nosniff"
+        }
+    )
+    
+    return response
 
 # Configure logging
 logging.basicConfig(

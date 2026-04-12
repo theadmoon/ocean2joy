@@ -56,15 +56,20 @@ function Homepage() {
         return (
           <div 
             className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:opacity-90 transition-all relative overflow-hidden group"
-            style={{
-              backgroundImage: fullThumbnailUrl
-                ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${fullThumbnailUrl})`
-                : 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
             onClick={() => window.open(video.video_url, '_blank')}
           >
+            {/* Thumbnail as img instead of background-image to avoid CORS issues */}
+            {fullThumbnailUrl && (
+              <img 
+                src={fullThumbnailUrl} 
+                alt={video.title}
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ filter: 'brightness(0.6)' }}
+              />
+            )}
+            {!fullThumbnailUrl && (
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900"></div>
+            )}
             <div className="text-center p-6 relative z-10">
               <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🎥</div>
               <p className="text-white text-lg font-semibold mb-2">Watch on {platform}</p>
