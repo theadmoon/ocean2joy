@@ -36,16 +36,23 @@ function Homepage() {
   // Helper function to render video player based on video type
   const renderVideoPlayer = (video) => {
     if (video.video_type === 'url') {
-      // For Yandex Disk and Google Drive - show clickable preview (CORS blocks iframe)
+      // For Yandex Disk and Google Drive - show clickable preview with thumbnail
       if (video.video_url.includes('disk.yandex') || video.video_url.includes('drive.google')) {
         const platform = video.video_url.includes('disk.yandex') ? 'Яндекс.Диск' : 'Google Drive';
         
         return (
           <div 
-            className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex flex-col items-center justify-center cursor-pointer hover:from-gray-700 hover:to-gray-800 transition-all group"
+            className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:opacity-90 transition-all relative overflow-hidden group"
+            style={{
+              backgroundImage: video.thumbnail_url 
+                ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${video.thumbnail_url})`
+                : 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
             onClick={() => window.open(video.video_url, '_blank')}
           >
-            <div className="text-center p-6">
+            <div className="text-center p-6 relative z-10">
               <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🎥</div>
               <p className="text-white text-lg font-semibold mb-2">Watch on {platform}</p>
               <div className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-lg inline-flex items-center gap-2 mt-4">

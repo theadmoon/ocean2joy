@@ -828,6 +828,7 @@ async def upload_demo_video(
     title: str = Form(...),
     description: str = Form(...),
     tags: str = Form(""),  # comma-separated
+    thumbnail_url: str = Form(""),  # optional preview image
     video: UploadFile = File(...),
     current_user: User = Depends(get_current_user)
 ):
@@ -876,7 +877,8 @@ async def upload_demo_video(
         tags=tags_list,
         video_type="file",
         video_filename=unique_filename,
-        video_url=f"/uploads/demo-videos/{unique_filename}"
+        video_url=f"/uploads/demo-videos/{unique_filename}",
+        thumbnail_url=thumbnail_url if thumbnail_url else None
     )
     
     await db.demo_videos.insert_one(demo_video.model_dump())
@@ -890,6 +892,7 @@ async def upload_demo_video_url(
     description: str = Form(...),
     tags: str = Form(""),
     video_url: str = Form(...),
+    thumbnail_url: str = Form(""),  # optional preview image
     current_user: User = Depends(get_current_user)
 ):
     """Add a demo video from external URL (Yandex Disk, Google Drive, direct link)"""
@@ -923,7 +926,8 @@ async def upload_demo_video_url(
         tags=tags_list,
         video_type="url",
         video_filename=None,
-        video_url=video_url
+        video_url=video_url,
+        thumbnail_url=thumbnail_url if thumbnail_url else None
     )
     
     await db.demo_videos.insert_one(demo_video.model_dump())

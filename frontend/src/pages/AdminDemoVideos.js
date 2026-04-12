@@ -20,6 +20,7 @@ function AdminDemoVideos() {
     tags: '',
     videoFile: null,
     videoUrl: '',
+    thumbnailUrl: '', // Preview image URL
     uploadMethod: 'file' // 'file' or 'url'
   });
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -107,6 +108,9 @@ function AdminDemoVideos() {
         formData.append('description', finalDescription);
         formData.append('tags', finalTags);
         formData.append('video', uploadForm.videoFile);
+        if (uploadForm.thumbnailUrl) {
+          formData.append('thumbnail_url', uploadForm.thumbnailUrl);
+        }
 
         await axios.post(`${API}/admin/demo-videos/upload`, formData, {
           headers: {
@@ -122,6 +126,9 @@ function AdminDemoVideos() {
         formData.append('description', finalDescription);
         formData.append('tags', finalTags);
         formData.append('video_url', uploadForm.videoUrl);
+        if (uploadForm.thumbnailUrl) {
+          formData.append('thumbnail_url', uploadForm.thumbnailUrl);
+        }
 
         await axios.post(`${API}/admin/demo-videos/upload-url`, formData, {
           headers: {
@@ -139,6 +146,7 @@ function AdminDemoVideos() {
         tags: '',
         videoFile: null,
         videoUrl: '',
+        thumbnailUrl: '',
         uploadMethod: 'file'
       });
       fetchVideos();
@@ -226,17 +234,24 @@ function AdminDemoVideos() {
   // Render video preview
   const renderVideoPreview = (video) => {
     if (video.video_type === 'url') {
-      // For Yandex Disk and Google Drive - show link instead of iframe (CORS issue)
+      // For Yandex Disk and Google Drive - show link with thumbnail
       if (video.video_url.includes('disk.yandex') || video.video_url.includes('drive.google')) {
         const platform = video.video_url.includes('disk.yandex') ? 'Яндекс.Диск' : 'Google Drive';
         
         return (
           <div 
-            className="w-full rounded-lg bg-gradient-to-br from-gray-800 to-gray-900 flex flex-col items-center justify-center cursor-pointer hover:from-gray-700 hover:to-gray-800 transition-all"
-            style={{ height: '200px' }}
+            className="w-full rounded-lg flex flex-col items-center justify-center cursor-pointer hover:opacity-90 transition-all relative overflow-hidden"
+            style={{ 
+              height: '200px',
+              backgroundImage: video.thumbnail_url 
+                ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${video.thumbnail_url})`
+                : 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
             onClick={() => window.open(video.video_url, '_blank')}
           >
-            <div className="text-center p-4">
+            <div className="text-center p-4 relative z-10">
               <div className="text-4xl mb-3">🎥</div>
               <p className="text-white font-semibold mb-2">External Video</p>
               <p className="text-gray-300 text-sm mb-3">{platform}</p>
@@ -255,6 +270,7 @@ function AdminDemoVideos() {
           controls
           className="w-full rounded-lg"
           style={{ maxHeight: '200px' }}
+          poster={video.thumbnail_url || undefined}
         >
           <source src={video.video_url} type="video/mp4" />
           Your browser does not support the video tag.
@@ -268,6 +284,7 @@ function AdminDemoVideos() {
         controls
         className="w-full rounded-lg"
         style={{ maxHeight: '200px' }}
+        poster={video.thumbnail_url || undefined}
       >
         <source src={`${BACKEND_URL}${video.video_url}`} type="video/mp4" />
         Your browser does not support the video tag.
@@ -416,6 +433,23 @@ function AdminDemoVideos() {
                   </p>
                 </div>
               )}
+
+              {/* Thumbnail URL (optional for all videos) */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Preview Image URL (optional)
+                </label>
+                <input
+                  type="url"
+                  value={uploadForm.thumbnailUrl}
+                  onChange={(e) => setUploadForm({ ...uploadForm, thumbnailUrl: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  placeholder="https://example.com/thumbnail.jpg"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 Add a preview image URL to show instead of black screen. Recommended size: 1280x720px
+                </p>
+              </div>
 
               <button
                 type="submit"
