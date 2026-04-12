@@ -1086,9 +1086,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve uploaded files (videos)
+# Serve uploaded files (videos and thumbnails)
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class StaticFilesCORSMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        
+        # Add CORS headers for /uploads/ paths
+        if request.url.path.startswith('/uploads/'):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = '*'
+            response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
+        
+        return response
+
 app.mount("/uploads", StaticFiles(directory="/app/backend/uploads"), name="uploads")
+app.add_middleware(StaticFilesCORSMiddleware)
 
 # Configure logging
 logging.basicConfig(

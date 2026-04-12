@@ -35,6 +35,19 @@ function Homepage() {
 
   // Helper function to render video player based on video type
   const renderVideoPlayer = (video) => {
+    // Helper to get full thumbnail URL
+    const getThumbnailUrl = (thumbnailUrl) => {
+      if (!thumbnailUrl) return null;
+      // If it's a relative path (uploaded file), add BACKEND_URL
+      if (thumbnailUrl.startsWith('/uploads/')) {
+        return `${BACKEND_URL}${thumbnailUrl}`;
+      }
+      // Otherwise it's already a full URL
+      return thumbnailUrl;
+    };
+
+    const fullThumbnailUrl = getThumbnailUrl(video.thumbnail_url);
+
     if (video.video_type === 'url') {
       // For Yandex Disk and Google Drive - show clickable preview with thumbnail
       if (video.video_url.includes('disk.yandex') || video.video_url.includes('drive.google')) {
@@ -44,8 +57,8 @@ function Homepage() {
           <div 
             className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:opacity-90 transition-all relative overflow-hidden group"
             style={{
-              backgroundImage: video.thumbnail_url 
-                ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${video.thumbnail_url})`
+              backgroundImage: fullThumbnailUrl
+                ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${fullThumbnailUrl})`
                 : 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
               backgroundSize: 'cover',
               backgroundPosition: 'center'
@@ -69,7 +82,7 @@ function Homepage() {
         <video
           controls
           className="w-full h-full object-cover"
-          poster={video.thumbnail_url || undefined}
+          poster={fullThumbnailUrl || undefined}
         >
           <source src={video.video_url} type="video/mp4" />
           Your browser does not support the video tag.
@@ -82,7 +95,7 @@ function Homepage() {
       <video
         controls
         className="w-full h-full object-cover"
-        poster={video.thumbnail_url || undefined}
+        poster={fullThumbnailUrl || undefined}
       >
         <source src={`${BACKEND_URL}${video.video_url}`} type="video/mp4" />
         Your browser does not support the video tag.
