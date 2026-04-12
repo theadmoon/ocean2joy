@@ -36,48 +36,24 @@ function Homepage() {
   // Helper function to render video player based on video type
   const renderVideoPlayer = (video) => {
     if (video.video_type === 'url') {
-      // Check if it's Yandex Disk
-      if (video.video_url.includes('disk.yandex')) {
-        // Convert Yandex Disk URL to iframe embed
-        let embedUrl = video.video_url;
-        
-        // If it's a share link, convert to iframe format
-        if (video.video_url.includes('/d/')) {
-          const fileId = video.video_url.split('/d/')[1].split('?')[0];
-          embedUrl = `https://disk.yandex.ru/i/${fileId}`;
-        }
+      // For Yandex Disk and Google Drive - show clickable preview (CORS blocks iframe)
+      if (video.video_url.includes('disk.yandex') || video.video_url.includes('drive.google')) {
+        const platform = video.video_url.includes('disk.yandex') ? 'Яндекс.Диск' : 'Google Drive';
         
         return (
-          <iframe
-            src={embedUrl}
-            className="w-full h-full"
-            frameBorder="0"
-            allow="autoplay; fullscreen"
-            allowFullScreen
-            title={video.title}
-          ></iframe>
-        );
-      }
-      
-      // Check if it's Google Drive
-      if (video.video_url.includes('drive.google.com')) {
-        let embedUrl = video.video_url;
-        
-        // Convert Google Drive URL to embed format
-        if (video.video_url.includes('/file/d/')) {
-          const fileId = video.video_url.split('/file/d/')[1].split('/')[0];
-          embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-        }
-        
-        return (
-          <iframe
-            src={embedUrl}
-            className="w-full h-full"
-            frameBorder="0"
-            allow="autoplay"
-            allowFullScreen
-            title={video.title}
-          ></iframe>
+          <div 
+            className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex flex-col items-center justify-center cursor-pointer hover:from-gray-700 hover:to-gray-800 transition-all group"
+            onClick={() => window.open(video.video_url, '_blank')}
+          >
+            <div className="text-center p-6">
+              <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🎥</div>
+              <p className="text-white text-lg font-semibold mb-2">Watch on {platform}</p>
+              <div className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-lg inline-flex items-center gap-2 mt-4">
+                <span>Open Video</span>
+                <span className="text-xl">→</span>
+              </div>
+            </div>
+          </div>
         );
       }
       

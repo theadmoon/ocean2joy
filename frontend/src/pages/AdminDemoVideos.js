@@ -226,47 +226,25 @@ function AdminDemoVideos() {
   // Render video preview
   const renderVideoPreview = (video) => {
     if (video.video_type === 'url') {
-      // For URL videos, show iframe preview
-      if (video.video_url.includes('disk.yandex')) {
-        // Yandex Disk iframe
-        let embedUrl = video.video_url;
-        if (video.video_url.includes('/d/')) {
-          const fileId = video.video_url.split('/d/')[1].split('?')[0];
-          embedUrl = `https://disk.yandex.ru/i/${fileId}`;
-        }
+      // For Yandex Disk and Google Drive - show link instead of iframe (CORS issue)
+      if (video.video_url.includes('disk.yandex') || video.video_url.includes('drive.google')) {
+        const platform = video.video_url.includes('disk.yandex') ? 'Яндекс.Диск' : 'Google Drive';
         
         return (
-          <div className="w-full rounded-lg overflow-hidden" style={{ height: '200px' }}>
-            <iframe
-              src={embedUrl}
-              className="w-full h-full"
-              frameBorder="0"
-              allow="autoplay; fullscreen"
-              allowFullScreen
-              title={video.title}
-            ></iframe>
-          </div>
-        );
-      }
-      
-      if (video.video_url.includes('drive.google')) {
-        // Google Drive iframe
-        let embedUrl = video.video_url;
-        if (video.video_url.includes('/file/d/')) {
-          const fileId = video.video_url.split('/file/d/')[1].split('/')[0];
-          embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-        }
-        
-        return (
-          <div className="w-full rounded-lg overflow-hidden" style={{ height: '200px' }}>
-            <iframe
-              src={embedUrl}
-              className="w-full h-full"
-              frameBorder="0"
-              allow="autoplay"
-              allowFullScreen
-              title={video.title}
-            ></iframe>
+          <div 
+            className="w-full rounded-lg bg-gradient-to-br from-gray-800 to-gray-900 flex flex-col items-center justify-center cursor-pointer hover:from-gray-700 hover:to-gray-800 transition-all"
+            style={{ height: '200px' }}
+            onClick={() => window.open(video.video_url, '_blank')}
+          >
+            <div className="text-center p-4">
+              <div className="text-4xl mb-3">🎥</div>
+              <p className="text-white font-semibold mb-2">External Video</p>
+              <p className="text-gray-300 text-sm mb-3">{platform}</p>
+              <div className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg text-sm inline-flex items-center gap-2">
+                <span>Open Video</span>
+                <span>→</span>
+              </div>
+            </div>
           </div>
         );
       }
