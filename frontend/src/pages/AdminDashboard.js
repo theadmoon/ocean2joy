@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { FaEye, FaCog, FaVideo } from 'react-icons/fa';
+import { FaEye, FaCog, FaVideo, FaCreditCard } from 'react-icons/fa';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -34,7 +34,7 @@ function AdminDashboard() {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="card-ocean p-6">
             <h2 className="text-2xl font-bold mb-4">All Projects</h2>
             <p className="text-gray-600 mb-4">Total: {projects.length} projects</p>
@@ -48,6 +48,17 @@ function AdminDashboard() {
             <p className="text-gray-600 mb-4">Manage homepage demo videos</p>
             <Link to="/admin/demo-videos" className="btn-ocean inline-block">
               Manage Demo Videos
+            </Link>
+          </div>
+
+          <div className="card-ocean p-6">
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <FaCreditCard className="text-green-600" />
+              Payment Settings
+            </h2>
+            <p className="text-gray-600 mb-4">Manage payment details</p>
+            <Link to="/admin/payment-settings" className="btn-ocean inline-block">
+              Manage Payments
             </Link>
           </div>
         </div>

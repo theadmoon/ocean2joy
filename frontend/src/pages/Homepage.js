@@ -339,6 +339,85 @@ function Homepage() {
         </div>
       </section>
 
+      {/* Payments Section */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Payments
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Payment systems are currently not integrated. Payments are processed in semi-manual mode. 
+              Once you confirm your order, you'll receive payment details directly in your project portal.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Bank Transfer Card */}
+            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-sky-100 hover:border-sky-300 transition">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-sky-400 to-teal-400 rounded-full flex items-center justify-center">
+                  <span className="text-3xl">🏦</span>
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-center text-gray-900 mb-3">
+                Bank Transfer (SWIFT)
+              </h3>
+              <p className="text-gray-600 text-center mb-4">
+                International wire transfer with full banking details and QR code provided in your order.
+              </p>
+              <div className="bg-sky-50 rounded-lg p-4 text-sm text-gray-700">
+                <p className="font-semibold mb-2">What you'll receive:</p>
+                <ul className="space-y-1 text-left">
+                  <li>✓ Full SWIFT details</li>
+                  <li>✓ IBAN & beneficiary info</li>
+                  <li>✓ Intermediary banks</li>
+                  <li>✓ QR code for quick payment</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* PayPal Card */}
+            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-sky-100 hover:border-sky-300 transition">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-3xl">💳</span>
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-center text-gray-900 mb-3">
+                PayPal
+              </h3>
+              <p className="text-gray-600 text-center mb-4">
+                Send payment directly to our PayPal account. Email address will be provided with your quote.
+              </p>
+              <div className="bg-blue-50 rounded-lg p-4 text-sm text-gray-700">
+                <p className="font-semibold mb-2">What you'll receive:</p>
+                <ul className="space-y-1 text-left">
+                  <li>✓ PayPal email address</li>
+                  <li>✓ Invoice reference number</li>
+                  <li>✓ Payment instructions</li>
+                  <li>✓ Confirmation process</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 bg-white rounded-xl shadow-md p-6 border-l-4 border-sky-500">
+            <div className="flex items-start gap-4">
+              <div className="text-3xl">ℹ️</div>
+              <div>
+                <h4 className="font-bold text-gray-900 mb-2">How Payment Works</h4>
+                <p className="text-gray-700 text-sm leading-relaxed">
+                  After you accept our quote, you'll receive complete payment details in your client dashboard. 
+                  Simply copy the payment information, make the transfer using your preferred method, and mark it as paid in your portal. 
+                  We'll verify the payment and immediately start production. You'll receive transaction documents (Invoice, Receipt, Certificate) at each stage.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-4 ocean-gradient text-white">
         <div className="max-w-4xl mx-auto text-center">

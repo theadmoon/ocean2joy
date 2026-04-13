@@ -184,6 +184,13 @@ class Project(BaseModel):
     paypal_payer_email: Optional[str] = None
     paypal_payment_status: Optional[str] = None  # COMPLETED, PENDING, REFUNDED
     
+    # Payment workflow fields
+    payment_method: Optional[str] = None  # "bank_transfer" or "paypal"
+    payment_marked_by_client_at: Optional[datetime] = None
+    payment_receipt_filename: Optional[str] = None
+    payment_confirmed_by_admin: bool = False
+    payment_confirmed_at: Optional[datetime] = None
+    
     # Status tracking
     status: str = ProjectStatus.SUBMITTED
     status_history: List[Dict[str, Any]] = []
@@ -297,6 +304,33 @@ class DemoVideoUpdate(BaseModel):
     tags: Optional[List[str]] = None
     is_active: Optional[bool] = None
     thumbnail_url: Optional[str] = None
+
+# Payment Settings Models
+class IntermediaryBank(BaseModel):
+    name: str
+    location: str
+    swift: str
+
+class BankTransferDetails(BaseModel):
+    beneficiary_bank_name: str
+    beneficiary_bank_location: str
+    beneficiary_bank_swift: str
+    beneficiary_iban: str
+    beneficiary_name: str
+    intermediary_bank_1: IntermediaryBank
+    intermediary_bank_2: IntermediaryBank
+    qr_code_url: Optional[str] = None
+
+class PaymentSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: "payment_settings_001")
+    paypal_email: str
+    bank_transfer: BankTransferDetails
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class PaymentSettingsUpdate(BaseModel):
+    paypal_email: Optional[str] = None
+    bank_transfer: Optional[Dict[str, Any]] = None
 
 # ==================== HELPER FUNCTIONS ====================
 
@@ -806,6 +840,159 @@ async def upload_deliverable(
     
     return {"message": "Deliverable uploaded", "deliverable": deliverable}
 
+# ==================== PAYMENT SETTINGS ENDPOINTS ====================
+
+@api_router.get("/payment-settings", response_model=PaymentSettings)
+async def get_payment_settings():
+    """Get payment settings (public endpoint)"""
+    settings = await db.payment_settings.find_one({"id": "payment_settings_001"}, {"_id": 0})
+    if not settings:
+        raise HTTPException(status_code=404, detail="Payment settings not found")
+    
+    # Convert datetime strings back
+    if isinstance(settings.get('updated_at'), str):
+        settings['updated_at'] = datetime.fromisoformat(settings['updated_at'])
+    
+    return settings
+
+@api_router.patch("/admin/payment-settings", response_model=PaymentSettings)
+async def update_payment_settings(
+    update_data: PaymentSettingsUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Admin updates payment settings"""
+    if current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    settings = await db.payment_settings.find_one({"id": "payment_settings_001"})
+    if not settings:
+        raise HTTPException(status_code=404, detail="Payment settings not found")
+    
+    update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
+    update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.payment_settings.update_one(
+        {"id": "payment_settings_001"},
+        {"$set": update_dict}
+    )
+    
+    updated_settings = await db.payment_settings.find_one({"id": "payment_settings_001"}, {"_id": 0})
+    
+    # Convert datetime strings back
+    if isinstance(updated_settings.get('updated_at'), str):
+        updated_settings['updated_at'] = datetime.fromisoformat(updated_settings['updated_at'])
+    
+    return updated_settings
+
+@api_router.post("/admin/payment-settings/qr-code")
+async def upload_payment_qr_code(
+    qr_code: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload QR code for bank transfer"""
+    if current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+    if qr_code.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPG, PNG, WebP allowed")
+    
+    # Save QR code file
+    file_extension = qr_code.filename.split('.')[-1]
+    unique_filename = f"payment-qr-{str(uuid.uuid4())}.{file_extension}"
+    file_path = Path("/app/backend/uploads/payment-assets") / unique_filename
+    
+    try:
+        with open(file_path, "wb") as f:
+            content = await qr_code.read()
+            f.write(content)
+        
+        qr_code_url = f"/uploads/payment-assets/{unique_filename}"
+        
+        # Update payment settings with new QR code
+        await db.payment_settings.update_one(
+            {"id": "payment_settings_001"},
+            {
+                "$set": {
+                    "bank_transfer.qr_code_url": qr_code_url,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        
+        return {"qr_code_url": qr_code_url, "message": "QR code uploaded successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save QR code: {str(e)}")
+
+@api_router.patch("/projects/{project_id}/mark-payment")
+async def mark_payment_by_client(
+    project_id: str,
+    payment_method: str = Form(...),
+    receipt: UploadFile = File(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Client marks payment as completed"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project or project['user_id'] != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if project['status'] != ProjectStatus.QUOTE_ACCEPTED:
+        raise HTTPException(status_code=400, detail="Project must be in quote_accepted status")
+    
+    update_data = {
+        "payment_method": payment_method,
+        "payment_marked_by_client_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Handle optional receipt upload
+    if receipt:
+        receipt_extension = receipt.filename.split('.')[-1]
+        receipt_filename = f"receipt-{project_id}-{str(uuid.uuid4())}.{receipt_extension}"
+        receipt_path = Path("/app/backend/uploads/payment-receipts") / receipt_filename
+        
+        # Create directory if it doesn't exist
+        receipt_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        try:
+            with open(receipt_path, "wb") as f:
+                receipt_content = await receipt.read()
+                f.write(receipt_content)
+            
+            update_data['payment_receipt_filename'] = receipt_filename
+        except Exception as e:
+            logger.error(f"Failed to save receipt: {e}")
+    
+    await db.projects.update_one({"id": project_id}, {"$set": update_data})
+    
+    return {"message": "Payment marked successfully", "payment_method": payment_method}
+
+@api_router.patch("/admin/projects/{project_id}/confirm-payment")
+async def confirm_payment_by_admin(
+    project_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Admin confirms payment received"""
+    if current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    update_data = {
+        "payment_confirmed_by_admin": True,
+        "payment_confirmed_at": datetime.now(timezone.utc).isoformat(),
+        "status": ProjectStatus.IN_PRODUCTION,
+        "production_started_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one({"id": project_id}, {"$set": update_data})
+    
+    return {"message": "Payment confirmed, project moved to production"}
+
 # ==================== DEMO VIDEOS ENDPOINTS ====================
 
 @api_router.get("/demo-videos", response_model=List[DemoVideo])
@@ -1101,7 +1288,7 @@ import mimetypes
 @app.get("/uploads/{file_type}/{filename}")
 async def serve_uploaded_file(file_type: str, filename: str):
     """Serve uploaded files with proper CORS headers"""
-    if file_type not in ["demo-videos", "thumbnails"]:
+    if file_type not in ["demo-videos", "thumbnails", "payment-assets", "payment-receipts"]:
         raise HTTPException(status_code=404, detail="Not found")
     
     file_path = Path(f"/app/backend/uploads/{file_type}") / filename
@@ -1122,7 +1309,8 @@ async def serve_uploaded_file(file_type: str, filename: str):
             'jpg': 'image/jpeg',
             'jpeg': 'image/jpeg',
             'png': 'image/png',
-            'webp': 'image/webp'
+            'webp': 'image/webp',
+            'pdf': 'application/pdf'
         }
         mime_type = mime_map.get(ext, 'application/octet-stream')
     
@@ -1618,4 +1806,34 @@ You can request:
         
         await db.messages.insert_many(messages_data)
         logger.info(f"Test messages created for project {project_id}")
+    
+    # Create payment settings if not exists
+    payment_settings_exists = await db.payment_settings.find_one({"id": "payment_settings_001"})
+    if not payment_settings_exists:
+        payment_settings_data = {
+            "id": "payment_settings_001",
+            "paypal_email": "302335809@postbox.ge",
+            "bank_transfer": {
+                "beneficiary_bank_name": "JSC TBC Bank",
+                "beneficiary_bank_location": "Tbilisi, Georgia",
+                "beneficiary_bank_swift": "TBCBGE22",
+                "beneficiary_iban": "GE18TB7399936110100014",
+                "beneficiary_name": "P/E Artem Antipov",
+                "intermediary_bank_1": {
+                    "name": "Citibank N.A.",
+                    "location": "New York, USA",
+                    "swift": "CITIUS33"
+                },
+                "intermediary_bank_2": {
+                    "name": "JPMorgan Chase Bank National Association",
+                    "location": "New York, USA",
+                    "swift": "CHASUS33"
+                },
+                "qr_code_url": "/uploads/payment-assets/qr-code.png"
+            },
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.payment_settings.insert_one(payment_settings_data)
+        logger.info("Payment settings seeded successfully")
 
