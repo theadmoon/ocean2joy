@@ -1332,7 +1332,7 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                     }`}
                   >
                     <div className="flex flex-col items-center text-center gap-2">
-                      <div className="text-3xl">🏦</div>
+                      <div className="text-3xl">💱</div>
                       <div>
                         <p className="font-bold text-gray-900">SWIFT Transfer</p>
                         <span className="inline-block mt-1 bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded">USD</span>
@@ -1351,7 +1351,7 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                     }`}
                   >
                     <div className="flex flex-col items-center text-center gap-2">
-                      <div className="text-3xl">💳</div>
+                      <div className="text-3xl">🅿️</div>
                       <div>
                         <p className="font-bold text-gray-900">PayPal</p>
                         <span className="inline-block mt-1 bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-0.5 rounded">USD</span>
@@ -1370,7 +1370,7 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                     }`}
                   >
                     <div className="flex flex-col items-center text-center gap-2">
-                      <div className="text-3xl">📱</div>
+                      <div className="text-3xl">⬜</div>
                       <div>
                         <p className="font-bold text-gray-900">QR Code</p>
                         <span className="inline-block mt-1 bg-emerald-100 text-emerald-800 text-xs font-semibold px-2 py-0.5 rounded">GEL</span>
