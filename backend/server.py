@@ -370,6 +370,30 @@ def generate_project_number():
     random_suffix = str(uuid.uuid4())[:8].upper()
     return f"OCN-{year}-{random_suffix}"
 
+def generate_default_document_names(project_data: dict) -> dict:
+    """
+    Generate standardized document names based on project data.
+    Format: [DocumentType] - [ProjectTitle] - [ClientName/ProjectNumber]
+    """
+    project_title = project_data.get('project_title', 'Project')
+    client_name = project_data.get('user_name', 'Client')
+    project_number = project_data.get('project_number', 'N/A')
+    
+    # Shorten title if too long
+    short_title = project_title[:40] + '...' if len(project_title) > 40 else project_title
+    
+    # Clean client name (remove special chars, limit length)
+    clean_client = ''.join(c for c in client_name if c.isalnum() or c in ' -_')[:30]
+    
+    return {
+        'quote_request': f"Quote Request - {short_title} - {clean_client}",
+        'quote': f"Quote Document - {short_title} - {project_number}",
+        'invoice': f"Invoice - {short_title} - {project_number}",
+        'receipt': f"Receipt - {short_title} - {project_number}",
+        'certificate': f"Certificate of Delivery - {short_title} - {project_number}",
+        'payment_confirmation': f"Payment Confirmation - {project_number} - {clean_client}"
+    }
+
 # ==================== PUBLIC ROUTES ====================
 
 @api_router.get("/")
@@ -532,8 +556,10 @@ async def create_detailed_request(
     )
     
     # Also create a project from this request
+    project_number = generate_project_number()
+    
     project = Project(
-        project_number=generate_project_number(),
+        project_number=project_number,
         user_id=current_user.id,
         user_name=current_user.name,
         user_email=current_user.email,
@@ -541,13 +567,22 @@ async def create_detailed_request(
         status=ProjectStatus.SUBMITTED
     )
     
+    # Generate default document names
+    project_data = {
+        'project_title': request.project_title,
+        'user_name': current_user.name,
+        'project_number': project_number
+    }
+    default_doc_names = generate_default_document_names(project_data)
+    
     # Save request
     req_doc = detailed_req.model_dump()
     req_doc['created_at'] = req_doc['created_at'].isoformat()
     await db.requests.insert_one(req_doc)
     
-    # Save project
+    # Save project with default document names
     project_doc = project.model_dump()
+    project_doc['document_names'] = default_doc_names
     project_doc['created_at'] = project_doc['created_at'].isoformat()
     project_doc['updated_at'] = project_doc['updated_at'].isoformat()
     await db.projects.insert_one(project_doc)
@@ -1758,6 +1793,8 @@ You can request:
             "quote_amount": 1050,
             "quote_details": "30 minutes @ $35/minute. Includes professional actors, locations, crew, and 2 special effects sequences.",
             "payment_terms": "Payment due upon delivery",
+            "user_name": test_client["name"],
+            "user_email": test_client["email"],
             "created_at": datetime(2026, 2, 17, 8, 15, 33, tzinfo=timezone.utc).isoformat(),
             "quote_sent_at": datetime(2026, 2, 17, 14, 22, 17, tzinfo=timezone.utc).isoformat(),
             "quote_accepted_at": datetime(2026, 2, 18, 9, 45, 8, tzinfo=timezone.utc).isoformat(),
@@ -1775,6 +1812,13 @@ You can request:
                 "Location_Photos.pdf (uploaded by client)"
             ]
         }
+        
+        # Generate default document names for test project
+        test_project['document_names'] = generate_default_document_names({
+            'project_title': test_project['project_title'],
+            'user_name': test_client['name'],
+            'project_number': test_project['project_number']
+        })
         
         await db.projects.insert_one(test_project)
         logger.info(f"Test project created: {project_id}")
