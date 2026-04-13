@@ -1370,18 +1370,44 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                     }`}
                   >
                     <div className="flex flex-col items-center text-center gap-2">
-                      <div className="text-2xl leading-none">
-                        <div className="inline-grid grid-cols-3 gap-0.5 bg-gray-800 p-1 rounded">
-                          <div className="w-1.5 h-1.5 bg-white"></div>
-                          <div className="w-1.5 h-1.5 bg-gray-800"></div>
-                          <div className="w-1.5 h-1.5 bg-white"></div>
-                          <div className="w-1.5 h-1.5 bg-gray-800"></div>
-                          <div className="w-1.5 h-1.5 bg-white"></div>
-                          <div className="w-1.5 h-1.5 bg-gray-800"></div>
-                          <div className="w-1.5 h-1.5 bg-white"></div>
-                          <div className="w-1.5 h-1.5 bg-gray-800"></div>
-                          <div className="w-1.5 h-1.5 bg-white"></div>
-                        </div>
+                      <div className="w-10 h-10 bg-white p-1 border border-gray-300 rounded">
+                        <svg viewBox="0 0 100 100" className="w-full h-full">
+                          {/* Top-left corner */}
+                          <rect x="0" y="0" width="30" height="30" fill="black"/>
+                          <rect x="5" y="5" width="20" height="20" fill="white"/>
+                          <rect x="10" y="10" width="10" height="10" fill="black"/>
+                          
+                          {/* Top-right corner */}
+                          <rect x="70" y="0" width="30" height="30" fill="black"/>
+                          <rect x="75" y="5" width="20" height="20" fill="white"/>
+                          <rect x="80" y="10" width="10" height="10" fill="black"/>
+                          
+                          {/* Bottom-left corner */}
+                          <rect x="0" y="70" width="30" height="30" fill="black"/>
+                          <rect x="5" y="75" width="20" height="20" fill="white"/>
+                          <rect x="10" y="80" width="10" height="10" fill="black"/>
+                          
+                          {/* Random pixels in center */}
+                          <rect x="40" y="15" width="5" height="5" fill="black"/>
+                          <rect x="50" y="15" width="5" height="5" fill="black"/>
+                          <rect x="45" y="25" width="5" height="5" fill="black"/>
+                          <rect x="55" y="25" width="5" height="5" fill="black"/>
+                          <rect x="35" y="35" width="5" height="5" fill="black"/>
+                          <rect x="45" y="35" width="5" height="5" fill="black"/>
+                          <rect x="55" y="35" width="5" height="5" fill="black"/>
+                          <rect x="40" y="45" width="5" height="5" fill="black"/>
+                          <rect x="50" y="45" width="5" height="5" fill="black"/>
+                          <rect x="60" y="45" width="5" height="5" fill="black"/>
+                          <rect x="35" y="55" width="5" height="5" fill="black"/>
+                          <rect x="50" y="55" width="5" height="5" fill="black"/>
+                          <rect x="40" y="65" width="5" height="5" fill="black"/>
+                          <rect x="55" y="65" width="5" height="5" fill="black"/>
+                          <rect x="65" y="55" width="5" height="5" fill="black"/>
+                          <rect x="70" y="65" width="5" height="5" fill="black"/>
+                          <rect x="80" y="75" width="5" height="5" fill="black"/>
+                          <rect x="45" y="75" width="5" height="5" fill="black"/>
+                          <rect x="55" y="85" width="5" height="5" fill="black"/>
+                        </svg>
                       </div>
                       <div>
                         <p className="font-bold text-gray-900">QR Code</p>
