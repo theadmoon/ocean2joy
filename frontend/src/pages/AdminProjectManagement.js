@@ -94,6 +94,19 @@ function AdminProjectManagement() {
     }
   };
 
+  const confirmPayment = async (projectId) => {
+    if (!confirm('Confirm that payment has been received?')) return;
+
+    try {
+      await axios.patch(`${API}/admin/projects/${projectId}/confirm-payment`);
+      alert('Payment confirmed! Project moved to production.');
+      fetchProjectDetails(); // Refresh
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      alert('Failed to confirm payment');
+    }
+  };
+
   // Check if field has value
   const hasValue = (value) => {
     return value !== null && value !== undefined && value !== '';
@@ -1383,6 +1396,15 @@ Issue Date: ${formatDate(projectData.completed_at)}
             <Link to={`/projects/${projectId}`} className="btn-ocean">
               📊 View as Client
             </Link>
+            {project.payment_marked_by_client_at && !project.payment_confirmed_by_admin && (
+              <button 
+                type="button"
+                onClick={() => confirmPayment(projectId)}
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-semibold"
+              >
+                ✓ Confirm Payment Received
+              </button>
+            )}
             <button 
               type="button"
               onClick={handlePrint} 

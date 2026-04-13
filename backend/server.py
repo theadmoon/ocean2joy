@@ -1817,8 +1817,8 @@ You can request:
                 "beneficiary_bank_name": "JSC TBC Bank",
                 "beneficiary_bank_location": "Tbilisi, Georgia",
                 "beneficiary_bank_swift": "TBCBGE22",
-                "beneficiary_iban": "GE18TB7399936110100014",
-                "beneficiary_name": "P/E Artem Antipov",
+                "beneficiary_iban": "GE91TB7398636110100026",
+                "beneficiary_name": "P/E Vera lambaeva",
                 "intermediary_bank_1": {
                     "name": "Citibank N.A.",
                     "location": "New York, USA",
@@ -1829,11 +1829,23 @@ You can request:
                     "location": "New York, USA",
                     "swift": "CHASUS33"
                 },
-                "qr_code_url": "/uploads/payment-assets/qr-code.png"
+                "qr_code_url": "/uploads/payment-assets/new-qr-code.pdf"
             },
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
         
         await db.payment_settings.insert_one(payment_settings_data)
         logger.info("Payment settings seeded successfully")
+    else:
+        # Update existing settings with new bank details
+        await db.payment_settings.update_one(
+            {"id": "payment_settings_001"},
+            {"$set": {
+                "bank_transfer.beneficiary_iban": "GE91TB7398636110100026",
+                "bank_transfer.beneficiary_name": "P/E Vera lambaeva",
+                "bank_transfer.qr_code_url": "/uploads/payment-assets/new-qr-code.pdf",
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        logger.info("Payment settings updated with new bank details")
 

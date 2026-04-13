@@ -15,6 +15,14 @@ function ProjectDetails() {
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
   const [showFileModal, setShowFileModal] = useState(false);
+  
+  // Payment states
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentSettings, setPaymentSettings] = useState(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [paymentMarked, setPaymentMarked] = useState(false);
+  const [paymentReceipt, setPaymentReceipt] = useState(null);
+  const [submittingPayment, setSubmittingPayment] = useState(false);
 
   // Dynamic document generation functions
   const generateInvoiceContent = (projectData) => {
@@ -760,6 +768,7 @@ END OF DOCUMENT`
       fetchProjectDetails();
       fetchMessages();
       fetchDeliverables();
+      fetchPaymentSettings();
     }
   }, [projectId]);
 
@@ -767,6 +776,7 @@ END OF DOCUMENT`
     try {
       const response = await axios.get(`${API}/projects/${projectId}`);
       setProject(response.data);
+      setPaymentMarked(response.data.payment_marked_by_client_at ? true : false);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -789,6 +799,45 @@ END OF DOCUMENT`
       setDeliverables(response.data);
     } catch (error) {
       console.error('Error:', error);
+    }
+  };
+
+  const fetchPaymentSettings = async () => {
+    try {
+      const response = await axios.get(`${API}/payment-settings`);
+      setPaymentSettings(response.data);
+    } catch (error) {
+      console.error('Error fetching payment settings:', error);
+    }
+  };
+
+  const handleMarkPayment = async () => {
+    if (!selectedPaymentMethod) {
+      alert('Please select a payment method');
+      return;
+    }
+
+    setSubmittingPayment(true);
+    try {
+      const formData = new FormData();
+      formData.append('payment_method', selectedPaymentMethod);
+      if (paymentReceipt) {
+        formData.append('receipt', paymentReceipt);
+      }
+
+      await axios.patch(`${API}/projects/${projectId}/mark-payment`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      setPaymentMarked(true);
+      setShowPaymentModal(false);
+      alert('Payment marked successfully! Admin will confirm receipt.');
+      fetchProjectDetails(); // Refresh project data
+    } catch (error) {
+      console.error('Error marking payment:', error);
+      alert('Failed to mark payment');
+    } finally {
+      setSubmittingPayment(false);
     }
   };
 
@@ -921,6 +970,28 @@ END OF DOCUMENT`
                 <p className="text-gray-700 mb-4 text-left">{project.quote_details}</p>
                 {project.status === 'quoted' && (
                   <button onClick={handleAcceptQuote} className="btn-ocean">Accept Quote & Start Production</button>
+                )}
+                {project.status === 'quote_accepted' && !paymentMarked && (
+                  <button 
+                    onClick={() => setShowPaymentModal(true)} 
+                    className="btn-ocean w-full"
+                  >
+                    💳 Make Payment
+                  </button>
+                )}
+                {paymentMarked && !project.payment_confirmed_by_admin && (
+                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
+                    <p className="text-sm text-yellow-800 font-semibold">
+                      ⏳ Payment marked. Awaiting admin confirmation...
+                    </p>
+                  </div>
+                )}
+                {project.payment_confirmed_by_admin && (
+                  <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                    <p className="text-sm text-green-800 font-semibold">
+                      ✓ Payment confirmed! Production has started.
+                    </p>
+                  </div>
                 )}
               </div>
             )}
@@ -1178,6 +1249,204 @@ END OF DOCUMENT`
                 className="btn-ocean-outline text-sm"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && paymentSettings && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-green-500 to-teal-500 text-white p-6 flex items-center justify-between sticky top-0">
+              <div>
+                <h3 className="text-2xl font-bold">💳 Payment Details</h3>
+                <p className="text-green-100 text-sm mt-1">
+                  Amount: ${project.quote_amount} USD
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowPaymentModal(false)}
+                className="text-white/80 hover:text-white text-3xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <p className="text-gray-700 mb-6">
+                Please select a payment method and copy the details to make your payment. After completing the payment, mark it as paid below.
+              </p>
+
+              {/* Payment Method Selection */}
+              <div className="mb-6">
+                <h4 className="font-bold text-gray-900 mb-3">Select Payment Method:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Bank Transfer */}
+                  <button
+                    onClick={() => setSelectedPaymentMethod('bank_transfer')}
+                    className={`border-2 rounded-xl p-4 transition ${
+                      selectedPaymentMethod === 'bank_transfer'
+                        ? 'border-sky-500 bg-sky-50'
+                        : 'border-gray-200 hover:border-sky-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="text-3xl">🏦</div>
+                      <div className="text-left">
+                        <p className="font-bold text-gray-900">Bank Transfer (SWIFT)</p>
+                        <p className="text-sm text-gray-600">International wire transfer</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* PayPal */}
+                  <button
+                    onClick={() => setSelectedPaymentMethod('paypal')}
+                    className={`border-2 rounded-xl p-4 transition ${
+                      selectedPaymentMethod === 'paypal'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="text-3xl">💳</div>
+                      <div className="text-left">
+                        <p className="font-bold text-gray-900">PayPal</p>
+                        <p className="text-sm text-gray-600">Send via PayPal</p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Payment Details */}
+              {selectedPaymentMethod === 'bank_transfer' && (
+                <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                  <h4 className="font-bold text-gray-900 mb-4">Bank Transfer Details:</h4>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <label className="font-semibold text-gray-700">Beneficiary Bank:</label>
+                      <p className="text-gray-900 font-mono">{paymentSettings.bank_transfer.beneficiary_bank_name}</p>
+                      <p className="text-gray-600">{paymentSettings.bank_transfer.beneficiary_bank_location}</p>
+                      <p className="text-gray-600">SWIFT: {paymentSettings.bank_transfer.beneficiary_bank_swift}</p>
+                    </div>
+                    <div>
+                      <label className="font-semibold text-gray-700">IBAN:</label>
+                      <p className="text-gray-900 font-mono text-lg">{paymentSettings.bank_transfer.beneficiary_iban}</p>
+                    </div>
+                    <div>
+                      <label className="font-semibold text-gray-700">Beneficiary:</label>
+                      <p className="text-gray-900">{paymentSettings.bank_transfer.beneficiary_name}</p>
+                    </div>
+                    <div className="border-t pt-3 mt-3">
+                      <label className="font-semibold text-gray-700">Intermediary Bank 1:</label>
+                      <p className="text-gray-900">{paymentSettings.bank_transfer.intermediary_bank_1.name}</p>
+                      <p className="text-gray-600">{paymentSettings.bank_transfer.intermediary_bank_1.location}</p>
+                      <p className="text-gray-600">SWIFT: {paymentSettings.bank_transfer.intermediary_bank_1.swift}</p>
+                    </div>
+                    <div className="border-t pt-3">
+                      <label className="font-semibold text-gray-700">Intermediary Bank 2:</label>
+                      <p className="text-gray-900">{paymentSettings.bank_transfer.intermediary_bank_2.name}</p>
+                      <p className="text-gray-600">{paymentSettings.bank_transfer.intermediary_bank_2.location}</p>
+                      <p className="text-gray-600">SWIFT: {paymentSettings.bank_transfer.intermediary_bank_2.swift}</p>
+                    </div>
+                  </div>
+                  
+                  {paymentSettings.bank_transfer.qr_code_url && (
+                    <div className="mt-4 text-center">
+                      <label className="font-semibold text-gray-700 block mb-2">Scan to Pay:</label>
+                      <a 
+                        href={`${BACKEND_URL}${paymentSettings.bank_transfer.qr_code_url}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-block"
+                      >
+                        <div className="bg-white p-4 rounded-lg border-2 border-gray-300 hover:border-sky-500 transition">
+                          <p className="text-sky-600 text-sm mb-2">Click to view QR Code</p>
+                          <div className="text-6xl">📱</div>
+                        </div>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedPaymentMethod === 'paypal' && (
+                <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                  <h4 className="font-bold text-gray-900 mb-4">PayPal Payment Details:</h4>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <label className="font-semibold text-gray-700">Send payment to:</label>
+                      <p className="text-gray-900 font-mono text-lg">{paymentSettings.paypal_email}</p>
+                    </div>
+                    <div>
+                      <label className="font-semibold text-gray-700">Amount:</label>
+                      <p className="text-gray-900 text-lg">${project.quote_amount} USD</p>
+                    </div>
+                    <div>
+                      <label className="font-semibold text-gray-700">Reference:</label>
+                      <p className="text-gray-900">{project.project_number}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800">
+                      <strong>Note:</strong> Please include your project number ({project.project_number}) in the payment notes.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Confirmation */}
+              {selectedPaymentMethod && (
+                <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={paymentMarked}
+                      onChange={(e) => setPaymentMarked(e.target.checked)}
+                      className="mt-1 w-5 h-5 text-sky-600"
+                    />
+                    <span className="text-gray-900 font-semibold">
+                      I have completed the payment
+                    </span>
+                  </label>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Upload Receipt (Optional):
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => setPaymentReceipt(e.target.files[0])}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      You can upload a screenshot or PDF of your payment confirmation
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-100 p-6 border-t border-gray-200 flex items-center justify-between">
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="btn-ocean-outline"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleMarkPayment}
+                disabled={!paymentMarked || submittingPayment}
+                className="btn-ocean disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submittingPayment ? 'Submitting...' : 'Confirm Payment Made'}
               </button>
             </div>
           </div>
