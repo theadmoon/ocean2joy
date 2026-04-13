@@ -841,6 +841,43 @@ END OF DOCUMENT`
     }
   };
 
+  const generatePayPalMessage = () => {
+    if (!project || !paymentSettings) return '';
+
+    // Service description mapping
+    const serviceDescriptions = {
+      'custom_video': 'Custom film production according to client\'s script',
+      'video_editing': 'Professional video editing services',
+      'ai_generated_video': 'AI-generated video content production'
+    };
+
+    const serviceDesc = serviceDescriptions[project.service_type] || 'Custom video production services';
+
+    return `Please send $${project.quote_amount} to the account ${paymentSettings.paypal_email}
+
+In the comments, please indicate:
+
+${serviceDesc}
+
+- Project Reference: ${project.project_number}
+
+Payment terms: 100% post-payment (invoice is issued after delivery).
+
+By completing payment via PayPal, the Client confirms successful receipt of the delivered digital materials and accepts that no refunds apply after delivery.
+
+- No physical shipment – digital service delivered electronically`;
+  };
+
+  const copyPayPalMessage = () => {
+    const message = generatePayPalMessage();
+    navigator.clipboard.writeText(message).then(() => {
+      alert('PayPal payment message copied to clipboard! ✓\nPaste it in PayPal comments when making payment.');
+    }).catch((err) => {
+      console.error('Failed to copy:', err);
+      alert('Failed to copy message. Please copy manually.');
+    });
+  };
+
   const handleApprove = async () => {
     try {
       await axios.patch(`${API}/projects/${projectId}/approve`);
@@ -1377,25 +1414,38 @@ END OF DOCUMENT`
 
               {selectedPaymentMethod === 'paypal' && (
                 <div className="bg-gray-50 rounded-xl p-6 mb-6">
-                  <h4 className="font-bold text-gray-900 mb-4">PayPal Payment Details:</h4>
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <label className="font-semibold text-gray-700">Send payment to:</label>
-                      <p className="text-gray-900 font-mono text-lg">{paymentSettings.paypal_email}</p>
+                  <h4 className="font-bold text-gray-900 mb-4">PayPal Payment Instructions:</h4>
+                  
+                  <div className="bg-white border-2 border-blue-300 rounded-lg p-4 mb-4">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-600 mb-2 font-semibold">
+                          📋 Copy this text and paste it in PayPal comments when making payment:
+                        </p>
+                      </div>
+                      <button
+                        onClick={copyPayPalMessage}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold whitespace-nowrap flex items-center gap-2"
+                      >
+                        📋 Copy Message
+                      </button>
                     </div>
-                    <div>
-                      <label className="font-semibold text-gray-700">Amount:</label>
-                      <p className="text-gray-900 text-lg">${project.quote_amount} USD</p>
-                    </div>
-                    <div>
-                      <label className="font-semibold text-gray-700">Reference:</label>
-                      <p className="text-gray-900">{project.project_number}</p>
+                    
+                    <div className="bg-gray-50 rounded border border-gray-300 p-4 text-sm font-mono text-gray-800 whitespace-pre-wrap overflow-x-auto">
+                      {generatePayPalMessage()}
                     </div>
                   </div>
-                  <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-sm text-blue-800">
-                      <strong>Note:</strong> Please include your project number ({project.project_number}) in the payment notes.
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-900 mb-2">
+                      <strong>💡 Important:</strong>
                     </p>
+                    <ul className="text-xs text-blue-800 space-y-1 ml-4">
+                      <li>• Click "Copy Message" button above</li>
+                      <li>• Go to PayPal and send <strong>${project.quote_amount} USD</strong> to <strong>{paymentSettings.paypal_email}</strong></li>
+                      <li>• Paste the copied text into PayPal payment comments/notes</li>
+                      <li>• After payment, return here and mark as completed below</li>
+                    </ul>
                   </div>
                 </div>
               )}
