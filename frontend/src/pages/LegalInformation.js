@@ -81,12 +81,12 @@ function LegalInformation() {
 
         {/* Contact Information */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Contact Information</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-left">Contact Information</h2>
           
-          <div className="space-y-4">
+          <div className="space-y-4 text-left">
             <div className="flex items-start gap-4">
-              <FaEnvelope className="text-2xl text-sky-600 mt-1" />
-              <div>
+              <FaEnvelope className="text-2xl text-sky-600 mt-1 flex-shrink-0" />
+              <div className="flex-1">
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   Email
                 </label>
@@ -100,8 +100,8 @@ function LegalInformation() {
             </div>
 
             <div className="flex items-start gap-4">
-              <FaPhone className="text-2xl text-sky-600 mt-1" />
-              <div>
+              <FaPhone className="text-2xl text-sky-600 mt-1 flex-shrink-0" />
+              <div className="flex-1">
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   Phone
                 </label>
@@ -115,8 +115,8 @@ function LegalInformation() {
             </div>
 
             <div className="flex items-start gap-4">
-              <FaMapMarkerAlt className="text-2xl text-sky-600 mt-1" />
-              <div>
+              <FaMapMarkerAlt className="text-2xl text-sky-600 mt-1 flex-shrink-0" />
+              <div className="flex-1">
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   Business Location
                 </label>
@@ -130,15 +130,15 @@ function LegalInformation() {
 
         {/* Payment Information */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Payment Information</h2>
-          <p className="text-gray-700 mb-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 text-left">Payment Information</h2>
+          <p className="text-gray-700 mb-4 text-left">
             Our business is registered and operates legally in Georgia. We accept payments through:
           </p>
-          <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4">
+          <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4 text-left">
             <li>International Bank Transfer (SWIFT)</li>
             <li>PayPal</li>
           </ul>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 text-left">
             For detailed payment information, please visit our{' '}
             <Link to="/" className="text-sky-600 hover:text-sky-700 font-semibold">
               Payments section
@@ -160,17 +160,17 @@ function LegalInformation() {
 
         {/* Service Description */}
         <div className="bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Business Activity</h2>
-          <p className="text-gray-700 leading-relaxed mb-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 text-left">Business Activity</h2>
+          <p className="text-gray-700 leading-relaxed mb-4 text-left">
             Ocean2joy specializes in digital video production services delivered electronically. 
             Our services include:
           </p>
-          <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4">
+          <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4 text-left">
             <li>Custom video production according to client specifications</li>
             <li>Professional video editing services</li>
             <li>AI-assisted video content creation</li>
           </ul>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 text-left">
             <strong>Important:</strong> All services are delivered digitally. No physical products are shipped. 
             Payment terms and conditions are specified in individual project quotes and invoices.
           </p>
