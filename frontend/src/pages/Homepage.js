@@ -9,10 +9,12 @@ const API = `${BACKEND_URL}/api`;
 function Homepage() {
   const [services, setServices] = useState([]);
   const [demoVideos, setDemoVideos] = useState([]);
+  const [paymentSettings, setPaymentSettings] = useState(null);
 
   useEffect(() => {
     fetchServices();
     fetchDemoVideos();
+    fetchPaymentSettings();
   }, []);
 
   const fetchServices = async () => {
@@ -30,6 +32,15 @@ function Homepage() {
       setDemoVideos(response.data);
     } catch (error) {
       console.error('Error fetching demo videos:', error);
+    }
+  };
+
+  const fetchPaymentSettings = async () => {
+    try {
+      const response = await axios.get(`${API}/payment-settings`);
+      setPaymentSettings(response.data);
+    } catch (error) {
+      console.error('Error fetching payment settings:', error);
     }
   };
 
@@ -352,55 +363,105 @@ function Homepage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Bank Transfer Card */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-sky-100 hover:border-sky-300 transition">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-sky-400 to-teal-400 rounded-full flex items-center justify-center">
-                  <span className="text-3xl">🏦</span>
+          {paymentSettings ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Bank Transfer Card with Real Details */}
+              <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-sky-100">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-sky-400 to-teal-400 rounded-full flex items-center justify-center">
+                    <span className="text-3xl">🏦</span>
+                  </div>
                 </div>
-              </div>
-              <h3 className="text-2xl font-bold text-center text-gray-900 mb-3">
-                Bank Transfer (SWIFT)
-              </h3>
-              <p className="text-gray-600 text-center mb-4">
-                International wire transfer with full banking details and QR code provided in your order.
-              </p>
-              <div className="bg-sky-50 rounded-lg p-4 text-sm text-gray-700">
-                <p className="font-semibold mb-2">What you'll receive:</p>
-                <ul className="space-y-1 text-left">
-                  <li>✓ Full SWIFT details</li>
-                  <li>✓ IBAN & beneficiary info</li>
-                  <li>✓ Intermediary banks</li>
-                  <li>✓ QR code for quick payment</li>
-                </ul>
-              </div>
-            </div>
+                <h3 className="text-2xl font-bold text-center text-gray-900 mb-4">
+                  Bank Transfer (SWIFT)
+                </h3>
+                
+                <div className="bg-sky-50 rounded-lg p-4 mb-4 text-sm space-y-3">
+                  <div>
+                    <p className="font-semibold text-gray-700">Beneficiary Bank:</p>
+                    <p className="text-gray-900">{paymentSettings.bank_transfer.beneficiary_bank_name}</p>
+                    <p className="text-gray-600 text-xs">{paymentSettings.bank_transfer.beneficiary_bank_location}</p>
+                    <p className="text-gray-600 text-xs">SWIFT: {paymentSettings.bank_transfer.beneficiary_bank_swift}</p>
+                  </div>
+                  
+                  <div className="border-t border-sky-200 pt-2">
+                    <p className="font-semibold text-gray-700">IBAN:</p>
+                    <p className="text-gray-900 font-mono text-base break-all">
+                      {paymentSettings.bank_transfer.beneficiary_iban}
+                    </p>
+                  </div>
+                  
+                  <div className="border-t border-sky-200 pt-2">
+                    <p className="font-semibold text-gray-700">Beneficiary:</p>
+                    <p className="text-gray-900">{paymentSettings.bank_transfer.beneficiary_name}</p>
+                  </div>
+                  
+                  <div className="border-t border-sky-200 pt-2">
+                    <p className="font-semibold text-gray-700 mb-1">Intermediary Banks:</p>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <p>1. {paymentSettings.bank_transfer.intermediary_bank_1.name}</p>
+                      <p className="ml-3">SWIFT: {paymentSettings.bank_transfer.intermediary_bank_1.swift}</p>
+                      <p>2. {paymentSettings.bank_transfer.intermediary_bank_2.name}</p>
+                      <p className="ml-3">SWIFT: {paymentSettings.bank_transfer.intermediary_bank_2.swift}</p>
+                    </div>
+                  </div>
+                </div>
 
-            {/* PayPal Card */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-sky-100 hover:border-sky-300 transition">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-3xl">💳</span>
+                {paymentSettings.bank_transfer.qr_code_url && (
+                  <div className="text-center">
+                    <a 
+                      href={`${BACKEND_URL}${paymentSettings.bank_transfer.qr_code_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition text-sm font-semibold"
+                    >
+                      📱 View QR Code
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* PayPal Card with Real Details */}
+              <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-blue-100">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-3xl">💳</span>
+                  </div>
+                </div>
+                <h3 className="text-2xl font-bold text-center text-gray-900 mb-4">
+                  PayPal
+                </h3>
+                
+                <div className="bg-blue-50 rounded-lg p-4 mb-4 text-sm space-y-3">
+                  <div>
+                    <p className="font-semibold text-gray-700 mb-2">Send payment to:</p>
+                    <p className="text-gray-900 font-mono text-base break-all bg-white px-3 py-2 rounded border border-blue-200">
+                      {paymentSettings.paypal_email}
+                    </p>
+                  </div>
+                  
+                  <div className="border-t border-blue-200 pt-3">
+                    <p className="font-semibold text-gray-700 mb-2">Instructions:</p>
+                    <ul className="space-y-1 text-gray-700 text-xs">
+                      <li>✓ Include your project reference number</li>
+                      <li>✓ Add invoice number in payment notes</li>
+                      <li>✓ Mark payment as completed in your portal</li>
+                      <li>✓ Production starts after confirmation</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bg-blue-100 border border-blue-300 rounded-lg p-3 text-xs text-blue-900">
+                  <p className="font-semibold mb-1">💡 Quick & Easy</p>
+                  <p>PayPal payments are typically confirmed faster than bank transfers.</p>
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-center text-gray-900 mb-3">
-                PayPal
-              </h3>
-              <p className="text-gray-600 text-center mb-4">
-                Send payment directly to our PayPal account. Email address will be provided with your quote.
-              </p>
-              <div className="bg-blue-50 rounded-lg p-4 text-sm text-gray-700">
-                <p className="font-semibold mb-2">What you'll receive:</p>
-                <ul className="space-y-1 text-left">
-                  <li>✓ PayPal email address</li>
-                  <li>✓ Invoice reference number</li>
-                  <li>✓ Payment instructions</li>
-                  <li>✓ Confirmation process</li>
-                </ul>
-              </div>
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Loading payment information...</p>
+            </div>
+          )}
 
           <div className="mt-8 bg-white rounded-xl shadow-md p-6 border-l-4 border-sky-500">
             <div className="flex items-start gap-4">
