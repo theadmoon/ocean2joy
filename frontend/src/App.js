@@ -6,6 +6,7 @@ import ServiceDetails from './pages/ServiceDetails';
 import HowItWorks from './pages/HowItWorks';
 import Contact from './pages/Contact';
 import Policies from './pages/Policies';
+import LegalInformation from './pages/LegalInformation';
 import QuickRequest from './pages/QuickRequest';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -34,6 +35,7 @@ function App() {
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/policies/:type" element={<Policies />} />
+              <Route path="/legal-information" element={<LegalInformation />} />
               <Route path="/request" element={<QuickRequest />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />

@@ -82,6 +82,11 @@ function Footer() {
                   Privacy Policy
                 </Link>
               </li>
+              <li>
+                <Link to="/legal-information" className="text-gray-400 hover:text-sky-400 transition">
+                  Legal Information
+                </Link>
+              </li>
             </ul>
           </div>
 
