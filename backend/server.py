@@ -946,7 +946,7 @@ async def upload_payment_qr_code(
             content = await qr_code.read()
             f.write(content)
         
-        qr_code_url = f"/uploads/payment-assets/{unique_filename}"
+        qr_code_url = f"/api/uploads/payment-assets/{unique_filename}"
         
         # Update payment settings with new QR code
         await db.payment_settings.update_one(
@@ -1130,7 +1130,7 @@ async def upload_demo_video(
                 thumb_content = await thumbnail.read()
                 f.write(thumb_content)
             
-            final_thumbnail_url = f"/uploads/thumbnails/{thumb_unique_filename}"
+            final_thumbnail_url = f"/api/uploads/thumbnails/{thumb_unique_filename}"
         except Exception as e:
             logger.error(f"Failed to save thumbnail: {e}")
     
@@ -1153,7 +1153,7 @@ async def upload_demo_video(
         tags=tags_list,
         video_type="file",
         video_filename=unique_filename,
-        video_url=f"/uploads/demo-videos/{unique_filename}",
+        video_url=f"/api/uploads/demo-videos/{unique_filename}",
         thumbnail_url=final_thumbnail_url
     )
     
@@ -1206,7 +1206,7 @@ async def upload_demo_video_url(
                 thumb_content = await thumbnail.read()
                 f.write(thumb_content)
             
-            final_thumbnail_url = f"/uploads/thumbnails/{thumb_unique_filename}"
+            final_thumbnail_url = f"/api/uploads/thumbnails/{thumb_unique_filename}"
         except Exception as e:
             logger.error(f"Failed to save thumbnail: {e}")
     
@@ -1288,7 +1288,7 @@ async def upload_demo_video_thumbnail(
             thumb_content = await thumbnail.read()
             f.write(thumb_content)
         
-        thumbnail_url = f"/uploads/thumbnails/{thumb_unique_filename}"
+        thumbnail_url = f"/api/uploads/thumbnails/{thumb_unique_filename}"
         
         # Update video with new thumbnail
         await db.demo_videos.update_one(
@@ -1321,7 +1321,7 @@ async def delete_demo_video(
                 file_path.unlink()
         
         # Delete thumbnail if it's an uploaded file
-        if video.get("thumbnail_url") and video["thumbnail_url"].startswith("/uploads/thumbnails/"):
+        if video.get("thumbnail_url") and video["thumbnail_url"].startswith("/api/uploads/thumbnails/"):
             thumb_filename = video["thumbnail_url"].split("/")[-1]
             thumb_path = Path("/app/backend/uploads/thumbnails") / thumb_filename
             if thumb_path.exists():
@@ -1349,7 +1349,7 @@ app.add_middleware(
 from fastapi.responses import FileResponse
 import mimetypes
 
-@app.get("/uploads/{file_type}/{filename}")
+@app.get("/api/uploads/{file_type}/{filename}")
 async def serve_uploaded_file(file_type: str, filename: str):
     """Serve uploaded files with proper CORS headers"""
     if file_type not in ["demo-videos", "thumbnails", "payment-assets", "payment-receipts"]:
@@ -1902,7 +1902,7 @@ You can request:
                     "location": "New York, USA",
                     "swift": "CHASUS33"
                 },
-                "qr_code_url": "/uploads/payment-assets/new-qr-code.pdf"
+                "qr_code_url": "/api/uploads/payment-assets/new-qr-code.png"
             },
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
@@ -1910,13 +1910,12 @@ You can request:
         await db.payment_settings.insert_one(payment_settings_data)
         logger.info("Payment settings seeded successfully")
     else:
-        # Update existing settings with new bank details
+        # Update existing settings with new bank details (but keep existing QR code)
         await db.payment_settings.update_one(
             {"id": "payment_settings_001"},
             {"$set": {
                 "bank_transfer.beneficiary_iban": "GE91TB7398636110100026",
                 "bank_transfer.beneficiary_name": "P/E Vera lambaeva",
-                "bank_transfer.qr_code_url": "/uploads/payment-assets/new-qr-code.pdf",
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }}
         )
