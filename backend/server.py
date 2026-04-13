@@ -191,6 +191,9 @@ class Project(BaseModel):
     payment_confirmed_by_admin: bool = False
     payment_confirmed_at: Optional[datetime] = None
     
+    # Document naming (custom names for project documents)
+    document_names: Optional[Dict[str, str]] = None  # {"quote": "Custom Quote Name", "invoice": "Custom Invoice", etc.}
+    
     # Status tracking
     status: str = ProjectStatus.SUBMITTED
     status_history: List[Dict[str, Any]] = []
@@ -992,6 +995,32 @@ async def confirm_payment_by_admin(
     await db.projects.update_one({"id": project_id}, {"$set": update_data})
     
     return {"message": "Payment confirmed, project moved to production"}
+
+@api_router.patch("/admin/projects/{project_id}/document-names")
+async def update_document_names(
+    project_id: str,
+    document_names: Dict[str, str],
+    current_user: User = Depends(get_current_user)
+):
+    """Update custom names for project documents"""
+    if current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {
+            "$set": {
+                "document_names": document_names,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Document names updated successfully", "document_names": document_names}
 
 # ==================== DEMO VIDEOS ENDPOINTS ====================
 

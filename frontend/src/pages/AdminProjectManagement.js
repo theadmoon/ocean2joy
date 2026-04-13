@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaSave, FaExclamationTriangle, FaCheckCircle, FaEdit } from 'react-icons/fa';
+import ProjectDocuments from '../components/ProjectDocuments';
 import './AdminProjectManagement.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -1087,6 +1088,9 @@ Issue Date: ${formatDate(projectData.completed_at)}
             <div><span className="font-semibold">Amount:</span> ${project.quote_amount}</div>
           </div>
         </div>
+
+        {/* Project Documents Section */}
+        <ProjectDocuments project={project} onUpdate={fetchProjectDetails} />
 
         {/* Operational Chain Management */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6" id="operational-chain-content">
