@@ -1,8 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaWater } from 'react-icons/fa';
 import { HiMenu, HiX } from 'react-icons/hi';
 import { useState } from 'react';
+import Logo from './Logo';
 
 function Navbar() {
   const { isAuthenticated, user, logout, quickSwitch } = useAuth();
@@ -25,9 +25,8 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <FaWater className="text-3xl text-sky-500" />
-            <span className="text-2xl font-bold text-ocean">Ocean2joy</span>
+          <Link to="/" className="flex items-center">
+            <Logo variant="horizontal" className="h-10 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}

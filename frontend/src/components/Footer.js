@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { FaWater, FaEnvelope, FaFacebook, FaTwitter, FaInstagram, FaYoutube } from 'react-icons/fa';
+import { FaEnvelope, FaFacebook, FaTwitter, FaInstagram, FaYoutube } from 'react-icons/fa';
+import Logo from './Logo';
 
 function Footer() {
   return (
@@ -8,9 +9,8 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1">
-            <div className="flex items-center space-x-2 mb-4">
-              <FaWater className="text-3xl text-sky-400" />
-              <span className="text-2xl font-bold">Ocean2joy</span>
+            <div className="mb-4">
+              <Logo variant="horizontal" className="h-12 w-auto" style={{ filter: 'brightness(0) invert(1)' }} />
             </div>
             <p className="text-gray-400 text-sm">
               Where video dreams come true. Professional video production services delivered digitally.
