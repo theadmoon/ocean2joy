@@ -1363,40 +1363,55 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
               {/* Payment Details */}
               {selectedPaymentMethod === 'bank_transfer' && (
                 <div className="bg-gray-50 rounded-xl p-6 mb-6">
-                  <h4 className="font-bold text-gray-900 mb-4 text-left">Bank Transfer Details:</h4>
-                  <div className="space-y-3 text-sm text-left">
-                    <div>
-                      <label className="font-semibold text-gray-700">Beneficiary Bank:</label>
-                      <p className="text-gray-900 font-mono">{paymentSettings.bank_transfer.beneficiary_bank_name}</p>
-                      <p className="text-gray-600">{paymentSettings.bank_transfer.beneficiary_bank_location}</p>
-                      <p className="text-gray-600">SWIFT: {paymentSettings.bank_transfer.beneficiary_bank_swift}</p>
+                  {/* SWIFT Transfer Section */}
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <h4 className="font-bold text-gray-900 text-left">International Bank Transfer (SWIFT)</h4>
+                      <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">USD</span>
                     </div>
-                    <div>
-                      <label className="font-semibold text-gray-700">IBAN:</label>
-                      <p className="text-gray-900 font-mono text-lg">{paymentSettings.bank_transfer.beneficiary_iban}</p>
-                    </div>
-                    <div>
-                      <label className="font-semibold text-gray-700">Beneficiary:</label>
-                      <p className="text-gray-900">{paymentSettings.bank_transfer.beneficiary_name}</p>
-                    </div>
-                    <div className="border-t pt-3 mt-3">
-                      <label className="font-semibold text-gray-700">Intermediary Bank 1:</label>
-                      <p className="text-gray-900">{paymentSettings.bank_transfer.intermediary_bank_1.name}</p>
-                      <p className="text-gray-600">{paymentSettings.bank_transfer.intermediary_bank_1.location}</p>
-                      <p className="text-gray-600">SWIFT: {paymentSettings.bank_transfer.intermediary_bank_1.swift}</p>
-                    </div>
-                    <div className="border-t pt-3">
-                      <label className="font-semibold text-gray-700">Intermediary Bank 2:</label>
-                      <p className="text-gray-900">{paymentSettings.bank_transfer.intermediary_bank_2.name}</p>
-                      <p className="text-gray-600">{paymentSettings.bank_transfer.intermediary_bank_2.location}</p>
-                      <p className="text-gray-600">SWIFT: {paymentSettings.bank_transfer.intermediary_bank_2.swift}</p>
+                    <p className="text-sm text-gray-600 mb-4 text-left">
+                      For international payments in <strong>US Dollars (USD)</strong>. This is a dollar-denominated account. Transfer typically takes 3-5 business days.
+                    </p>
+                    <div className="space-y-3 text-sm text-left">
+                      <div>
+                        <label className="font-semibold text-gray-700">Beneficiary Bank:</label>
+                        <p className="text-gray-900 font-mono">{paymentSettings.bank_transfer.beneficiary_bank_name}</p>
+                        <p className="text-gray-600">{paymentSettings.bank_transfer.beneficiary_bank_location}</p>
+                        <p className="text-gray-600">SWIFT: {paymentSettings.bank_transfer.beneficiary_bank_swift}</p>
+                      </div>
+                      <div>
+                        <label className="font-semibold text-gray-700">IBAN:</label>
+                        <p className="text-gray-900 font-mono text-lg">{paymentSettings.bank_transfer.beneficiary_iban}</p>
+                      </div>
+                      <div>
+                        <label className="font-semibold text-gray-700">Beneficiary:</label>
+                        <p className="text-gray-900">{paymentSettings.bank_transfer.beneficiary_name}</p>
+                      </div>
+                      <div className="border-t pt-3 mt-3">
+                        <label className="font-semibold text-gray-700">Intermediary Bank 1:</label>
+                        <p className="text-gray-900">{paymentSettings.bank_transfer.intermediary_bank_1.name}</p>
+                        <p className="text-gray-600">{paymentSettings.bank_transfer.intermediary_bank_1.location}</p>
+                        <p className="text-gray-600">SWIFT: {paymentSettings.bank_transfer.intermediary_bank_1.swift}</p>
+                      </div>
+                      <div className="border-t pt-3">
+                        <label className="font-semibold text-gray-700">Intermediary Bank 2:</label>
+                        <p className="text-gray-900">{paymentSettings.bank_transfer.intermediary_bank_2.name}</p>
+                        <p className="text-gray-600">{paymentSettings.bank_transfer.intermediary_bank_2.location}</p>
+                        <p className="text-gray-600">SWIFT: {paymentSettings.bank_transfer.intermediary_bank_2.swift}</p>
+                      </div>
                     </div>
                   </div>
                   
+                  {/* Local QR Payment Section */}
                   {paymentSettings.bank_transfer.qr_code_url && (
-                    <div className="mt-8 pt-6 border-t border-gray-300">
-                      <h5 className="font-semibold text-gray-900 mb-2 text-left">Quick Payment:</h5>
-                      <p className="text-sm text-gray-600 mb-4 text-left">Scan the QR code below with your mobile banking app to complete the transfer instantly.</p>
+                    <div className="mt-8 pt-6 border-t-2 border-gray-300">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h5 className="font-semibold text-gray-900 text-left">Or Pay via QR Code</h5>
+                        <span className="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded">GEL</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-4 text-left">
+                        For local payments in <strong>Georgian Lari (GEL)</strong>. Scan the QR code with your TBC Bank mobile app for instant transfer.
+                      </p>
                       <div className="flex justify-center">
                         <img
                           src={`${BACKEND_URL}${paymentSettings.bank_transfer.qr_code_url}`}
