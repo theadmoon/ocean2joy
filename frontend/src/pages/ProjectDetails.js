@@ -1394,15 +1394,15 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                   </div>
                   
                   {paymentSettings.bank_transfer.qr_code_url && (
-                    <div className="mt-4">
-                      <label className="font-semibold text-gray-700 block mb-3 text-left">Scan to Pay:</label>
-                      <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
+                    <div className="mt-6">
+                      <label className="font-semibold text-gray-700 block mb-4 text-center text-lg">Scan to Pay:</label>
+                      <div className="bg-white p-6 rounded-xl border-2 border-gray-200 flex flex-col items-center">
                         <img
                           src={`${BACKEND_URL}${paymentSettings.bank_transfer.qr_code_url}`}
                           alt="Payment QR Code"
-                          className="w-64 h-64 object-contain"
+                          className="w-full max-w-lg h-auto object-contain"
                         />
-                        <p className="text-xs text-gray-500 text-center mt-2">Scan with your banking app</p>
+                        <p className="text-sm text-gray-600 text-center mt-4">Scan with your banking app</p>
                       </div>
                     </div>
                   )}
