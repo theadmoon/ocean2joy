@@ -23,14 +23,14 @@ function Navbar() {
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center py-2">
-            <Logo variant="horizontal" className="h-16 w-auto" />
+          <Link to="/" className="flex items-center -ml-2">
+            <Logo variant="horizontal" className="h-11 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-6 text-base">
             <Link to="/services" className="text-gray-700 hover:text-sky-600 font-medium transition">
               Services
             </Link>
