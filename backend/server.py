@@ -387,11 +387,11 @@ def generate_default_document_names(project_data: dict) -> dict:
     
     return {
         'quote_request': f"Quote Request - {short_title} - {clean_client}",
-        'quote': f"Quote Document - {short_title} - {project_number}",
+        'quote': f"Quote - {short_title} - {project_number}",
         'invoice': f"Invoice - {short_title} - {project_number}",
         'receipt': f"Receipt - {short_title} - {project_number}",
-        'certificate': f"Certificate of Delivery - {short_title} - {project_number}",
-        'payment_confirmation': f"Payment Confirmation - {project_number} - {clean_client}"
+        'delivery_note': f"Delivery Note - {short_title} - {project_number}",
+        'certificate': f"Certificate of Completion - {short_title} - {project_number}"
     }
 
 # ==================== PUBLIC ROUTES ====================
