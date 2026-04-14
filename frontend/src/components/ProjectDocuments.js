@@ -44,22 +44,68 @@ function ProjectDocuments({ project, onUpdate }) {
     setEditing(false);
   };
 
+  // Define sub-steps for each document
+  const getSubSteps = (docType) => {
+    const subSteps = {
+      quote_request: [
+        { key: 'awaiting_upload', label: 'Awaiting Script Upload', condition: () => !project.reference_materials || project.reference_materials.length === 0 },
+        { key: 'script_uploaded', label: 'Script Uploaded by Client', condition: () => project.reference_materials && project.reference_materials.length > 0 },
+        { key: 'manager_reviewing', label: 'Manager Reviewing', condition: () => project.reference_materials && !project.quote_request_created_at },
+        { key: 'summary_created', label: 'Quote Request Summary Created', condition: () => project.quote_request_created_at },
+        { key: 'sent_for_approval', label: 'Sent to Client for Approval', condition: () => project.quote_request_sent_at },
+        { key: 'approved', label: 'Approved by Client', condition: () => project.quote_request_approved_at }
+      ],
+      quote: [
+        { key: 'draft', label: 'Draft', condition: () => !project.quote_amount },
+        { key: 'prepared', label: 'Quote Prepared', condition: () => project.quote_amount && !project.quote_sent_at },
+        { key: 'sent', label: 'Sent to Client', condition: () => project.quote_sent_at },
+        { key: 'approved', label: 'Approved by Client', condition: () => project.quote_accepted_at }
+      ],
+      invoice: [
+        { key: 'draft', label: 'Draft', condition: () => !project.quote_accepted_at },
+        { key: 'generated', label: 'Invoice Generated', condition: () => project.quote_accepted_at },
+        { key: 'sent', label: 'Sent to Client', condition: () => project.quote_accepted_at },
+        { key: 'awaiting_payment', label: 'Awaiting Payment', condition: () => project.quote_accepted_at && !project.payment_confirmed_by_admin }
+      ],
+      payment_confirmation: [
+        { key: 'awaiting', label: 'Awaiting Payment', condition: () => !project.payment_marked_by_client_at },
+        { key: 'marked', label: 'Payment Marked by Client', condition: () => project.payment_marked_by_client_at },
+        { key: 'confirmed', label: 'Confirmed by Manager', condition: () => project.payment_confirmed_by_admin }
+      ],
+      receipt: [
+        { key: 'pending', label: 'Pending', condition: () => !project.payment_confirmed_by_admin },
+        { key: 'generated', label: 'Generated', condition: () => project.payment_confirmed_by_admin }
+      ],
+      certificate: [
+        { key: 'pending', label: 'Pending', condition: () => !project.delivered_at },
+        { key: 'work_completed', label: 'Work Completed', condition: () => project.delivered_at && !project.completed_at },
+        { key: 'issued', label: 'Certificate Issued', condition: () => project.completed_at }
+      ]
+    };
+    return subSteps[docType] || [];
+  };
+
+  const getCurrentSubStep = (docType) => {
+    const subSteps = getSubSteps(docType);
+    // Find last completed sub-step
+    for (let i = subSteps.length - 1; i >= 0; i--) {
+      if (subSteps[i].condition()) {
+        return i;
+      }
+    }
+    return -1; // No steps completed
+  };
+
   const getDocumentStatus = (docType) => {
-    switch(docType) {
-      case 'quote_request':
-        return project.status !== 'submitted' ? 'generated' : 'pending';
-      case 'quote':
-        return project.quote_sent_at ? 'generated' : 'pending';
-      case 'invoice':
-        return project.payment_confirmed_by_admin ? 'generated' : 'pending';
-      case 'receipt':
-        return project.payment_confirmed_by_admin ? 'generated' : 'pending';
-      case 'certificate':
-        return project.delivered_at ? 'generated' : 'pending';
-      case 'payment_confirmation':
-        return project.payment_marked_by_client_at ? 'generated' : 'pending';
-      default:
-        return 'pending';
+    const currentStep = getCurrentSubStep(docType);
+    const subSteps = getSubSteps(docType);
+    
+    if (currentStep === subSteps.length - 1) {
+      return 'completed'; // All steps done
+    } else if (currentStep >= 0) {
+      return 'in_progress'; // Some steps done
+    } else {
+      return 'pending'; // No steps done
     }
   };
 
@@ -109,12 +155,18 @@ function ProjectDocuments({ project, onUpdate }) {
       <div className="space-y-3">
         {documents.map((doc) => {
           const status = getDocumentStatus(doc.key);
+          const currentStep = getCurrentSubStep(doc.key);
+          const subSteps = getSubSteps(doc.key);
+          const progressPercent = subSteps.length > 0 ? ((currentStep + 1) / subSteps.length) * 100 : 0;
+          
           return (
             <div
               key={doc.key}
               className={`border-2 rounded-lg p-4 transition ${
-                status === 'generated'
+                status === 'completed'
                   ? 'border-green-200 bg-green-50'
+                  : status === 'in_progress'
+                  ? 'border-orange-200 bg-orange-50'
                   : 'border-gray-200 bg-gray-50'
               }`}
             >
@@ -139,17 +191,41 @@ function ProjectDocuments({ project, onUpdate }) {
                       {documentNames[doc.key] || doc.key}
                     </h4>
                   )}
-                  <p className="text-xs text-gray-600 mb-2">{doc.description}</p>
-                  <div className="flex items-center gap-2">
-                    {status === 'generated' ? (
-                      <span className="text-xs bg-green-600 text-white px-2 py-1 rounded">
-                        ✓ Generated
+                  <p className="text-xs text-gray-600 mb-3">{doc.description}</p>
+                  
+                  {/* Progress Bar */}
+                  <div className="mb-3">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-semibold text-gray-700">
+                        {currentStep >= 0 && subSteps[currentStep] ? subSteps[currentStep].label : 'Not Started'}
                       </span>
-                    ) : (
-                      <span className="text-xs bg-gray-400 text-white px-2 py-1 rounded">
-                        Pending
-                      </span>
-                    )}
+                      <span className="text-xs text-gray-500">{Math.round(progressPercent)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          status === 'completed' ? 'bg-green-600' : 
+                          status === 'in_progress' ? 'bg-orange-500' : 'bg-gray-400'
+                        }`}
+                        style={{ width: `${progressPercent}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  {/* Sub-steps List */}
+                  <div className="space-y-1">
+                    {subSteps.map((subStep, index) => (
+                      <div key={subStep.key} className="flex items-center gap-2 text-xs">
+                        {index <= currentStep ? (
+                          <span className="text-green-600">✓</span>
+                        ) : (
+                          <span className="text-gray-400">○</span>
+                        )}
+                        <span className={index <= currentStep ? 'text-green-700 font-medium' : 'text-gray-500'}>
+                          {subStep.label}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
