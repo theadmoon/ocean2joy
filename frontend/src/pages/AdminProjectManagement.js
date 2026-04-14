@@ -1084,7 +1084,42 @@ Issue Date: ${formatDate(projectData.completed_at)}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div><span className="font-semibold">Project:</span> {project.project_number}</div>
             <div><span className="font-semibold">Client:</span> {project.user_name || 'N/A'}</div>
-            <div><span className="font-semibold">Title:</span> {project.project_title}</div>
+            <div className="col-span-2">
+              <span className="font-semibold">Title:</span>{' '}
+              {editMode.project_title ? (
+                <div className="inline-flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editedData.project_title || ''}
+                    onChange={(e) => handleFieldChange('project_title', e.target.value)}
+                    className="border border-gray-300 rounded px-2 py-1 flex-1 min-w-[300px]"
+                  />
+                  <button
+                    onClick={() => saveField('project_title')}
+                    disabled={saving}
+                    className="btn-ocean-sm"
+                  >
+                    <FaSave className="inline mr-1" /> Save
+                  </button>
+                  <button
+                    onClick={() => toggleEditMode('project_title')}
+                    className="btn-ghost-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <span>
+                  {project.project_title}
+                  <button
+                    onClick={() => toggleEditMode('project_title')}
+                    className="ml-2 text-sky-600 hover:text-sky-700"
+                  >
+                    <FaEdit className="inline" />
+                  </button>
+                </span>
+              )}
+            </div>
             <div><span className="font-semibold">Amount:</span> ${project.quote_amount}</div>
           </div>
         </div>
