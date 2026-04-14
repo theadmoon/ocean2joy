@@ -25,8 +25,8 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-24">
           {/* Logo */}
-          <Link to="/" className="flex items-center relative -ml-10">
-            <Logo variant="horizontal" className="h-32 w-auto" style={{ objectFit: 'contain', display: 'block' }} />
+          <Link to="/" className="flex items-center relative -ml-14 -my-2">
+            <Logo variant="horizontal" className="h-36 w-auto" style={{ objectFit: 'contain', display: 'block' }} />
           </Link>
 
           {/* Desktop Navigation */}
