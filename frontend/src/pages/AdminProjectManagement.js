@@ -1084,6 +1084,9 @@ Issue Date: ${formatDate(projectData.completed_at)}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div><span className="font-semibold">Project:</span> {project.project_number}</div>
             <div><span className="font-semibold">Client:</span> {project.user_name || 'N/A'}</div>
+            <div><span className="font-semibold">Client Email:</span> {project.user_email || 'N/A'}</div>
+            <div><span className="font-semibold">Amount:</span> ${project.quote_amount}</div>
+            
             <div className="col-span-2">
               <span className="font-semibold">Title:</span>{' '}
               {editMode.project_title ? (
@@ -1120,7 +1123,45 @@ Issue Date: ${formatDate(projectData.completed_at)}
                 </span>
               )}
             </div>
-            <div><span className="font-semibold">Amount:</span> ${project.quote_amount}</div>
+            
+            <div className="col-span-2">
+              <span className="font-semibold">Brief Description:</span>{' '}
+              {editMode.detailed_brief ? (
+                <div className="flex flex-col gap-2 mt-1">
+                  <textarea
+                    value={editedData.detailed_brief || ''}
+                    onChange={(e) => handleFieldChange('detailed_brief', e.target.value)}
+                    className="border border-gray-300 rounded px-2 py-1 w-full min-h-[80px]"
+                    placeholder="Enter brief project description..."
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => saveField('detailed_brief')}
+                      disabled={saving}
+                      className="btn-ocean-sm"
+                    >
+                      <FaSave className="inline mr-1" /> Save
+                    </button>
+                    <button
+                      onClick={() => toggleEditMode('detailed_brief')}
+                      className="btn-ghost-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-gray-700">
+                  {project.detailed_brief || 'No description provided'}
+                  <button
+                    onClick={() => toggleEditMode('detailed_brief')}
+                    className="ml-2 text-sky-600 hover:text-sky-700"
+                  >
+                    <FaEdit className="inline" />
+                  </button>
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
