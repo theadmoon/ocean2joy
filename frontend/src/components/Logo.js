@@ -1,29 +1,23 @@
 import React from 'react';
 
 function Logo({ variant = 'horizontal', className = '', style = {} }) {
-  const defaultStyle = {
-    imageRendering: 'crisp-edges',
-    ...style
-  };
-
   if (variant === 'horizontal') {
     return (
       <img
-        src="/logo-horizontal.png"
+        src="/logo-horizontal-clean.png"
         alt="Ocean2joy"
-        className={className || "h-12 w-auto"}
-        style={defaultStyle}
+        className={className || "h-10 w-auto"}
+        style={{ imageRendering: 'crisp-edges', ...style }}
       />
     );
   }
 
-  // Vertical variant
   return (
     <img
-      src="/logo-vertical.png"
+      src="/logo-vertical-clean.png"
       alt="Ocean2joy"
-      className={className || "h-20 w-auto"}
-      style={defaultStyle}
+      className={className || "h-32 w-auto"}
+      style={{ imageRendering: 'crisp-edges', ...style }}
     />
   );
 }

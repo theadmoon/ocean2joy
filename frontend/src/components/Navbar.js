@@ -25,19 +25,19 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center -ml-2">
-            <Logo variant="horizontal" className="h-11 w-auto" />
+          <Link to="/" className="flex items-center -ml-4">
+            <Logo variant="horizontal" className="h-10 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6 text-base">
-            <Link to="/services" className="text-gray-700 hover:text-sky-600 font-medium transition">
+          <div className="hidden md:flex items-center space-x-8 text-base font-medium">
+            <Link to="/services" className="text-gray-700 hover:text-sky-600 transition">
               Services
             </Link>
-            <Link to="/how-it-works" className="text-gray-700 hover:text-sky-600 font-medium transition">
+            <Link to="/how-it-works" className="text-gray-700 hover:text-sky-600 transition">
               How It Works
             </Link>
-            <Link to="/contact" className="text-gray-700 hover:text-sky-600 font-medium transition">
+            <Link to="/contact" className="text-gray-700 hover:text-sky-600 transition">
               Contact
             </Link>
             
