@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaEdit, FaSave, FaTimes, FaFileAlt } from 'react-icons/fa';
+import { FaEdit, FaSave, FaTimes, FaFileAlt, FaEye } from 'react-icons/fa';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-function ProjectDocuments({ project, onUpdate }) {
+function ProjectDocuments({ project, onUpdate, isClientView = false }) {
   const [editing, setEditing] = useState(false);
   const [documentNames, setDocumentNames] = useState({});
   const [tempNames, setTempNames] = useState({});
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedDocumentContent, setSelectedDocumentContent] = useState('');
+  const [selectedDocumentTitle, setSelectedDocumentTitle] = useState('');
 
   useEffect(() => {
     // Initialize document names from project or use defaults
@@ -118,37 +121,246 @@ function ProjectDocuments({ project, onUpdate }) {
     { key: 'certificate', icon: '📜', description: 'Delivery certificate', step: 6 }
   ];
 
+  const viewDocument = (docType) => {
+    // Generate document content based on type
+    let content = '';
+    let title = documentNames[docType] || docType;
+
+    switch(docType) {
+      case 'quote_request':
+        content = `QUOTE REQUEST
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+Project: ${project.project_number}
+Client: ${project.user_name}
+Date: ${project.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}
+
+═══════════════════════════════════════════════
+
+PROJECT DETAILS:
+
+Title: ${project.project_title || 'N/A'}
+
+Service Type: ${project.service_type || 'N/A'}
+
+Brief Description:
+${project.detailed_brief || 'No description provided'}
+
+Objectives:
+${project.objectives || 'Not specified'}
+
+Special Instructions:
+${project.special_instructions || 'None'}
+
+Reference Materials:
+${project.reference_materials ? project.reference_materials.join('\n') : 'None uploaded'}
+
+═══════════════════════════════════════════════
+
+This quote request has been received and is being reviewed by our production team.`;
+        break;
+
+      case 'quote':
+        content = `QUOTE / PROPOSAL
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+Project: ${project.project_number}
+Client: ${project.user_name}
+Date: ${project.quote_sent_at ? new Date(project.quote_sent_at).toLocaleDateString() : 'N/A'}
+
+═══════════════════════════════════════════════
+
+PROJECT SPECIFICATIONS:
+
+Title: ${project.project_title}
+Type: ${project.service_type}
+
+${project.detailed_brief || ''}
+
+${project.special_instructions || ''}
+
+═══════════════════════════════════════════════
+
+PRICING:
+
+Service Description                        Amount
+─────────────────────────────────────────────────
+${project.service_type}                    $${project.quote_amount || 0}
+
+${project.quote_details || ''}
+
+═══════════════════════════════════════════════
+
+TOTAL QUOTE:                              $${project.quote_amount || 0}
+
+Payment Terms: ${project.payment_terms || 'TBD'}
+
+═══════════════════════════════════════════════`;
+        break;
+
+      case 'invoice':
+        content = `INVOICE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+Invoice #: ${project.project_number}
+Date: ${project.quote_accepted_at ? new Date(project.quote_accepted_at).toLocaleDateString() : 'N/A'}
+
+═══════════════════════════════════════════════
+
+BILL TO:
+${project.user_name}
+${project.user_email}
+
+═══════════════════════════════════════════════
+
+PROJECT: ${project.project_title}
+
+Service: ${project.service_type}
+Amount: $${project.quote_amount || 0}
+
+${project.quote_details || ''}
+
+═══════════════════════════════════════════════
+
+TOTAL AMOUNT DUE:                         $${project.quote_amount || 0}
+
+Payment Terms: ${project.payment_terms || 'Due upon delivery'}
+
+═══════════════════════════════════════════════`;
+        break;
+
+      case 'payment_confirmation':
+        content = `PAYMENT CONFIRMATION
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+Project: ${project.project_number}
+Date: ${project.payment_marked_by_client_at ? new Date(project.payment_marked_by_client_at).toLocaleDateString() : 'N/A'}
+
+═══════════════════════════════════════════════
+
+PAYMENT DETAILS:
+
+Amount Paid: $${project.quote_amount || 0}
+Payment Method: ${project.payment_method || 'N/A'}
+${project.paypal_transaction_id ? `Transaction ID: ${project.paypal_transaction_id}` : ''}
+${project.paypal_payer_email ? `Payer Email: ${project.paypal_payer_email}` : ''}
+
+Status: ${project.payment_confirmed_by_admin ? 'CONFIRMED' : 'Pending Confirmation'}
+
+═══════════════════════════════════════════════`;
+        break;
+
+      case 'receipt':
+        content = `RECEIPT
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+Receipt #: ${project.project_number}
+Date: ${project.payment_confirmed_at ? new Date(project.payment_confirmed_at).toLocaleDateString() : 'N/A'}
+
+═══════════════════════════════════════════════
+
+RECEIVED FROM:
+${project.user_name}
+${project.user_email}
+
+═══════════════════════════════════════════════
+
+PAYMENT FOR:
+${project.project_title}
+
+Amount Received: $${project.quote_amount || 0}
+Payment Method: ${project.payment_method || 'N/A'}
+
+═══════════════════════════════════════════════
+
+Thank you for your payment!`;
+        break;
+
+      case 'certificate':
+        content = `CERTIFICATE OF COMPLETION
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+Certificate #: ${project.project_number}
+Date: ${project.completed_at ? new Date(project.completed_at).toLocaleDateString() : 'N/A'}
+
+═══════════════════════════════════════════════
+
+This certifies that the following project has been completed:
+
+Project: ${project.project_title}
+Client: ${project.user_name}
+
+Production Period:
+Started: ${project.production_started_at ? new Date(project.production_started_at).toLocaleDateString() : 'N/A'}
+Delivered: ${project.delivered_at ? new Date(project.delivered_at).toLocaleDateString() : 'N/A'}
+
+═══════════════════════════════════════════════
+
+All deliverables have been provided digitally via secure client portal.
+
+Project Status: ${project.acceptance_status === 'approved' ? 'APPROVED' : 'Pending Approval'}
+
+═══════════════════════════════════════════════`;
+        break;
+
+      default:
+        content = 'Document content not available.';
+    }
+
+    setSelectedDocumentTitle(title);
+    setSelectedDocumentContent(content);
+    setShowDocumentModal(true);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-2xl font-bold text-gray-900">Project Documents</h3>
+          <h3 className="text-2xl font-bold text-gray-900">
+            {isClientView ? 'Project Operational Chain' : 'Project Documents'}
+          </h3>
           <p className="text-sm text-gray-600 mt-1">
-            Manage all document names used in this project
+            {isClientView 
+              ? 'Track your project progress and access important documents' 
+              : 'Manage all document names used in this project'}
           </p>
         </div>
-        {!editing ? (
-          <button
-            onClick={() => setEditing(true)}
-            className="btn-ocean inline-flex items-center gap-2"
-          >
-            <FaEdit /> Edit Names
-          </button>
-        ) : (
-          <div className="flex gap-2">
+        {!isClientView && (
+          !editing ? (
             <button
-              onClick={handleCancel}
-              className="btn-ocean-outline inline-flex items-center gap-2"
-            >
-              <FaTimes /> Cancel
-            </button>
-            <button
-              onClick={handleSave}
+              onClick={() => setEditing(true)}
               className="btn-ocean inline-flex items-center gap-2"
             >
-              <FaSave /> Save Changes
+              <FaEdit /> Edit Names
             </button>
-          </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={handleCancel}
+                className="btn-ocean-outline inline-flex items-center gap-2"
+              >
+                <FaTimes /> Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="btn-ocean inline-flex items-center gap-2"
+              >
+                <FaSave /> Save Changes
+              </button>
+            </div>
+          )
         )}
       </div>
 
@@ -213,7 +425,7 @@ function ProjectDocuments({ project, onUpdate }) {
                   </div>
                   
                   {/* Sub-steps List */}
-                  <div className="space-y-1">
+                  <div className="space-y-1 mb-3">
                     {subSteps.map((subStep, index) => (
                       <div key={subStep.key} className="flex items-center gap-2 text-xs">
                         {index <= currentStep ? (
@@ -227,6 +439,16 @@ function ProjectDocuments({ project, onUpdate }) {
                       </div>
                     ))}
                   </div>
+
+                  {/* View Document Button */}
+                  {(status === 'completed' || status === 'in_progress') && (
+                    <button
+                      onClick={() => viewDocument(doc.key)}
+                      className="btn-ocean-sm inline-flex items-center gap-2 mt-2"
+                    >
+                      <FaEye /> View Document
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -241,6 +463,52 @@ function ProjectDocuments({ project, onUpdate }) {
           new names automatically.
         </p>
       </div>
+
+      {/* Document View Modal */}
+      {showDocumentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-sky-600 to-sky-700 text-white p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold">{selectedDocumentTitle}</h3>
+                <button
+                  onClick={() => setShowDocumentModal(false)}
+                  className="text-white hover:text-gray-200 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                {selectedDocumentContent}
+              </pre>
+            </div>
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  const element = document.createElement('a');
+                  const file = new Blob([selectedDocumentContent], { type: 'text/plain' });
+                  element.href = URL.createObjectURL(file);
+                  element.download = `${selectedDocumentTitle.replace(/\s+/g, '_')}.txt`;
+                  document.body.appendChild(element);
+                  element.click();
+                  document.body.removeChild(element);
+                }}
+                className="btn-ocean-outline inline-flex items-center gap-2"
+              >
+                <FaFileAlt /> Download as TXT
+              </button>
+              <button
+                onClick={() => setShowDocumentModal(false)}
+                className="btn-ocean"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

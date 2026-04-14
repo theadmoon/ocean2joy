@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaDownload, FaCheckCircle, FaComments } from 'react-icons/fa';
+import ProjectDocuments from '../components/ProjectDocuments';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -1277,6 +1278,11 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                 )}
               </div>
             )}
+
+
+
+            {/* Project Operational Chain - Client View */}
+            <ProjectDocuments project={project} onUpdate={fetchProjectDetails} isClientView={true} />
 
           </div>
 
