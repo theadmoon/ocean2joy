@@ -8,9 +8,16 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
-          <div className="col-span-1">
-            <div className="mb-4">
-              <Logo variant="vertical" className="h-40 w-auto" />
+          <div className="col-span-1 flex flex-col items-start justify-start">
+            <div className="mb-6">
+              <Logo 
+                variant="vertical" 
+                className="h-36 w-auto" 
+                style={{ 
+                  imageRendering: '-webkit-optimize-contrast',
+                  WebkitFontSmoothing: 'antialiased'
+                }} 
+              />
             </div>
             <p className="text-gray-400 text-sm">
               Where video dreams come true. Professional video production services delivered digitally.
