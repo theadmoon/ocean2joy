@@ -16,6 +16,10 @@ function ProjectDetails() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [showFileModal, setShowFileModal] = useState(false);
   
+  // Order Activation states
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  
   // Payment states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentSettings, setPaymentSettings] = useState(null);
@@ -878,6 +882,61 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
     });
   };
 
+  // Order Activation - File Upload
+  const handleFileUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+
+    setUploadingFiles(true);
+    try {
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+
+      const response = await axios.post(
+        `${API}/projects/${projectId}/upload-materials`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      // Update project with new materials
+      setProject(prev => ({
+        ...prev,
+        reference_materials: response.data.reference_materials
+      }));
+      
+      alert('Files uploaded successfully! Manager will review your materials.');
+      fetchProjectDetails(); // Refresh project data
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      alert('Failed to upload files. Please try again.');
+    } finally {
+      setUploadingFiles(false);
+    }
+  };
+
+  const activateOrder = async () => {
+    if (!project.reference_materials || project.reference_materials.length === 0) {
+      alert('Please upload your script/materials before activating the order.');
+      return;
+    }
+
+    try {
+      await axios.patch(`${API}/projects/${projectId}/activate-order`);
+      alert('Order activated! Manager will review and prepare Quote Request.');
+      fetchProjectDetails();
+    } catch (error) {
+      console.error('Error activating order:', error);
+      alert('Failed to activate order. Please try again.');
+    }
+  };
+
+
   const handleApprove = async () => {
     try {
       await axios.patch(`${API}/projects/${projectId}/approve`);
@@ -1138,6 +1197,87 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                 </div>
               </div>
             )}
+
+
+            {/* Order Activation Section */}
+            {(!project.reference_materials || project.reference_materials.length === 0 || !project.order_activated_at) && (
+              <div className="card-ocean p-6 mt-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 text-left flex items-center gap-2">
+                  🚀 Order Activation
+                </h3>
+                <p className="text-sm text-gray-600 mb-6 text-left">
+                  Upload your script and materials to activate your order. Manager will review and prepare official Quote Request.
+                </p>
+
+                {/* Current Status */}
+                <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm font-semibold text-sky-900 mb-2">
+                    📋 Current Status:
+                  </p>
+                  <p className="text-sm text-sky-700">
+                    {!project.reference_materials || project.reference_materials.length === 0 ? (
+                      <span>⏳ Awaiting Script Upload</span>
+                    ) : !project.order_activated_at ? (
+                      <span>✅ Files Uploaded - Ready to Activate Order</span>
+                    ) : (
+                      <span>🎬 Order Activated - Manager Reviewing</span>
+                    )}
+                  </p>
+                </div>
+
+                {/* File Upload */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    📎 Attach Script & Materials
+                  </label>
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    disabled={uploadingFiles}
+                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Upload your script, character references, location photos, or any other materials (PDF, DOCX, ZIP, Images)
+                  </p>
+                </div>
+
+                {/* Uploaded Files List */}
+                {project.reference_materials && project.reference_materials.length > 0 && (
+                  <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="text-sm font-semibold text-green-900 mb-2">
+                      ✅ Uploaded Materials:
+                    </p>
+                    <ul className="space-y-1">
+                      {project.reference_materials.map((file, idx) => (
+                        <li key={idx} className="text-sm text-green-700 flex items-center gap-2">
+                          <span>📄</span>
+                          <span>{file}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Activate Order Button */}
+                {project.reference_materials && project.reference_materials.length > 0 && !project.order_activated_at && (
+                  <button
+                    onClick={activateOrder}
+                    className="btn-ocean w-full py-3 text-lg font-semibold"
+                  >
+                    🚀 Activate Order & Submit for Review
+                  </button>
+                )}
+
+                {uploadingFiles && (
+                  <div className="text-center text-sm text-gray-600 mt-4">
+                    <span className="inline-block animate-spin mr-2">⏳</span>
+                    Uploading files...
+                  </div>
+                )}
+              </div>
+            )}
+
           </div>
 
           <div className="lg:col-span-1">

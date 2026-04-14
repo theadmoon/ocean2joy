@@ -1059,6 +1059,87 @@ async def update_document_names(
 
 # ==================== DEMO VIDEOS ENDPOINTS ====================
 
+
+@api_router.post("/projects/{project_id}/upload-materials")
+async def upload_project_materials(
+    project_id: str,
+    files: List[UploadFile] = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Client uploads script and reference materials"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify user owns this project
+    if project['user_id'] != current_user.id and current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Store files as reference materials list (for now, just store filenames)
+    # In production, you would save actual files to storage
+    reference_materials = project.get('reference_materials', [])
+    
+    for file in files:
+        filename = file.filename
+        # Add to reference materials list
+        file_entry = f"{filename} (uploaded by client)"
+        if file_entry not in reference_materials:
+            reference_materials.append(file_entry)
+    
+    # Update project
+    await db.projects.update_one(
+        {"id": project_id},
+        {
+            "$set": {
+                "reference_materials": reference_materials,
+                "materials_uploaded_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    logger.info(f"Materials uploaded for project {project_id}: {[f.filename for f in files]}")
+    
+    return {
+        "message": "Materials uploaded successfully",
+        "reference_materials": reference_materials
+    }
+
+@api_router.patch("/projects/{project_id}/activate-order")
+async def activate_order(
+    project_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Client activates order after uploading materials"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify user owns this project
+    if project['user_id'] != current_user.id and current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Check if materials are uploaded
+    if not project.get('reference_materials') or len(project.get('reference_materials', [])) == 0:
+        raise HTTPException(status_code=400, detail="Please upload materials before activating order")
+    
+    # Update project status
+    await db.projects.update_one(
+        {"id": project_id},
+        {
+            "$set": {
+                "order_activated_at": datetime.now(timezone.utc).isoformat(),
+                "status": ProjectStatus.SUBMITTED,  # Move to submitted status
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    logger.info(f"Order activated for project {project_id}")
+    
+    return {"message": "Order activated successfully"}
+
+
 @api_router.get("/demo-videos", response_model=List[DemoVideo])
 async def get_demo_videos():
     """Get all demo videos (public endpoint)"""
