@@ -26,7 +26,7 @@ function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <Logo variant="horizontal" className="h-14 w-auto" />
+            <Logo variant="horizontal" className="h-16 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
