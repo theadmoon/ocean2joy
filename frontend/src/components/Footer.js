@@ -10,14 +10,7 @@ function Footer() {
           {/* Brand */}
           <div className="col-span-1 flex flex-col items-start justify-start">
             <div className="mb-6">
-              <Logo 
-                variant="vertical" 
-                className="h-36 w-auto" 
-                style={{ 
-                  imageRendering: '-webkit-optimize-contrast',
-                  WebkitFontSmoothing: 'antialiased'
-                }} 
-              />
+              <Logo variant="vertical" className="h-40 w-auto" />
             </div>
             <p className="text-gray-400 text-sm">
               Where video dreams come true. Professional video production services delivered digitally.
