@@ -4,9 +4,9 @@ function Logo({ variant = 'horizontal', className = '', style = {} }) {
   if (variant === 'horizontal') {
     return (
       <img
-        src="/logo-horizontal.png"
+        src="/logo-horizontal-transparent.png"
         alt="Ocean2joy"
-        className={className}
+        className={className || "h-12 w-auto"}
         style={style}
       />
     );
@@ -15,9 +15,9 @@ function Logo({ variant = 'horizontal', className = '', style = {} }) {
   // Vertical variant
   return (
     <img
-      src="/logo-vertical.png"
+      src="/logo-vertical-transparent.png"
       alt="Ocean2joy"
-      className={className}
+      className={className || "h-20 w-auto"}
       style={style}
     />
   );
