@@ -10,7 +10,7 @@ function Footer() {
           {/* Brand */}
           <div className="col-span-1">
             <div className="mb-4">
-              <Logo variant="horizontal" className="h-20 w-auto" />
+              <Logo variant="vertical" className="h-40 w-auto" />
             </div>
             <p className="text-gray-400 text-sm">
               Where video dreams come true. Professional video production services delivered digitally.
