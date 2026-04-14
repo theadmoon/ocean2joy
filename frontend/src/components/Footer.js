@@ -12,29 +12,29 @@ function Footer() {
             <div className="relative -mt-10 -ml-12 -mb-8">
               <Logo variant="vertical" className="max-h-64 w-auto" style={{ objectFit: 'contain', display: 'block' }} />
             </div>
-            <p className="text-gray-400 text-sm mb-6 max-w-xs leading-relaxed mt-6">
+            <p className="text-gray-400 text-base mb-6 max-w-xs leading-relaxed mt-6">
               Where video dreams come true. Professional video production services delivered digitally.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-sky-400 transition">
-                <FaFacebook className="text-xl" />
+                <FaFacebook className="text-2xl" />
               </a>
               <a href="#" className="text-gray-400 hover:text-sky-400 transition">
-                <FaTwitter className="text-xl" />
+                <FaTwitter className="text-2xl" />
               </a>
               <a href="#" className="text-gray-400 hover:text-sky-400 transition">
-                <FaInstagram className="text-xl" />
+                <FaInstagram className="text-2xl" />
               </a>
               <a href="#" className="text-gray-400 hover:text-sky-400 transition">
-                <FaYoutube className="text-xl" />
+                <FaYoutube className="text-2xl" />
               </a>
             </div>
           </div>
 
           {/* Services */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Services</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="text-xl font-semibold mb-4">Services</h3>
+            <ul className="space-y-2 text-base">
               <li>
                 <Link to="/services" className="text-gray-400 hover:text-sky-400 transition">
                   All Services
@@ -60,8 +60,8 @@ function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Company</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="text-xl font-semibold mb-4">Company</h3>
+            <ul className="space-y-2 text-base">
               <li>
                 <Link to="/how-it-works" className="text-gray-400 hover:text-sky-400 transition">
                   How It Works
@@ -92,8 +92,8 @@ function Footer() {
 
           {/* Policies */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Policies</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="text-xl font-semibold mb-4">Policies</h3>
+            <ul className="space-y-2 text-base">
               <li>
                 <Link to="/policies/digital_delivery" className="text-gray-400 hover:text-sky-400 transition">
                   Digital Delivery
