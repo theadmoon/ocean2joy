@@ -6,11 +6,13 @@ function Footer() {
   return (
     <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
-            <Logo variant="vertical" className="max-h-52 w-auto mb-6" style={{ objectFit: 'contain' }} />
-            <p className="text-gray-400 text-sm mb-6 max-w-xs leading-relaxed">
+            <div className="relative -mt-2">
+              <Logo variant="vertical" className="max-h-56 w-auto" style={{ objectFit: 'contain', display: 'block' }} />
+            </div>
+            <p className="text-gray-400 text-sm mb-6 max-w-xs leading-relaxed mt-4">
               Where video dreams come true. Professional video production services delivered digitally.
             </p>
             <div className="flex space-x-4">
