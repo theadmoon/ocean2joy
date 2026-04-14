@@ -9,10 +9,10 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
-            <div className="relative -mt-2">
-              <Logo variant="vertical" className="max-h-56 w-auto" style={{ objectFit: 'contain', display: 'block' }} />
+            <div className="relative -mt-6 -ml-4">
+              <Logo variant="vertical" className="max-h-60 w-auto" style={{ objectFit: 'contain', display: 'block' }} />
             </div>
-            <p className="text-gray-400 text-sm mb-6 max-w-xs leading-relaxed mt-4">
+            <p className="text-gray-400 text-sm mb-6 max-w-xs leading-relaxed mt-2">
               Where video dreams come true. Professional video production services delivered digitally.
             </p>
             <div className="flex space-x-4">
