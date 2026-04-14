@@ -83,7 +83,7 @@ function ClientDashboard() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-xl font-bold text-gray-900">
-                        {project.project_title}
+                        {project.title || project.project_title || project.detailed_brief?.substring(0, 50) + '...'}
                       </h3>
                       <span className={`status-badge ${getStatusColor(project.status)}`}>
                         {project.status.replace('_', ' ')}
