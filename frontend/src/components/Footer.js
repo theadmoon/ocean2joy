@@ -9,8 +9,8 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Brand - Takes 2 columns */}
           <div className="col-span-1 md:col-span-2">
-            <div className="mb-6">
-              <Logo variant="vertical" className="h-48 w-auto" />
+            <div className="mb-6 flex justify-start">
+              <Logo variant="vertical" className="max-h-40 w-auto" style={{ objectFit: 'contain' }} />
             </div>
             <p className="text-gray-400 text-sm mb-6 max-w-md">
               Where video dreams come true. Professional video production services delivered digitally.
