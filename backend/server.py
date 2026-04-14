@@ -1140,6 +1140,106 @@ async def activate_order(
     return {"message": "Order activated successfully"}
 
 
+
+@api_router.post("/projects/{project_id}/upload-confirmation/{doc_type}")
+async def upload_client_confirmation(
+    project_id: str,
+    doc_type: str,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Client uploads PDF confirmation/signature for a document"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify user owns this project
+    if project['user_id'] != current_user.id and current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Validate document type
+    valid_doc_types = ['quote_request', 'quote', 'invoice', 'payment_confirmation', 'receipt', 'certificate']
+    if doc_type not in valid_doc_types:
+        raise HTTPException(status_code=400, detail="Invalid document type")
+    
+    # Validate file type (PDF only)
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    
+    # Create confirmations directory if not exists
+    confirmations_dir = Path("/app/backend/uploads/confirmations")
+    confirmations_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate unique filename
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    safe_filename = f"{project_id}_{doc_type}_{timestamp}.pdf"
+    file_path = confirmations_dir / safe_filename
+    
+    # Save file
+    try:
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+    except Exception as e:
+        logger.error(f"Error saving confirmation file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save file")
+    
+    # Update project with confirmation
+    client_confirmations = project.get('client_confirmations', {})
+    client_confirmations[doc_type] = safe_filename
+    
+    update_data = {
+        "client_confirmations": client_confirmations,
+        f"{doc_type}_confirmed_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": update_data}
+    )
+    
+    logger.info(f"Client confirmation uploaded for {doc_type} in project {project_id}")
+    
+    return {
+        "message": "Confirmation uploaded successfully",
+        "filename": safe_filename,
+        "doc_type": doc_type
+    }
+
+@api_router.get("/projects/{project_id}/confirmation/{doc_type}")
+async def get_client_confirmation(
+    project_id: str,
+    doc_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get client confirmation file for a document"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify access
+    if project['user_id'] != current_user.id and current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    client_confirmations = project.get('client_confirmations', {})
+    filename = client_confirmations.get(doc_type)
+    
+    if not filename:
+        raise HTTPException(status_code=404, detail="Confirmation not found")
+    
+    file_path = Path("/app/backend/uploads/confirmations") / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Confirmation file not found")
+    
+    return FileResponse(
+        path=str(file_path),
+        media_type="application/pdf",
+        filename=filename
+    )
+
+
 @api_router.get("/demo-videos", response_model=List[DemoVideo])
 async def get_demo_videos():
     """Get all demo videos (public endpoint)"""
