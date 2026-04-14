@@ -10,7 +10,7 @@ function Footer() {
           {/* Brand - Takes 2 columns */}
           <div className="col-span-1 md:col-span-2">
             <div className="mb-6">
-              <Logo variant="horizontal" className="h-16 w-auto mb-4" />
+              <Logo variant="vertical" className="h-48 w-auto" />
             </div>
             <p className="text-gray-400 text-sm mb-6 max-w-md">
               Where video dreams come true. Professional video production services delivered digitally.
