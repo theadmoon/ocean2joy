@@ -64,12 +64,12 @@ function ProjectDocuments({ project, onUpdate }) {
   };
 
   const documents = [
-    { key: 'quote_request', icon: '📄', description: 'Initial client request' },
-    { key: 'quote', icon: '💰', description: 'Project quote with pricing' },
-    { key: 'invoice', icon: '📃', description: 'Invoice for payment' },
-    { key: 'receipt', icon: '🧾', description: 'Payment receipt' },
-    { key: 'certificate', icon: '📜', description: 'Delivery certificate' },
-    { key: 'payment_confirmation', icon: '✅', description: 'Payment confirmation' }
+    { key: 'quote_request', icon: '📄', description: 'Initial client request', step: 1 },
+    { key: 'quote', icon: '💰', description: 'Project quote with pricing', step: 2 },
+    { key: 'invoice', icon: '📃', description: 'Invoice for payment', step: 3 },
+    { key: 'payment_confirmation', icon: '✅', description: 'Payment confirmation', step: 4 },
+    { key: 'receipt', icon: '🧾', description: 'Payment receipt', step: 5 },
+    { key: 'certificate', icon: '📜', description: 'Delivery certificate', step: 6 }
   ];
 
   return (
@@ -106,7 +106,7 @@ function ProjectDocuments({ project, onUpdate }) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-3">
         {documents.map((doc) => {
           const status = getDocumentStatus(doc.key);
           return (
@@ -119,7 +119,10 @@ function ProjectDocuments({ project, onUpdate }) {
               }`}
             >
               <div className="flex items-start gap-3">
-                <div className="text-3xl">{doc.icon}</div>
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-sky-600 text-white flex items-center justify-center font-bold text-sm">
+                  {doc.step}
+                </div>
+                <div className="text-2xl flex-shrink-0">{doc.icon}</div>
                 <div className="flex-1">
                   {editing ? (
                     <input
