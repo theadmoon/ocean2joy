@@ -12,16 +12,6 @@ function ProjectDocuments({ project, onUpdate, isClientView = false }) {
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedDocumentContent, setSelectedDocumentContent] = useState('');
   const [selectedDocumentTitle, setSelectedDocumentTitle] = useState('');
-  
-  // Client confirmation states
-  const [uploadingConfirmation, setUploadingConfirmation] = useState(false);
-  const [selectedDocForConfirmation, setSelectedDocForConfirmation] = useState(null);
-
-  // Deliverables states
-  const [deliverables, setDeliverables] = useState([]);
-
-  // Documents that require client confirmation
-  const documentsRequiringConfirmation = ['quote_request', 'quote', 'payment_confirmation', 'certificate'];
 
   useEffect(() => {
     // Initialize document names from project or use defaults
@@ -60,22 +50,6 @@ function ProjectDocuments({ project, onUpdate, isClientView = false }) {
   // Define sub-steps for each document
   const getSubSteps = (docType) => {
     const subSteps = {
-
-
-  // Fetch deliverables
-  useEffect(() => {
-    const fetchDeliverables = async () => {
-      if (!project?.id) return;
-      try {
-        const response = await axios.get(`${API}/projects/${project.id}/deliverables`);
-        setDeliverables(response.data);
-      } catch (error) {
-        console.error('Error fetching deliverables:', error);
-      }
-    };
-    fetchDeliverables();
-  }, [project?.id]);
-
       quote_request: [
         { key: 'awaiting_upload', label: 'Awaiting Script Upload', condition: () => !project.reference_materials || project.reference_materials.length === 0 },
         { key: 'script_uploaded', label: 'Script Uploaded by Client', condition: () => project.reference_materials && project.reference_materials.length > 0 },
@@ -343,63 +317,6 @@ Project Status: ${project.acceptance_status === 'approved' ? 'APPROVED' : 'Pendi
 
       default:
         content = 'Document content not available.';
-
-
-  const handleConfirmationUpload = async (docType, event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
-      alert('Only PDF files are allowed for confirmations');
-      return;
-    }
-
-    setUploadingConfirmation(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      await axios.post(
-        `${API}/projects/${project.id}/upload-confirmation/${docType}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
-
-      alert('Confirmation uploaded successfully! ✓');
-      onUpdate(); // Refresh project data
-    } catch (error) {
-      console.error('Error uploading confirmation:', error);
-      alert('Failed to upload confirmation. Please try again.');
-    } finally {
-      setUploadingConfirmation(false);
-      setSelectedDocForConfirmation(null);
-    }
-  };
-
-  const viewClientConfirmation = async (docType) => {
-    try {
-      const response = await axios.get(
-        `${API}/projects/${project.id}/confirmation/${docType}`,
-        { responseType: 'blob' }
-      );
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${docType}_confirmation.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      console.error('Error downloading confirmation:', error);
-      alert('Failed to download confirmation');
-    }
-  };
-
     }
 
     setSelectedDocumentTitle(title);
@@ -523,68 +440,14 @@ Project Status: ${project.acceptance_status === 'approved' ? 'APPROVED' : 'Pendi
                     ))}
                   </div>
 
-                  {/* View Document Button & Client Confirmations */}
+                  {/* View Document Button */}
                   {(status === 'completed' || status === 'in_progress') && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <button
-                        onClick={() => viewDocument(doc.key)}
-                        className="btn-ocean-sm inline-flex items-center gap-2"
-                      >
-                        <FaEye /> View Document
-                      </button>
-                      
-                      {/* Client Confirmation Section */}
-                      {documentsRequiringConfirmation.includes(doc.key) && (
-                        <>
-                          {project.client_confirmations && project.client_confirmations[doc.key] ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs bg-green-600 text-white px-3 py-1 rounded-full inline-flex items-center gap-1">
-                                ✓ Confirmed by Client
-                              </span>
-                              <button
-                                onClick={() => viewClientConfirmation(doc.key)}
-                                className="btn-ocean-outline-sm inline-flex items-center gap-1 text-xs"
-                                title="Download client confirmation PDF"
-                              >
-                                📄 Download PDF
-                              </button>
-                            </div>
-                          ) : isClientView && status !== 'pending' ? (
-                            <div className="flex items-center gap-2">
-                              {selectedDocForConfirmation === doc.key ? (
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="file"
-                                    accept=".pdf"
-                                    onChange={(e) => handleConfirmationUpload(doc.key, e)}
-                                    disabled={uploadingConfirmation}
-                                    className="text-xs"
-                                  />
-                                  <button
-                                    onClick={() => setSelectedDocForConfirmation(null)}
-                                    className="btn-ghost-sm text-xs"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => setSelectedDocForConfirmation(doc.key)}
-                                  className="btn-ocean-outline-sm inline-flex items-center gap-1 text-xs"
-                                  title="Attach your signed confirmation PDF"
-                                >
-                                  📎 Attach Confirmation
-                                </button>
-                              )}
-                            </div>
-                          ) : !isClientView && !(project.client_confirmations && project.client_confirmations[doc.key]) ? (
-                            <span className="text-xs bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">
-                              ⏳ Awaiting Client Confirmation
-                            </span>
-                          ) : null}
-                        </>
-                      )}
-                    </div>
+                    <button
+                      onClick={() => viewDocument(doc.key)}
+                      className="btn-ocean-sm inline-flex items-center gap-2 mt-2"
+                    >
+                      <FaEye /> View Document
+                    </button>
                   )}
                 </div>
               </div>
@@ -593,88 +456,13 @@ Project Status: ${project.acceptance_status === 'approved' ? 'APPROVED' : 'Pendi
         })}
       </div>
 
-      {/* Info Note */}
-      {isClientView ? (
-        <div className="mt-6 bg-sky-50 border border-sky-200 rounded-lg p-4">
-          <p className="text-sm text-sky-900">
-            <strong>📌 Important:</strong> For added legal protection and smooth payment processing, you can attach 
-            signed PDF confirmations to key documents (Quote Request, Quote, Payment Confirmation, Certificate). 
-            This helps resolve disputes and is often required by payment systems.
-          </p>
-        </div>
-      ) : (
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-900">
-            <strong>💡 Note:</strong> Changing document names here will update how they appear in all transaction
-            documents (Quote, Invoice, Receipt, Certificate). The actual document content will reference the
-            new names automatically.
-          </p>
-        </div>
-      )}
-
-      {/* Deliverables Section - Only for Client View */}
-      {isClientView && deliverables.length > 0 && (
-        <div className="mt-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center">
-              <span className="text-2xl">🎬</span>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-emerald-900">Your Video Deliverables</h3>
-              <p className="text-sm text-emerald-700">Final video files ready for download</p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {deliverables.map((file, index) => (
-              <div 
-                key={file.id || index} 
-                className="bg-white border border-emerald-200 rounded-lg p-4 hover:shadow-md transition"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <FaPlay className="text-emerald-600" />
-                      <h4 className="font-bold text-gray-900">{file.file_name || `Video ${index + 1}`}</h4>
-                    </div>
-                    <p className="text-sm text-gray-600">{file.description || 'No description'}</p>
-                    {file.uploaded_at && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Uploaded: {new Date(file.uploaded_at).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                  <a 
-                    href={file.file_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="btn-ocean inline-flex items-center gap-2 ml-4"
-                  >
-                    <FaDownload /> Download
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 bg-emerald-100 border border-emerald-300 rounded-lg p-4">
-            <p className="text-sm text-emerald-900">
-              <strong>📥 Download Tips:</strong> Right-click and "Save As" to download. Files are available for 90 days after project completion.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Admin Note */}
-      {!isClientView && (
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-900">
-            <strong>💡 Note:</strong> Changing document names here will update how they appear in all transaction
-            documents (Quote, Invoice, Receipt, Certificate). The actual document content will reference the
-            new names automatically.
-          </p>
-        </div>
-      )}
+      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm text-blue-900">
+          <strong>💡 Note:</strong> Changing document names here will update how they appear in all transaction
+          documents (Quote, Invoice, Receipt, Certificate). The actual document content will reference the
+          new names automatically.
+        </p>
+      </div>
 
       {/* Document View Modal */}
       {showDocumentModal && (

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaDownload, FaCheckCircle, FaComments } from 'react-icons/fa';
 import ProjectDocuments from '../components/ProjectDocuments';
+import ProjectDeliverables from '../components/ProjectDeliverables';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -1282,6 +1283,11 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
 
 
             {/* Project Operational Chain - Client View */}
+
+
+            {/* Video Deliverables - Client View */}
+            <ProjectDeliverables project={project} />
+
             <ProjectDocuments project={project} onUpdate={fetchProjectDetails} isClientView={true} />
 
           </div>
