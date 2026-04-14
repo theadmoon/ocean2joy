@@ -4,20 +4,20 @@ function Logo({ variant = 'horizontal', className = '', style = {} }) {
   if (variant === 'horizontal') {
     return (
       <img
-        src="/logo-horizontal-clean.png"
+        src="/logo-horizontal.png"
         alt="Ocean2joy"
-        className={className || "h-10 w-auto"}
-        style={{ imageRendering: 'crisp-edges', ...style }}
+        className={className || "h-12 w-auto"}
+        style={{ ...style }}
       />
     );
   }
 
   return (
     <img
-      src="/logo-vertical-clean.png"
+      src="/logo-vertical.png"
       alt="Ocean2joy"
       className={className || "h-32 w-auto"}
-      style={{ imageRendering: 'crisp-edges', ...style }}
+      style={{ ...style }}
     />
   );
 }
