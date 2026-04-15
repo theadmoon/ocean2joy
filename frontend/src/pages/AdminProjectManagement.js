@@ -20,6 +20,7 @@ function AdminProjectManagement() {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [showFileModal, setShowFileModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [sendingInvoice, setSendingInvoice] = useState(false);
 
   useEffect(() => {
     if (projectId) {
@@ -107,6 +108,39 @@ function AdminProjectManagement() {
       alert('Failed to confirm payment');
     }
   };
+
+  const handleSendInvoice = async () => {
+    if (!editedData.quote_amount) {
+      alert('Please set the invoice amount first');
+      return;
+    }
+
+    if (!confirm(`Send invoice for $${editedData.quote_amount} to client?`)) {
+      return;
+    }
+
+    setSendingInvoice(true);
+    try {
+      const formData = new FormData();
+      formData.append('invoice_amount', editedData.quote_amount);
+      formData.append('invoice_details', editedData.quote_details || 'Service fee');
+
+      await axios.patch(`${API}/admin/projects/${projectId}/send-invoice`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      alert('Invoice sent successfully! Client will be notified.');
+      fetchProjectDetails();
+    } catch (error) {
+      console.error('Error sending invoice:', error);
+      alert('Failed to send invoice. Please try again.');
+    } finally {
+      setSendingInvoice(false);
+    }
+  };
+
 
   // Check if field has value
   const hasValue = (value) => {
@@ -992,17 +1026,21 @@ Issue Date: ${formatDate(projectData.completed_at)}
   const getDocumentForStep = (stepKey) => {
     const docMap = {
       'submitted': 'Quote Request',
-      'quote_sent': 'Quote Document',
-      'quote_accepted': 'Acceptance Confirmation',
+      'order_activated': 'Quote Request',
+      'invoice_sent': 'Invoice',
+      'invoice_signed': 'Invoice (Signed)',
       'production_started': 'Production Order',
-      'delivered': 'Invoice',
+      'delivered': 'Delivery Note',
       'payment_received': 'Receipt',
-      'project_completed': 'Certificate'
+      'project_completed': 'Certificate',
+      // Legacy mappings
+      'quote_sent': 'Quote Document',
+      'quote_accepted': 'Acceptance Confirmation'
     };
     return docMap[stepKey];
   };
 
-  // Operational chain steps
+  // Operational chain steps (simplified workflow)
   const operationalSteps = [
     { 
       key: 'submitted', 
@@ -1012,19 +1050,27 @@ Issue Date: ${formatDate(projectData.completed_at)}
       required: true
     },
     { 
-      key: 'quote_sent', 
-      label: 'Quote Sent', 
-      dateField: 'quote_sent_at',
-      valueField: 'quote_amount',
-      description: 'Quote provided to client',
-      required: true
+      key: 'order_activated', 
+      label: 'Order Activated', 
+      dateField: 'order_activated_at',
+      description: 'Client completed order activation',
+      required: false
     },
     { 
-      key: 'quote_accepted', 
-      label: 'Quote Accepted', 
-      dateField: 'quote_accepted_at',
-      description: 'Client confirmed terms',
-      required: true
+      key: 'invoice_sent', 
+      label: 'Invoice Sent', 
+      dateField: 'invoice_sent_at',
+      valueField: 'quote_amount',
+      description: 'Invoice sent to client',
+      required: true,
+      action: 'send_invoice'
+    },
+    { 
+      key: 'invoice_signed', 
+      label: 'Invoice Signed', 
+      dateField: 'invoice_signed_at',
+      description: 'Client signed invoice',
+      required: false
     },
     { 
       key: 'production_started', 
@@ -1038,7 +1084,6 @@ Issue Date: ${formatDate(projectData.completed_at)}
       label: 'Delivered', 
       dateField: 'delivered_at',
       description: 'Files available for download',
-      documentType: 'Invoice',
       required: true
     },
     { 
@@ -1328,6 +1373,22 @@ Issue Date: ${formatDate(projectData.completed_at)}
                               )}
                             </div>
                           </div>
+                        </div>
+                      )}
+
+                      {/* Send Invoice Action Button */}
+                      {step.action === 'send_invoice' && project.order_activated_at && !project.invoice_sent_at && editedData.quote_amount && (
+                        <div className="mt-3">
+                          <button
+                            onClick={handleSendInvoice}
+                            disabled={sendingInvoice}
+                            className="btn-ocean w-full py-2"
+                          >
+                            {sendingInvoice ? 'Sending...' : '📃 Send Invoice to Client'}
+                          </button>
+                          <p className="text-xs text-gray-600 mt-2 text-left">
+                            This will notify the client and change project status to "Invoice Sent"
+                          </p>
                         </div>
                       )}
 

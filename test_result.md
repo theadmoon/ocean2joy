@@ -154,4 +154,8 @@ test_plan:
 
 agent_communication:
   - agent: "main"
-    message: "Implemented simplified workflow: removed Quote, added Order Activation with Brief/Files/Payment selection, Invoice signature upload. Need full e2e testing of new project flow."
+    message: "Implemented simplified workflow: removed Quote, added Order Activation with Brief/Files/Payment selection, Invoice signature upload, Admin Send Invoice UI. Testing agent fixed one issue (Order Activation display condition). Need full e2e testing of new project flow."
+  - agent: "testing_v1"
+    message: "Fixed: Order Activation now hidden for completed/in-progress projects. Action item: Admin needs UI to send Invoice with amount."
+  - agent: "main"
+    message: "Added Admin Send Invoice UI in AdminProjectManagement.js. Manager can set amount and send invoice. Updated operational steps to use new workflow (invoice_sent instead of quote_sent)."
