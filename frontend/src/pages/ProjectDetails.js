@@ -4,6 +4,11 @@ import axios from 'axios';
 import { FaDownload, FaCheckCircle, FaComments } from 'react-icons/fa';
 import ProjectDocuments from '../components/ProjectDocuments';
 import OperationalChainWithDocuments from '../components/OperationalChainWithDocuments';
+import { 
+  generateInvoice, 
+  generateReceipt, 
+  generateCertificate 
+} from '../utils/documentGenerators';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -35,363 +40,7 @@ function ProjectDetails() {
   const [paymentReceipt, setPaymentReceipt] = useState(null);
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
-  // Dynamic document generation functions
-  const generateInvoiceContent = (projectData) => {
-    if (!projectData) return '';
-    
-    const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    const productionStart = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    const productionEnd = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    
-    return `INVOICE
-═══════════════════════════════════════════════
-
-Ocean2Joy Digital Video Production
-Custom Digital Video Services
-
-Invoice #: ${projectData.project_number}
-Date Issued: ${deliveredDate}
-Due Date: Upon Receipt
-
-═══════════════════════════════════════════════
-
-BILL TO:
-${projectData.client_name || 'Client'}
-Email: ${projectData.client_email || ''}
-Project: ${projectData.project_number}
-Project Title: ${projectData.project_title}
-
-═══════════════════════════════════════════════
-
-PROJECT DETAILS:
-
-Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : projectData.service_type}
-${projectData.detailed_brief ? 'Brief: ' + projectData.detailed_brief : ''}
-Production Period: ${productionStart} - ${productionEnd}
-
-═══════════════════════════════════════════════
-
-PRICING BREAKDOWN:
-
-Service Description                        Amount
-─────────────────────────────────────────────────
-${projectData.service_type === 'custom_video' ? 'Custom Video Production' : 'Service'}      $${projectData.quote_amount?.toFixed(2)}
-
-${projectData.quote_details || ''}
-
-═══════════════════════════════════════════════
-
-SUBTOTAL:                              $${projectData.quote_amount?.toFixed(2)}
-Tax:                                        $0.00
-                                       ──────────
-TOTAL AMOUNT DUE:                      $${projectData.quote_amount?.toFixed(2)}
-
-═══════════════════════════════════════════════
-
-PAYMENT INSTRUCTIONS:
-
-Payment Method: PayPal
-Please send payment to: 302335809@postbox.ge
-
-Payment is due upon receipt of this invoice.
-
-═══════════════════════════════════════════════
-
-DELIVERABLES (Included):
-
-All files delivered digitally via secure client portal.
-
-═══════════════════════════════════════════════
-
-NOTES:
-
-This invoice is for digital video production services.
-No physical goods are shipped - all deliverables are
-provided electronically through our secure platform.
-
-Files have been delivered to your client portal and
-are ready for download.
-
-═══════════════════════════════════════════════
-
-Thank you for choosing Ocean2Joy!
-
-For questions about this invoice, contact:
-ocean2joy@gmail.com
-
-Ocean2Joy Digital Video Production
-Digital Services - No Physical Shipping
-www.ocean2joy.com
-
-═══════════════════════════════════════════════`;
-  };
-
-  const generateReceiptContent = (projectData) => {
-    if (!projectData) return '';
-    
-    const paymentDate = projectData.completed_at ? new Date(projectData.completed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    const paymentTime = projectData.completed_at ? new Date(projectData.completed_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }) : '';
-    
-    // Use real PayPal data if available, otherwise generate from project_number
-    const transactionId = projectData.paypal_transaction_id || `PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}`;
-    const payerEmail = projectData.paypal_payer_email || projectData.client_email || '';
-    const paymentStatus = projectData.paypal_payment_status || 'COMPLETED';
-    
-    return `PAYMENT RECEIPT
-═══════════════════════════════════════════════
-
-PayPal Payment Confirmation
-
-Transaction ID: ${transactionId}
-Payment Date: ${paymentDate}
-Status: ✓ ${paymentStatus}
-
-═══════════════════════════════════════════════
-
-TRANSACTION DETAILS:
-
-From: ${projectData.client_name || 'Client'}
-Email: ${payerEmail}
-
-To: Ocean2Joy Digital Video Production
-Email: 302335809@postbox.ge
-
-═══════════════════════════════════════════════
-
-PAYMENT INFORMATION:
-
-Amount Paid: $${projectData.quote_amount?.toFixed(2)} USD
-Payment Method: PayPal Balance
-Currency: USD
-Transaction Type: Goods & Services Payment
-
-Invoice Reference: ${projectData.project_number}
-Project: ${projectData.project_title}
-
-═══════════════════════════════════════════════
-
-PAYMENT BREAKDOWN:
-
-Subtotal:                              $${projectData.quote_amount?.toFixed(2)}
-PayPal Fee: (paid by merchant)              $0.00
-                                       ──────────
-Total Paid by Customer:                $${projectData.quote_amount?.toFixed(2)}
-
-═══════════════════════════════════════════════
-
-PAYMENT TIMELINE:
-
-Payment Initiated: ${paymentDate} at ${paymentTime}
-Payment Processed: ${paymentDate} at ${paymentTime}
-Payment Completed: ${paymentDate}
-
-Processing Time: Instant
-
-═══════════════════════════════════════════════
-
-MERCHANT INFORMATION:
-
-Business Name: Ocean2Joy Digital Video Production
-Business Email: 302335809@postbox.ge
-Business Type: Digital Services Provider
-Service Description: Custom video production services
-
-═══════════════════════════════════════════════
-
-PURCHASE DETAILS:
-
-Item: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : 'Digital Service'}
-Project ID: ${projectData.project_number}
-Service Type: Digital video creation and delivery
-Delivery Method: Digital download (no shipping)
-
-═══════════════════════════════════════════════
-
-BUYER PROTECTION:
-
-This transaction is covered by PayPal's Purchase
-Protection program for eligible digital goods and
-services.
-
-Dispute Resolution: Available through PayPal
-Resolution Center
-
-═══════════════════════════════════════════════
-
-TRANSACTION VERIFICATION:
-
-✓ Payment verified and completed
-✓ Funds transferred to merchant account
-✓ Digital service delivered to customer
-✓ Customer access confirmed
-✓ No disputes or claims filed
-
-═══════════════════════════════════════════════
-
-RECEIPT NOTES:
-
-• This is an official PayPal payment receipt
-• Transaction completed successfully
-• Payment for digital video production services
-• No physical goods shipped
-• All deliverables provided digitally
-• Customer confirmed receipt of files
-
-═══════════════════════════════════════════════
-
-For questions about this transaction:
-• Contact Ocean2Joy: ocean2joy@gmail.com
-• PayPal Support: www.paypal.com/support
-• Transaction ID: ${transactionId}
-
-═══════════════════════════════════════════════
-
-This receipt confirms successful payment processing
-through PayPal for digital services rendered by
-Ocean2Joy Digital Video Production.
-
-Receipt Generated: ${paymentDate}
-Document ID: RCPT-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
-
-═══════════════════════════════════════════════`;
-  };
-
-  const generateCertificateContent = (projectData) => {
-    if (!projectData) return '';
-    
-    const submittedDate = projectData.created_at ? new Date(projectData.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    const quoteSentDate = projectData.quote_sent_at ? new Date(projectData.quote_sent_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    const quoteAcceptedDate = projectData.quote_accepted_at ? new Date(projectData.quote_accepted_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    const productionStartDate = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    const paymentDate = projectData.completed_at ? new Date(projectData.completed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    
-    // Calculate production time
-    let productionDays = '';
-    if (projectData.production_started_at && projectData.delivered_at) {
-      const start = new Date(projectData.production_started_at);
-      const end = new Date(projectData.delivered_at);
-      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-      productionDays = `${days} days`;
-    }
-    
-    return `PROJECT COMPLETION CERTIFICATE
-═══════════════════════════════════════════════
-
-Ocean2Joy Digital Video Production
-
-═══════════════════════════════════════════════
-
-This certificate confirms the successful 
-completion of the following digital service:
-
-PROJECT INFORMATION:
-─────────────────────────────────────────────
-Project Number: ${projectData.project_number}
-Project Title: ${projectData.project_title}
-Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Digital Video Production' : projectData.service_type}
-Client: ${projectData.client_name || 'Client'} (${projectData.client_email || ''})
-
-═══════════════════════════════════════════════
-
-PROJECT TIMELINE:
-─────────────────────────────────────────────
-
-Request Submitted: ${submittedDate}
-Quote Provided: ${quoteSentDate}
-Quote Accepted: ${quoteAcceptedDate}
-Production Started: ${productionStartDate}
-Production Completed: ${deliveredDate}
-Deliverables Provided: ${deliveredDate}
-Payment Received: ${paymentDate}
-Project Closed: ${paymentDate}
-
-Total Production Time: ${productionDays}
-
-═══════════════════════════════════════════════
-
-DELIVERABLES PROVIDED:
-─────────────────────────────────────────────
-
-All files delivered digitally via secure 
-client portal on ${deliveredDate}.
-
-═══════════════════════════════════════════════
-
-FINANCIAL SETTLEMENT:
-─────────────────────────────────────────────
-
-Total Project Value: $${projectData.quote_amount?.toFixed(2)} USD
-Payment Method: PayPal
-Payment Status: ✓ PAID IN FULL
-Payment Date: ${paymentDate}
-Transaction Reference: PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
-
-═══════════════════════════════════════════════
-
-CLIENT ACCEPTANCE:
-─────────────────────────────────────────────
-
-✓ Client reviewed all deliverables
-✓ Client approved final work
-✓ Payment completed via PayPal
-✓ No disputes or issues raised
-
-Client satisfaction confirmed through:
-• Successful payment completion
-• Digital delivery acceptance
-• No refund requests
-• Project marked as complete
-
-═══════════════════════════════════════════════
-
-SERVICE VERIFICATION:
-
-This was a DIGITAL-ONLY service transaction.
-
-✓ No physical products were created
-✓ No shipping or logistics involved
-✓ All deliverables provided digitally
-✓ Client accessed files via secure portal
-✓ Full transaction trace available
-✓ Communication history preserved
-
-═══════════════════════════════════════════════
-
-COMPLIANCE NOTES:
-
-This certificate serves as verification for 
-payment processors and dispute resolution:
-
-• Complete project lifecycle documented
-• All communications preserved
-• Payment processed through verified channel
-• Digital delivery confirmed by client access
-• No outstanding issues or disputes
-
-═══════════════════════════════════════════════
-
-PROJECT STATUS: ✓ SUCCESSFULLY COMPLETED
-
-Issued by: Ocean2Joy Digital Video Production
-Issue Date: ${paymentDate}
-Certificate ID: CERT-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
-
-═══════════════════════════════════════════════
-
-For verification or questions:
-ocean2joy@gmail.com
-www.ocean2joy.com
-
-Ocean2Joy - Digital Video Services
-"An Ocean of Opportunities, A Sea of Joy"
-
-═══════════════════════════════════════════════
-
-END OF CERTIFICATE`;
-  };
-
-  // Mock file contents for client-uploaded materials (these are static examples)
+  // Static file contents for client materials - mock data
   const staticFileContents = {
     "Comedy_Script_v1.pdf": {
       type: "script",
@@ -728,15 +377,15 @@ END OF DOCUMENT`
     if (staticFileContents[fileName]) {
       fileContent = staticFileContents[fileName];
     }
-    // Generate dynamic documents based on project data
+    // Generate dynamic documents based on project data using utilities
     else if (fileName === 'invoice_VAPP6_1050USD.pdf' || fileName.includes('invoice')) {
       fileContent = {
         type: "document",
         name: `Invoice ${project.project_number} - $${project.quote_amount}`,
-        content: generateInvoiceContent({
+        content: generateInvoice({
           ...project,
-          client_name: "Marcos Knight",
-          client_email: "mek110@yahoo.com"
+          client_name: project.user_name,
+          client_email: project.user_email
         })
       };
     }
@@ -744,10 +393,10 @@ END OF DOCUMENT`
       fileContent = {
         type: "document",
         name: `PayPal Payment Receipt - $${project.quote_amount} USD`,
-        content: generateReceiptContent({
+        content: generateReceipt({
           ...project,
-          client_name: "Marcos Knight",
-          client_email: "mek110@yahoo.com"
+          client_name: project.user_name,
+          client_email: project.user_email
         })
       };
     }
@@ -755,10 +404,10 @@ END OF DOCUMENT`
       fileContent = {
         type: "document",
         name: "Project Completion Certificate",
-        content: generateCertificateContent({
+        content: generateCertificate({
           ...project,
-          client_name: "Marcos Knight",
-          client_email: "mek110@yahoo.com"
+          client_name: project.user_name,
+          client_email: project.user_email
         })
       };
     }

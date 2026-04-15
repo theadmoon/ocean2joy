@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
 import { FaDownload, FaEye, FaCheckCircle, FaUpload, FaClock, FaTimes } from 'react-icons/fa';
+import { 
+  generateInvoice, 
+  generateReceipt, 
+  generateCertificate,
+  generateAcceptanceAct,
+  generateDownloadConfirmation,
+  generatePaymentProof
+} from '../utils/documentGenerators';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -80,38 +88,7 @@ ${project.quote_request_manager_comments || 'No notes available'}`;
         break;
         
       case 'invoice':
-        content = `INVOICE
-═══════════════════════════════════════════════
-
-Ocean2Joy Digital Video Production
-
-Invoice #: ${project.project_number?.split('-')[0] || 'N/A'}
-Client: ${project.user_name}
-Date: ${project.invoice_sent_at ? new Date(project.invoice_sent_at).toLocaleDateString() : 'N/A'}
-
-═══════════════════════════════════════════════
-
-SERVICE DESCRIPTION:
-
-${project.service_type}
-${project.quote_details || project.detailed_brief || ''}
-
-═══════════════════════════════════════════════
-
-AMOUNT DUE: $${project.quote_amount || '0.00'} USD
-
-Payment Method: ${
-  project.order_activation_payment_method === 'paypal' ? 'PayPal' :
-  project.order_activation_payment_method === 'swift' ? 'SWIFT Transfer' :
-  project.order_activation_payment_method === 'qr_code' ? 'QR Code Payment' : 
-  'To be determined'
-}
-
-${project.invoice_signed_at ? `\nSTATUS: ✅ SIGNED by Client on ${new Date(project.invoice_signed_at).toLocaleDateString()}` : '\nSTATUS: ⏳ AWAITING CLIENT SIGNATURE'}
-
-═══════════════════════════════════════════════
-
-Please sign and return this invoice to proceed with production.`;
+        content = generateInvoice(project);
         break;
         
       case 'payment_confirmation':
@@ -131,115 +108,19 @@ Status: ${project.payment_confirmed_by_admin ? '✅ Confirmed by Manager' : '⏳
         break;
         
       case 'receipt':
-        content = `RECEIPT
-═══════════════════════════════════════════════
-
-Ocean2Joy Digital Video Production
-
-Receipt #: ${project.project_number}
-Date: ${project.completed_at ? new Date(project.completed_at).toLocaleDateString() : 'N/A'}
-
-Client: ${project.user_name}
-Service: ${project.service_type}
-
-AMOUNT PAID: $${project.quote_amount || '0.00'} USD
-
-Payment Method: ${project.order_activation_payment_method || 'N/A'}
-${project.paypal_transaction_id ? `Transaction ID: ${project.paypal_transaction_id}` : ''}
-
-STATUS: ✅ PAID IN FULL
-
-Thank you for your business!
-
-═══════════════════════════════════════════════`;
+        content = generateReceipt(project);
         break;
         
       case 'certificate':
-        content = `CERTIFICATE OF DELIVERY
-═══════════════════════════════════════════════
-
-Ocean2Joy Digital Video Production
-
-This is to certify that the following work has been completed and delivered:
-
-Project: ${project.project_number}
-Client: ${project.user_name}
-Service: ${project.service_type}
-
-Delivered on: ${project.delivered_at ? new Date(project.delivered_at).toLocaleDateString() : 'N/A'}
-Completed on: ${project.completed_at ? new Date(project.completed_at).toLocaleDateString() : 'N/A'}
-
-DELIVERABLES:
-${project.deliverables && project.deliverables.length > 0 ? 
-  project.deliverables.map((d, idx) => `${idx + 1}. ${d.filename || 'Video file'}`).join('\n') : 
-  'Final video files'}
-
-All project requirements have been met and files are available for download.
-
-═══════════════════════════════════════════════
-
-Authorized by: Ocean2Joy Production Team
-Date: ${new Date().toLocaleDateString()}`;
+        content = generateCertificate(project);
         break;
         
       case 'payment_proof':
-        content = `PAYMENT PROOF
-═══════════════════════════════════════════════
-
-Ocean2Joy Digital Video Production
-
-Project: ${project.project_number}
-Client: ${project.user_name}
-Invoice Amount: $${project.quote_amount || '0.00'} USD
-
-═══════════════════════════════════════════════
-
-PAYMENT DETAILS:
-
-Transaction ID: ${project.paypal_transaction_id || 'N/A'}
-${project.paypal_payer_email ? `Payer Email: ${project.paypal_payer_email}` : ''}
-Payment Method: ${project.order_activation_payment_method || 'N/A'}
-
-Payment Sent: ${project.payment_marked_by_client_at ? new Date(project.payment_marked_by_client_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
-
-═══════════════════════════════════════════════
-
-STATUS: ${project.payment_confirmed_by_admin_at ? 
-  `✅ CONFIRMED by Manager on ${new Date(project.payment_confirmed_by_admin_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}` : 
-  '⏳ PENDING Manager Confirmation'}
-
-${!project.payment_confirmed_by_admin_at ? '\nThis payment is awaiting verification by the manager.' : ''}`;
+        content = generatePaymentProof(project);
         break;
         
       case 'download_confirmation':
-        content = `DOWNLOAD CONFIRMATION (ТЗ Step 11: Buyer-Specific Handoff)
-═══════════════════════════════════════════════
-
-Ocean2Joy Digital Video Production
-
-Project: ${project.project_number}
-Client: ${project.user_name}
-
-═══════════════════════════════════════════════
-
-FILES ACCESSED:
-
-Download Confirmed: ${project.files_accessed_at ? new Date(project.files_accessed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
-
-This log confirms that the client has successfully downloaded the 
-deliverable files from the portal.
-
-═══════════════════════════════════════════════
-
-DELIVERABLE FILES:
-${project.deliverables && project.deliverables.length > 0 ? 
-  project.deliverables.filter(d => d.is_final).map((d, idx) => `${idx + 1}. ${d.file_name || 'Video file'}`).join('\n') : 
-  'Final video files'}
-
-STATUS: ✅ CLIENT ACCESSED FILES
-
-This confirms the "Buyer-Specific Handoff" requirement for payment 
-dispute resolution (PayPal, Stripe protection).`;
+        content = generateDownloadConfirmation(project);
         break;
         
       case 'access_pending':
@@ -277,45 +158,7 @@ Please download the files and click "Confirm Access" to proceed.`;
         break;
         
       case 'acceptance_act':
-        content = `ACCEPTANCE ACT (ТЗ Step 12: Acceptance/Completion)
-═══════════════════════════════════════════════
-
-Ocean2Joy Digital Video Production
-ACT OF WORK ACCEPTANCE (Акт приёмки-сдачи работ)
-
-Project: ${project.project_number}
-Client: ${project.user_name}
-Service: ${project.service_type}
-
-═══════════════════════════════════════════════
-
-WORK DESCRIPTION:
-
-${project.detailed_brief || 'Digital video production services'}
-
-DELIVERABLES:
-${project.deliverables && project.deliverables.length > 0 ? 
-  project.deliverables.filter(d => d.is_final).map((d, idx) => `${idx + 1}. ${d.file_name || 'Video file'}`).join('\n') : 
-  'Final video files'}
-
-═══════════════════════════════════════════════
-
-CLIENT CONFIRMATION:
-
-"I, ${project.user_name}, confirm that:
- 1. I have downloaded and reviewed all deliverable files
- 2. The work meets the requirements specified in the brief
- 3. The quality is satisfactory and acceptable
- 4. I accept the work as completed"
-
-Signed: ${project.work_accepted_at ? new Date(project.work_accepted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Pending'}
-
-═══════════════════════════════════════════════
-
-STATUS: ✅ WORK ACCEPTED BY CLIENT
-
-This document satisfies the "Acceptance/Completion" requirement 
-for digital service fulfillment and payment processing.`;
+        content = generateAcceptanceAct(project);
         break;
         
       case 'acceptance_pending':
