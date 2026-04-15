@@ -305,7 +305,7 @@ Click the Download button to save the file.`;
     
     switch(stepKey) {
       case 'submitted':
-        // Quote Request document
+        // Quote Request document (view only - system document)
         docs.push({
           id: 'quote_request',
           name: 'Quote Request',
@@ -314,7 +314,7 @@ Click the Download button to save the file.`;
           createdAt: project.created_at,
           status: 'generated',
           icon: '📄',
-          actions: ['view']
+          actions: ['view', 'download']
         });
         break;
         
@@ -336,7 +336,7 @@ Click the Download button to save the file.`;
           });
         }
         
-        // Manager's Comments
+        // Manager's Comments (view only - text notes)
         if (project.quote_request_manager_comments) {
           docs.push({
             id: 'manager_comments',
@@ -346,19 +346,13 @@ Click the Download button to save the file.`;
             createdAt: project.quote_request_created_at || project.order_activated_at,
             status: 'added',
             icon: '💬',
-            actions: ['view']
+            actions: ['view', 'download']
           });
         }
         break;
         
       case 'invoice_sent':
-        // Invoice document
-        const invoiceActions = ['view', 'download'];
-        // Add upload action if not yet signed
-        if (!project.invoice_signed_at) {
-          invoiceActions.push('upload_signed');
-        }
-        
+        // Invoice document - unified: view, download, upload (if unsigned)
         docs.push({
           id: 'invoice',
           name: `Invoice #${project.project_number?.split('-')[0] || 'N/A'}`,
@@ -368,12 +362,12 @@ Click the Download button to save the file.`;
           status: project.invoice_signed_at ? 'signed' : 'awaiting_signature',
           icon: '📃',
           amount: project.quote_amount,
-          actions: invoiceActions
+          actions: project.invoice_signed_at ? ['view', 'download'] : ['view', 'download', 'upload']
         });
         break;
         
       case 'invoice_signed':
-        // Signed Invoice
+        // Signed Invoice - unified: view, download, upload
         if (project.invoice_signed_at) {
           docs.push({
             id: 'signed_invoice',
@@ -383,13 +377,13 @@ Click the Download button to save the file.`;
             createdAt: project.invoice_signed_at,
             status: 'signed_by_client',
             icon: '✅',
-            actions: ['view', 'download', 'upload_signed']
+            actions: ['view', 'download', 'upload']
           });
         }
         break;
         
       case 'production_started':
-        // Production notes (if any)
+        // Production notes (view, download only - text notes)
         if (project.production_notes) {
           docs.push({
             id: 'production_notes',
@@ -399,13 +393,13 @@ Click the Download button to save the file.`;
             createdAt: project.production_started_at,
             status: 'in_progress',
             icon: '📝',
-            actions: ['view']
+            actions: ['view', 'download']
           });
         }
         break;
         
       case 'delivered':
-        // Deliverables (videos) - Show only ONE final deliverable
+        // Deliverables (videos) - unified: view, download only (no upload for videos)
         if (project.deliverables && project.deliverables.length > 0) {
           // Find first final deliverable
           const finalDeliverable = project.deliverables.find(d => d.is_final === true);
@@ -419,14 +413,14 @@ Click the Download button to save the file.`;
               createdAt: finalDeliverable.uploaded_at || project.delivered_at,
               status: 'final',
               icon: '🎬',
-              actions: ['download', 'view']
+              actions: ['view', 'download']
             });
           }
         }
         break;
         
       case 'delivery_confirmed':
-        // Delivery Confirmation by Client
+        // Delivery Confirmation - unified: view, download, upload
         if (project.delivery_confirmed_at) {
           // If already confirmed - show the confirmation document
           docs.push({
@@ -437,10 +431,10 @@ Click the Download button to save the file.`;
             createdAt: project.delivery_confirmed_at,
             status: 'confirmed',
             icon: '✅',
-            actions: ['view', 'download', 'upload_signed']
+            actions: ['view', 'download', 'upload']
           });
         } else if (project.delivered_at) {
-          // If delivered but not confirmed - show action item
+          // If delivered but not confirmed - show action item (confirm only)
           docs.push({
             id: 'delivery_pending',
             name: 'Confirm Receipt',
@@ -658,7 +652,7 @@ Click the Download button to save the file.`;
                             </div>
                           </div>
                           
-                          {/* Action buttons */}
+                          {/* Action buttons - UNIFIED ORDER: View, Download, Upload, Confirm */}
                           <div className="flex items-center gap-2">
                             {doc.actions.includes('view') && (
                               <button 
@@ -678,7 +672,7 @@ Click the Download button to save the file.`;
                                 <FaDownload />
                               </button>
                             )}
-                            {doc.actions.includes('upload_signed') && (
+                            {doc.actions.includes('upload') && (
                               <button 
                                 onClick={() => setShowUploadModal(true)}
                                 className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" 
