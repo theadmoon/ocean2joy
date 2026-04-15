@@ -1,161 +1,92 @@
 # THIS SECTION CONTAINS CRITICAL TESTING INSTRUCTIONS FOR BOTH AGENTS
 # BOTH MAIN_AGENT AND TESTING_AGENT MUST PRESERVE THIS ENTIRE BLOCK
 
-user_problem_statement: "Simplify Ocean2joy workflow by removing Quote document. Client activates order with: Brief (text), Script (files), Payment Method (PayPal/SWIFT/QR). Manager reviews, sends Invoice directly. Client signs and uploads PDF Invoice. Chain: Quote Request → Invoice → Payment → Receipt → Certificate."
+user_problem_statement: "Ocean2joy.com video production platform with OS.1 v2.0 compliance. User requested to test full operational cycle with all document View/Download/Upload buttons working correctly, using templates where actual files don't exist."
 
 backend:
-  - task: "New project statuses (INVOICE_SENT, INVOICE_SIGNED)"
+  - task: "OS.1 v2.0 fields in Project model"
     implemented: true
-    working: "NA"
-    file: "/app/backend/server.py:133-143"
+    working: "YES"
+    file: "/app/backend/server.py:176-191"
     stuck_count: 0
-    priority: "high"
-    needs_retesting: true
+    priority: "critical"
+    needs_retesting: false
     status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Added new statuses to replace QUOTED and QUOTE_ACCEPTED. Kept legacy statuses for backward compatibility."
+      - working: "YES"
+        agent: "fork_agent"
+        comment: "Added files_accessed_at, work_accepted_at, payment_confirmed_by_admin_at, deliverables, client_confirmations fields to Pydantic Project model. Critical fix: these fields were missing causing API to return None for OS.1 v2.0 dates."
 
-  - task: "Order activation endpoint with brief and payment_method"
+  - task: "DateTime conversion for OS.1 v2.0 fields"
     implemented: true
-    working: "NA"
-    file: "/app/backend/server.py:1125-1170"
+    working: "YES"
+    file: "/app/backend/server.py:646-652, 626-634, 825-833"
     stuck_count: 0
-    priority: "high"
-    needs_retesting: true
+    priority: "critical"
+    needs_retesting: false
     status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Updated /api/projects/{id}/activate-order to accept brief (Form) and payment_method (Form). Validates payment method."
-
-  - task: "Send invoice endpoint for manager"
-    implemented: true
-    working: "NA"
-    file: "/app/backend/server.py:1173-1202"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Added /api/admin/projects/{id}/send-invoice endpoint for managers to send invoice with amount and details."
-
-  - task: "Invoice signature upload updates status"
-    implemented: true
-    working: "NA"
-    file: "/app/backend/server.py:1310-1318"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Modified /api/projects/{id}/upload-confirmation/{doc_type} to set status=INVOICE_SIGNED when doc_type=invoice."
+      - working: "YES"
+        agent: "fork_agent"
+        comment: "Updated datetime string conversion in get_project_details, get_my_projects, and get_all_projects to include all OS.1 v2.0 date fields (files_accessed_at, work_accepted_at, payment_confirmed_by_admin_at, invoice_sent_at, invoice_signed_at, order_activated_at, quote_request_created_at)."
 
 frontend:
-  - task: "Remove Quote from operational chain"
+  - task: "Work Accepted button logic"
     implemented: true
-    working: "NA"
-    file: "/app/frontend/src/components/ProjectDocuments.js:106-112"
+    working: "YES"
+    file: "/app/frontend/src/components/OperationalChainWithDocuments.js:656"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Removed Quote document from documents array. Chain now: Quote Request → Invoice → Payment → Receipt → Certificate."
+      - working: "YES"
+        agent: "fork_agent"
+        comment: "Fixed Work Accepted Upload button to be disabled with 'Already signed' tooltip when work_accepted_at is set. View and Download buttons active for signed document."
 
-  - task: "Update Quote Request sub-steps"
+  - task: "Full Operational Chain display"
     implemented: true
-    working: "NA"
-    file: "/app/frontend/src/components/ProjectDocuments.js:53-60"
+    working: "YES"
+    file: "/app/frontend/src/components/OperationalChainWithDocuments.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Updated sub-steps to: awaiting_activation → activated → manager_reviewing → comments_added"
-
-  - task: "Update Invoice sub-steps"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/components/ProjectDocuments.js:61-66"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Updated sub-steps to: pending → sent → awaiting_signature → signed"
-
-  - task: "Order Activation UI with Brief, Files, Payment Method"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/pages/ProjectDetails.js:1225-1362"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Added textarea for Brief, file upload for Script, radio buttons for Payment Method (PayPal/SWIFT/QR). Shows progress: Step 1/2/3."
-
-  - task: "Invoice signature upload UI"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/components/ProjectDocuments.js:481-505"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Added PDF upload UI for Invoice signature when invoice_sent_at exists and invoice_signed_at is null."
-
-  - task: "Remove duplicate Client Materials section"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/pages/ProjectDetails.js:1017"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Removed duplicate 'Client Materials' and 'Upload Materials' sections - now handled in Order Activation."
-
-  - task: "Replace Quote section with Invoice section"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/pages/ProjectDetails.js:1018-1057"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Replaced old Quote section with Invoice section. Shows signature status and payment button when signed."
+      - working: "YES"
+        agent: "fork_agent"
+        comment: "All 11 steps of OS.1 v2.0 chain display correctly: Submitted → Order Activated → Invoice Sent → Invoice Signed → Production Started → Delivered → Files Accessed → Work Accepted → Payment Sent → Payment Received → Completed. All View/Download/Upload buttons functional."
 
 metadata:
-  created_by: "main_agent"
-  version: "1.0"
-  test_sequence: 0
+  created_by: "fork_agent"
+  version: "2.0"
+  test_sequence: 3
   run_ui: false
+  last_test_iteration: "iteration_3.json"
+  last_test_status: "PASS - 100% success rate"
 
 test_plan:
   current_focus:
-    - "Complete Order Activation flow (new project)"
-    - "Invoice send and signature flow"
-    - "Operational chain without Quote document"
+    - "All OS.1 v2.0 operational chain steps tested and working"
+    - "All document View/Download/Upload buttons verified"
+    - "Disabled button tooltips display correctly"
   stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+  test_all: true
+  test_priority: "all_completed"
 
 agent_communication:
-  - agent: "main"
-    message: "Implemented simplified workflow: removed Quote, added Order Activation with Brief/Files/Payment selection, Invoice signature upload, Admin Send Invoice UI. Testing agent fixed one issue (Order Activation display condition). Need full e2e testing of new project flow."
-  - agent: "testing_v1"
-    message: "Fixed: Order Activation now hidden for completed/in-progress projects. Action item: Admin needs UI to send Invoice with amount."
-  - agent: "main"
-    message: "Added Admin Send Invoice UI in AdminProjectManagement.js. Manager can set amount and send invoice. Updated operational steps to use new workflow (invoice_sent instead of quote_sent)."
+  - agent: "fork_agent"
+    message: "CRITICAL FIX: API was not returning files_accessed_at, work_accepted_at, payment_confirmed_by_admin_at because they were missing from Pydantic Project model. Added all OS.1 v2.0 fields to model and datetime conversion. Full operational chain now displays correctly with all dates."
+  - agent: "testing_v3"
+    message: "Iteration 3 testing: 100% PASS. All View/Download/Upload buttons work correctly. Work Accepted Upload correctly disabled with 'Already signed' message. All View modals display correct templates. Files Accessed, Payment Sent, Payment Received all working. OS.1 v2.0 compliance verified."
+
+## Testing Status Summary
+- Backend API: ✅ ALL OS.1 v2.0 fields returned correctly
+- Frontend Display: ✅ ALL 11 operational chain steps show correct dates and documents  
+- Button Functionality: ✅ ALL View/Download/Upload buttons work as expected
+- Disabled States: ✅ ALL disabled buttons show proper tooltip messages
+- Document Templates: ✅ ALL View modals display correct content
+- OS.1 v2.0 Compliance: ✅ Steps 11 (Files Accessed) and 12 (Work Accepted) fully implemented
+
+## Incorporate User Feedback
+User requested to test full cycle and load documents (use templates if no actual files). COMPLETED:
+- Full OS.1 v2.0 cycle populated with dates for project Marcos (ead900d9-33ab-4b22-9e72-20fbc1820bcc)
+- All documents display with templates via View modals
+- Download shows mocked alert (expected behavior until file storage implemented)
+- Upload buttons work or are properly disabled based on document state
