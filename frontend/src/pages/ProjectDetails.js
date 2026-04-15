@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaDownload, FaCheckCircle, FaComments } from 'react-icons/fa';
 import ProjectDocuments from '../components/ProjectDocuments';
-import ProjectDeliverables from '../components/ProjectDeliverables';
 import OperationalChainWithDocuments from '../components/OperationalChainWithDocuments';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -13,7 +12,6 @@ function ProjectDetails() {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [deliverables, setDeliverables] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -780,7 +778,6 @@ END OF DOCUMENT`
     if (projectId) {
       fetchProjectDetails();
       fetchMessages();
-      fetchDeliverables();
       fetchPaymentSettings();
     }
   }, [projectId]);
@@ -799,16 +796,6 @@ END OF DOCUMENT`
       const response = await axios.get(`${API}/projects/${projectId}`);
       const projectData = response.data;
       
-      // Fetch deliverables and add to project object
-      try {
-        const deliverablesResponse = await axios.get(`${API}/projects/${projectId}/deliverables`);
-        projectData.deliverables = deliverablesResponse.data;
-        setDeliverables(deliverablesResponse.data);
-      } catch (err) {
-        console.error('Error fetching deliverables:', err);
-        projectData.deliverables = [];
-      }
-      
       setProject(projectData);
       setPaymentMarked(projectData.payment_marked_by_client_at ? true : false);
     } catch (error) {
@@ -822,15 +809,6 @@ END OF DOCUMENT`
     try {
       const response = await axios.get(`${API}/projects/${projectId}/messages`);
       setMessages(response.data);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const fetchDeliverables = async () => {
-    try {
-      const response = await axios.get(`${API}/projects/${projectId}/deliverables`);
-      setDeliverables(response.data);
     } catch (error) {
       console.error('Error:', error);
     }
@@ -1201,28 +1179,6 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
               </div>
             )}
 
-            {deliverables.length > 0 && (
-              <div className="card-ocean p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">Deliverables</h3>
-                <div className="space-y-3">
-                  {deliverables.map((file) => (
-                    <div key={file.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-                      <div className="text-left">
-                        <p className="font-semibold text-left">{file.file_name}</p>
-                        <p className="text-sm text-gray-600 text-left">{file.description}</p>
-                      </div>
-                      <a href={file.file_url} target="_blank" rel="noopener noreferrer" className="btn-ocean-outline">
-                        <FaDownload className="inline mr-2" />Download
-                      </a>
-                    </div>
-                  ))}
-                </div>
-                {project.status === 'delivered' && (
-                  <button onClick={handleApprove} className="btn-ocean mt-4 w-full"><FaCheckCircle className="inline mr-2" />Approve & Complete Project</button>
-                )}
-              </div>
-            )}
-
             {/* Messages / Communication Thread */}
             {messages.length > 0 && (
               <div className="card-ocean p-6">
@@ -1554,145 +1510,9 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
 
 
 
-            {/* Project Operational Chain - Client View */}
-
-
-            {/* Video Deliverables - Client View */}
-            <ProjectDeliverables project={project} />
-
-            {/* NEW: Operational Chain with Documents */}
+            {/* Operational Chain with Documents - Complete OS.1 v2.0 Timeline */}
             <OperationalChainWithDocuments project={project} onUpdate={fetchProjectDetails} />
 
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="card-ocean p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">Project Status Timeline</h3>
-              <div className="space-y-3 text-sm text-left">
-                {/* Submitted */}
-                <div className="border-l-4 border-sky-500 pl-3 py-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-gray-900">Submitted</span>
-                    <span className="text-gray-700">{new Date(project.created_at).toLocaleDateString()}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Initial request received</p>
-                </div>
-
-                {/* Order Activated */}
-                {project.order_activated_at && (
-                  <div className="border-l-4 border-blue-500 pl-3 py-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-900">Order Activated</span>
-                      <span className="text-gray-700">{new Date(project.order_activated_at).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Client submitted materials & brief</p>
-                  </div>
-                )}
-
-                {/* Invoice Sent (replaces Quote Sent) */}
-                {project.invoice_sent_at && (
-                  <div className="border-l-4 border-purple-500 pl-3 py-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-900">Invoice Sent</span>
-                      <span className="text-gray-700">{new Date(project.invoice_sent_at).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">${project.quote_amount} USD</p>
-                  </div>
-                )}
-
-                {/* Invoice Signed (replaces Quote Accepted) */}
-                {project.invoice_signed_at && (
-                  <div className="border-l-4 border-green-500 pl-3 py-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-900">Invoice Signed</span>
-                      <span className="text-gray-700">{new Date(project.invoice_signed_at).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Client confirmed payment terms</p>
-                  </div>
-                )}
-
-                {/* Legacy: Quote Sent (for backward compatibility) */}
-                {!project.invoice_sent_at && project.quote_sent_at && (
-                  <div className="border-l-4 border-purple-500 pl-3 py-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-900">Quote Sent</span>
-                      <span className="text-gray-700">{new Date(project.quote_sent_at).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">${project.quote_amount} USD</p>
-                  </div>
-                )}
-
-                {/* Legacy: Quote Accepted (for backward compatibility) */}
-                {!project.invoice_signed_at && project.quote_accepted_at && (
-                  <div className="border-l-4 border-green-500 pl-3 py-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-900">Quote Accepted</span>
-                      <span className="text-gray-700">{new Date(project.quote_accepted_at).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Client confirmed terms</p>
-                  </div>
-                )}
-
-                {/* Production Started */}
-                {project.production_started_at && (
-                  <div className="border-l-4 border-orange-500 pl-3 py-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-900">Production Started</span>
-                      <span className="text-gray-700">{new Date(project.production_started_at).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Work in progress</p>
-                  </div>
-                )}
-
-                {/* Delivered */}
-                {project.delivered_at && (
-                  <div className="border-l-4 border-teal-500 pl-3 py-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-900">Delivered</span>
-                      <span className="text-gray-700">{new Date(project.delivered_at).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Files available for download</p>
-                  </div>
-                )}
-
-                {/* Payment & Completion */}
-                {project.completed_at && (
-                  <>
-                    <div className="border-l-4 border-emerald-600 pl-3 py-1">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-gray-900">Payment Received</span>
-                        <span className="text-gray-700">{new Date(project.completed_at).toLocaleDateString()}</span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">PayPal payment confirmed</p>
-                    </div>
-                    <div className="border-l-4 border-emerald-700 pl-3 py-1 bg-emerald-50 rounded">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-emerald-900">Project Completed</span>
-                        <span className="text-emerald-700">{new Date(project.completed_at).toLocaleDateString()}</span>
-                      </div>
-                      <p className="text-xs text-emerald-600 mt-1">
-                        {project.acceptance_status === 'approved' ? 'Client approved ✓' : 'Work accepted'}
-                      </p>
-                    </div>
-                  </>
-                )}
-
-                {/* Production Timeline Info */}
-                {project.production_started_at && project.delivered_at && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-600 mb-1">
-                      <span className="font-semibold">Production Time:</span>
-                    </p>
-                    <p className="text-sm text-gray-900 font-medium">
-                      {Math.ceil((new Date(project.delivered_at) - new Date(project.production_started_at)) / (1000 * 60 * 60 * 24))} days
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      From production start to delivery
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       </div>
