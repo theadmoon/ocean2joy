@@ -792,56 +792,6 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
               </div>
             </div>
 
-            {/* Invoice Section - replaces old Quote section */}
-            {project.invoice_sent_at && (
-              <div className="card-ocean p-6 bg-gradient-to-br from-sky-50 to-teal-50">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">📃 Invoice</h3>
-                <div className="text-3xl font-bold text-sky-600 mb-2 text-left">${project.quote_amount}</div>
-                <p className="text-gray-700 mb-4 text-left">{project.quote_details}</p>
-                
-                {/* Invoice Signature Status */}
-                {!project.invoice_signed_at && (
-                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded mb-4">
-                    <p className="text-sm text-yellow-800 font-semibold">
-                      ⏳ Waiting for your signature. Please scroll down to the Operational Chain section to upload signed invoice.
-                    </p>
-                  </div>
-                )}
-                
-                {project.invoice_signed_at && !paymentMarked && (
-                  <div>
-                    <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded mb-4">
-                      <p className="text-sm text-green-800 font-semibold">
-                        ✓ Invoice Signed on {new Date(project.invoice_signed_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <button 
-                      onClick={() => setShowPaymentModal(true)} 
-                      className="btn-ocean w-full"
-                    >
-                      💳 Make Payment
-                    </button>
-                  </div>
-                )}
-                
-                {paymentMarked && !project.payment_confirmed_by_admin && (
-                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-                    <p className="text-sm text-yellow-800 font-semibold">
-                      ⏳ Payment marked. Awaiting admin confirmation...
-                    </p>
-                  </div>
-                )}
-                
-                {project.payment_confirmed_by_admin && (
-                  <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                    <p className="text-sm text-green-800 font-semibold">
-                      ✓ Payment confirmed! Production has started.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Messages / Communication Thread */}
             {messages.length > 0 && (
               <div className="card-ocean p-6">
