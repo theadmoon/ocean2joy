@@ -219,6 +219,16 @@ class Project(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ProjectUpdate(BaseModel):
+    # Basic project fields
+    project_title: Optional[str] = None
+    project_number: Optional[str] = None
+    detailed_brief: Optional[str] = None
+    
+    # Order Activation fields
+    order_activation_payment_method: Optional[str] = None
+    quote_request_manager_comments: Optional[str] = None
+    
+    # Status and pricing
     status: Optional[str] = None
     quote_amount: Optional[float] = None
     quote_details: Optional[str] = None
