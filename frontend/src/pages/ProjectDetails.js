@@ -797,8 +797,20 @@ END OF DOCUMENT`
   const fetchProjectDetails = async () => {
     try {
       const response = await axios.get(`${API}/projects/${projectId}`);
-      setProject(response.data);
-      setPaymentMarked(response.data.payment_marked_by_client_at ? true : false);
+      const projectData = response.data;
+      
+      // Fetch deliverables and add to project object
+      try {
+        const deliverablesResponse = await axios.get(`${API}/projects/${projectId}/deliverables`);
+        projectData.deliverables = deliverablesResponse.data;
+        setDeliverables(deliverablesResponse.data);
+      } catch (err) {
+        console.error('Error fetching deliverables:', err);
+        projectData.deliverables = [];
+      }
+      
+      setProject(projectData);
+      setPaymentMarked(projectData.payment_marked_by_client_at ? true : false);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -1550,6 +1562,39 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
 
             {/* NEW: Operational Chain with Documents */}
             <OperationalChainWithDocuments project={project} onUpdate={fetchProjectDetails} />
+
+            {/* Confirm Delivery Receipt - Client Action */}
+            {project.delivered_at && !project.delivery_confirmed_at && (
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl shadow-lg p-6 border-2 border-emerald-200">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl">📦</div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Delivery Receipt</h3>
+                    <p className="text-sm text-gray-700 mb-4">
+                      Your final deliverables are ready for download! Please confirm that you have received and downloaded all files. 
+                      This confirmation is required for payment processing.
+                    </p>
+                    <button
+                      onClick={async () => {
+                        if (confirm('Have you downloaded all deliverables? This confirmation is required for payment.')) {
+                          try {
+                            await axios.post(`${API}/projects/${projectId}/confirm-delivery`);
+                            alert('✅ Delivery confirmed! You can now proceed with payment.');
+                            fetchProjectDetails();
+                          } catch (error) {
+                            console.error('Error confirming delivery:', error);
+                            alert('Failed to confirm delivery. Please try again.');
+                          }
+                        }
+                      }}
+                      className="btn-ocean inline-flex items-center gap-2"
+                    >
+                      <FaCheckCircle /> Confirm Receipt of Deliverables
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
 

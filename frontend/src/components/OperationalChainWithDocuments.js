@@ -181,6 +181,32 @@ Authorized by: Ocean2Joy Production Team
 Date: ${new Date().toLocaleDateString()}`;
         break;
         
+      case 'delivery_receipt':
+        content = `DELIVERY CONFIRMATION
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+Project: ${project.project_number}
+Client: ${project.user_name}
+
+═══════════════════════════════════════════════
+
+I, ${project.user_name}, hereby confirm that I have received and 
+downloaded the final deliverables for this project.
+
+Delivery Date: ${project.delivered_at ? new Date(project.delivered_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+Confirmed on: ${project.delivery_confirmed_at ? new Date(project.delivery_confirmed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+
+═══════════════════════════════════════════════
+
+This confirmation is required for payment processing and serves as 
+acknowledgment that all digital deliverables have been successfully 
+received by the client.
+
+STATUS: ✅ DELIVERY CONFIRMED`;
+        break;
+        
       default:
         // For client files (scripts, materials)
         if (doc.type === 'client_file') {
@@ -356,19 +382,38 @@ Click the Download button to save the file.`;
         break;
         
       case 'delivered':
-        // Deliverables (videos)
+        // Deliverables (videos) - Show only ONE final deliverable
         if (project.deliverables && project.deliverables.length > 0) {
-          project.deliverables.forEach((deliverable, idx) => {
+          // Find first final deliverable
+          const finalDeliverable = project.deliverables.find(d => d.is_final === true);
+          
+          if (finalDeliverable) {
             docs.push({
-              id: `deliverable_${idx}`,
-              name: deliverable.filename || `Video_${idx + 1}.mp4`,
+              id: 'final_deliverable',
+              name: finalDeliverable.file_name || 'Final_Video.mp4',
               type: 'deliverable',
               createdBy: 'Production',
-              createdAt: deliverable.uploaded_at || project.delivered_at,
-              status: deliverable.type === 'final' ? 'final' : 'intermediate',
+              createdAt: finalDeliverable.uploaded_at || project.delivered_at,
+              status: 'final',
               icon: '🎬',
               actions: ['download', 'view']
             });
+          }
+        }
+        break;
+        
+      case 'delivery_confirmed':
+        // Delivery Confirmation by Client
+        if (project.delivery_confirmed_at) {
+          docs.push({
+            id: 'delivery_receipt',
+            name: 'Delivery Confirmation',
+            type: 'confirmation',
+            createdBy: 'Client',
+            createdAt: project.delivery_confirmed_at,
+            status: 'confirmed',
+            icon: '✅',
+            actions: ['view']
           });
         }
         break;
@@ -470,6 +515,14 @@ Click the Download button to save the file.`;
       description: 'Files available for download',
       color: 'teal',
       completed: !!project.delivered_at
+    },
+    {
+      key: 'delivery_confirmed',
+      label: 'Delivery Confirmed',
+      date: project.delivery_confirmed_at,
+      description: 'Client confirmed receipt',
+      color: 'emerald',
+      completed: !!project.delivery_confirmed_at
     },
     {
       key: 'payment_received',

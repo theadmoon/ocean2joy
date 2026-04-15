@@ -177,6 +177,7 @@ class Project(BaseModel):
     delivered_at: Optional[datetime] = None
     delivery_method: Optional[str] = "portal"  # portal, email, both
     deliverable_files: List[str] = []
+    delivery_confirmed_at: Optional[datetime] = None  # Client confirms receipt
     
     # Completion
     completed_at: Optional[datetime] = None
@@ -1366,6 +1367,45 @@ async def get_client_confirmation(
         media_type="application/pdf",
         filename=filename
     )
+
+@api_router.post("/projects/{project_id}/confirm-delivery")
+async def confirm_delivery(
+    project_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Client confirms receipt of deliverables"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify user owns this project
+    if project['user_id'] != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the client can confirm delivery")
+    
+    # Check if already delivered
+    if not project.get('delivered_at'):
+        raise HTTPException(status_code=400, detail="Project has not been delivered yet")
+    
+    # Check if already confirmed
+    if project.get('delivery_confirmed_at'):
+        raise HTTPException(status_code=400, detail="Delivery already confirmed")
+    
+    # Update project with confirmation timestamp
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {
+            "delivery_confirmed_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    logger.info(f"Client confirmed delivery for project {project_id}")
+    
+    return {
+        "message": "Delivery confirmed successfully",
+        "confirmed_at": datetime.now(timezone.utc).isoformat()
+    }
+
 
 
 @api_router.get("/demo-videos", response_model=List[DemoVideo])
