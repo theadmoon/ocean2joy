@@ -178,6 +178,15 @@ class Project(BaseModel):
     delivery_method: Optional[str] = "portal"  # portal, email, both
     deliverable_files: List[str] = []
     delivery_confirmed_at: Optional[datetime] = None  # Client confirms receipt
+    deliverables: List[Dict[str, Any]] = []  # New format: [{id, file_name, file_url, is_final, uploaded_at}]
+    
+    # OS.1 v2.0 Operational Chain fields
+    files_accessed_at: Optional[datetime] = None  # Client confirmed download
+    work_accepted_at: Optional[datetime] = None  # Client signed acceptance act
+    payment_confirmed_by_admin_at: Optional[datetime] = None  # Admin confirmed payment receipt
+    
+    # Client confirmations (uploaded document filenames)
+    client_confirmations: Optional[Dict[str, str]] = None  # {invoice: 'file.pdf', acceptance: 'act.pdf', payment: 'proof.pdf'}
     
     # Completion
     completed_at: Optional[datetime] = None
@@ -626,7 +635,10 @@ async def get_my_projects(current_user: User = Depends(get_current_user)):
     # Convert datetime strings back
     for proj in projects:
         for field in ['created_at', 'updated_at', 'quote_sent_at', 'quote_accepted_at', 
-                      'production_started_at', 'delivered_at', 'completed_at']:
+                      'production_started_at', 'delivered_at', 'completed_at',
+                      'files_accessed_at', 'work_accepted_at', 'payment_marked_by_client_at',
+                      'payment_confirmed_by_admin_at', 'invoice_sent_at', 'invoice_signed_at',
+                      'order_activated_at', 'quote_request_created_at']:
             if field in proj and isinstance(proj[field], str):
                 proj[field] = datetime.fromisoformat(proj[field])
     
@@ -645,7 +657,10 @@ async def get_project_details(project_id: str, current_user: User = Depends(get_
     
     # Convert datetime strings back
     for field in ['created_at', 'updated_at', 'quote_sent_at', 'quote_accepted_at', 
-                  'production_started_at', 'delivered_at', 'completed_at']:
+                  'production_started_at', 'delivered_at', 'completed_at',
+                  'files_accessed_at', 'work_accepted_at', 'payment_marked_by_client_at',
+                  'payment_confirmed_by_admin_at', 'invoice_sent_at', 'invoice_signed_at',
+                  'order_activated_at', 'quote_request_created_at']:
         if field in project and isinstance(project[field], str):
             project[field] = datetime.fromisoformat(project[field])
     
@@ -822,7 +837,10 @@ async def get_all_projects(current_user: User = Depends(get_current_user)):
     # Convert datetime strings
     for proj in projects:
         for field in ['created_at', 'updated_at', 'quote_sent_at', 'quote_accepted_at', 
-                      'production_started_at', 'delivered_at', 'completed_at']:
+                      'production_started_at', 'delivered_at', 'completed_at',
+                      'files_accessed_at', 'work_accepted_at', 'payment_marked_by_client_at',
+                      'payment_confirmed_by_admin_at', 'invoice_sent_at', 'invoice_signed_at',
+                      'order_activated_at', 'quote_request_created_at']:
             if field in proj and isinstance(proj[field], str):
                 proj[field] = datetime.fromisoformat(proj[field])
     
