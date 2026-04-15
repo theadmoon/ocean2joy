@@ -336,6 +336,12 @@ Click the Download button to save the file.`;
         
       case 'invoice_sent':
         // Invoice document
+        const invoiceActions = ['view', 'download'];
+        // Add upload action if not yet signed
+        if (!project.invoice_signed_at) {
+          invoiceActions.push('upload_signed');
+        }
+        
         docs.push({
           id: 'invoice',
           name: `Invoice #${project.project_number?.split('-')[0] || 'N/A'}`,
@@ -345,7 +351,7 @@ Click the Download button to save the file.`;
           status: project.invoice_signed_at ? 'signed' : 'awaiting_signature',
           icon: '📃',
           amount: project.quote_amount,
-          actions: ['view', 'upload_signed']
+          actions: invoiceActions
         });
         break;
         
@@ -646,7 +652,7 @@ Click the Download button to save the file.`;
                               <button 
                                 onClick={() => setShowUploadModal(true)}
                                 className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" 
-                                title="Upload Signed Invoice"
+                                title="Upload Signed Document"
                               >
                                 <FaUpload />
                               </button>
@@ -655,6 +661,34 @@ Click the Download button to save the file.`;
                         </div>
                       </div>
                     ))}
+                  </div>
+                ) : step.key === 'delivery_confirmed' && project.delivered_at && !project.delivery_confirmed_at ? (
+                  // Special case: Show confirmation action for delivery_confirmed step
+                  <div className="bg-emerald-50 border-2 border-emerald-200 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-2xl">📦</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-gray-900">Action Required</p>
+                        <p className="text-xs text-gray-600">Confirm receipt of deliverables</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (confirm('Have you downloaded all deliverables? This confirmation is required for payment.')) {
+                          try {
+                            await axios.post(`${API}/projects/${project.id}/confirm-delivery`);
+                            alert('✅ Delivery confirmed! You can now proceed with payment.');
+                            if (onUpdate) onUpdate();
+                          } catch (error) {
+                            console.error('Error confirming delivery:', error);
+                            alert('Failed to confirm delivery. Please try again.');
+                          }
+                        }
+                      }}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                      <FaCheckCircle /> Confirm Receipt
+                    </button>
                   </div>
                 ) : (
                   <div className="text-sm text-gray-400 italic">No documents yet</div>
