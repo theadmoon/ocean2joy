@@ -305,7 +305,7 @@ Click the Download button to save the file.`;
     
     switch(stepKey) {
       case 'submitted':
-        // Quote Request document (view only - system document)
+        // Quote Request document (system - no upload)
         docs.push({
           id: 'quote_request',
           name: 'Quote Request',
@@ -314,7 +314,7 @@ Click the Download button to save the file.`;
           createdAt: project.created_at,
           status: 'generated',
           icon: '📄',
-          actions: ['view', 'download']
+          actions: ['view', 'download', 'upload:disabled:System document']
         });
         break;
         
@@ -336,7 +336,7 @@ Click the Download button to save the file.`;
           });
         }
         
-        // Manager's Comments (view only - text notes)
+        // Manager's Comments (text notes - no upload)
         if (project.quote_request_manager_comments) {
           docs.push({
             id: 'manager_comments',
@@ -346,7 +346,7 @@ Click the Download button to save the file.`;
             createdAt: project.quote_request_created_at || project.order_activated_at,
             status: 'added',
             icon: '💬',
-            actions: ['view', 'download']
+            actions: ['view', 'download', 'upload:disabled:Read-only notes']
           });
         }
         break;
@@ -383,7 +383,7 @@ Click the Download button to save the file.`;
         break;
         
       case 'production_started':
-        // Production notes (view, download only - text notes)
+        // Production notes (text notes - no upload)
         if (project.production_notes) {
           docs.push({
             id: 'production_notes',
@@ -393,13 +393,13 @@ Click the Download button to save the file.`;
             createdAt: project.production_started_at,
             status: 'in_progress',
             icon: '📝',
-            actions: ['view', 'download']
+            actions: ['view', 'download', 'upload:disabled:Read-only notes']
           });
         }
         break;
         
       case 'delivered':
-        // Deliverables (videos) - unified: view, download only (no upload for videos)
+        // Deliverables (videos) - no upload (client cannot upload deliverables)
         if (project.deliverables && project.deliverables.length > 0) {
           // Find first final deliverable
           const finalDeliverable = project.deliverables.find(d => d.is_final === true);
@@ -413,7 +413,7 @@ Click the Download button to save the file.`;
               createdAt: finalDeliverable.uploaded_at || project.delivered_at,
               status: 'final',
               icon: '🎬',
-              actions: ['view', 'download']
+              actions: ['view', 'download', 'upload:disabled:Deliverable file']
             });
           }
         }
@@ -652,9 +652,10 @@ Click the Download button to save the file.`;
                             </div>
                           </div>
                           
-                          {/* Action buttons - UNIFIED ORDER: View, Download, Upload, Confirm */}
+                          {/* Action buttons - UNIFIED ORDER with FIXED ALIGNMENT */}
                           <div className="flex items-center gap-2">
-                            {doc.actions.includes('view') && (
+                            {/* View button */}
+                            {doc.actions.some(a => a === 'view' || a.startsWith('view:')) && (
                               <button 
                                 onClick={() => handleViewDocument(doc)}
                                 className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors" 
@@ -663,7 +664,9 @@ Click the Download button to save the file.`;
                                 <FaEye />
                               </button>
                             )}
-                            {doc.actions.includes('download') && (
+                            
+                            {/* Download button */}
+                            {doc.actions.some(a => a === 'download' || a.startsWith('download:')) && (
                               <button 
                                 onClick={() => handleDownload(doc)}
                                 className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" 
@@ -672,15 +675,32 @@ Click the Download button to save the file.`;
                                 <FaDownload />
                               </button>
                             )}
-                            {doc.actions.includes('upload') && (
-                              <button 
-                                onClick={() => setShowUploadModal(true)}
-                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" 
-                                title="Upload Signed Document"
-                              >
-                                <FaUpload />
-                              </button>
-                            )}
+                            
+                            {/* Upload button - always show, but disabled if needed */}
+                            {(() => {
+                              const uploadAction = doc.actions.find(a => a === 'upload' || a.startsWith('upload:'));
+                              if (!uploadAction) return null;
+                              
+                              const isDisabled = uploadAction.startsWith('upload:disabled');
+                              const disabledReason = isDisabled ? uploadAction.split(':')[2] : '';
+                              
+                              return (
+                                <button 
+                                  onClick={() => !isDisabled && setShowUploadModal(true)}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    isDisabled 
+                                      ? 'text-purple-300 cursor-not-allowed opacity-50' 
+                                      : 'text-purple-600 hover:bg-purple-50'
+                                  }`}
+                                  title={isDisabled ? `Upload not available: ${disabledReason}` : 'Upload Signed Document'}
+                                  disabled={isDisabled}
+                                >
+                                  <FaUpload />
+                                </button>
+                              );
+                            })()}
+                            
+                            {/* Confirm button - special action */}
                             {doc.actions.includes('confirm') && (
                               <button 
                                 onClick={handleConfirmDelivery}
