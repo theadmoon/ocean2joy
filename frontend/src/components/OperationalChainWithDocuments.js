@@ -247,6 +247,23 @@ Click the Download button to save the file.`;
     alert(`Download functionality for "${doc.name}" will be implemented with actual file storage.`);
     // TODO: Implement actual file download from storage
   };
+
+  // Handle Confirm Delivery
+  const handleConfirmDelivery = async () => {
+    if (!confirm('Have you downloaded all deliverables? This confirmation is required for payment.')) {
+      return;
+    }
+    
+    try {
+      await axios.post(`${API}/projects/${project.id}/confirm-delivery`);
+      alert('✅ Delivery confirmed! You can now proceed with payment.');
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Error confirming delivery:', error);
+      alert('Failed to confirm delivery. Please try again.');
+    }
+  };
+
   
   // Handle Upload Signed Invoice
   const handleUploadSignedInvoice = async () => {
@@ -411,6 +428,7 @@ Click the Download button to save the file.`;
       case 'delivery_confirmed':
         // Delivery Confirmation by Client
         if (project.delivery_confirmed_at) {
+          // If already confirmed - show the confirmation document
           docs.push({
             id: 'delivery_receipt',
             name: 'Delivery Confirmation',
@@ -420,6 +438,18 @@ Click the Download button to save the file.`;
             status: 'confirmed',
             icon: '✅',
             actions: ['view']
+          });
+        } else if (project.delivered_at) {
+          // If delivered but not confirmed - show action item
+          docs.push({
+            id: 'delivery_pending',
+            name: 'Confirm Receipt',
+            type: 'action_required',
+            createdBy: 'Client',
+            createdAt: project.delivered_at,
+            status: 'pending_confirmation',
+            icon: '📦',
+            actions: ['confirm']
           });
         }
         break;
@@ -657,38 +687,19 @@ Click the Download button to save the file.`;
                                 <FaUpload />
                               </button>
                             )}
+                            {doc.actions.includes('confirm') && (
+                              <button 
+                                onClick={handleConfirmDelivery}
+                                className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" 
+                                title="Confirm Receipt"
+                              >
+                                <FaCheckCircle />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
                     ))}
-                  </div>
-                ) : step.key === 'delivery_confirmed' && project.delivered_at && !project.delivery_confirmed_at ? (
-                  // Special case: Show confirmation action for delivery_confirmed step
-                  <div className="bg-emerald-50 border-2 border-emerald-200 rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="text-2xl">📦</span>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-gray-900">Action Required</p>
-                        <p className="text-xs text-gray-600">Confirm receipt of deliverables</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        if (confirm('Have you downloaded all deliverables? This confirmation is required for payment.')) {
-                          try {
-                            await axios.post(`${API}/projects/${project.id}/confirm-delivery`);
-                            alert('✅ Delivery confirmed! You can now proceed with payment.');
-                            if (onUpdate) onUpdate();
-                          } catch (error) {
-                            console.error('Error confirming delivery:', error);
-                            alert('Failed to confirm delivery. Please try again.');
-                          }
-                        }
-                      }}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                    >
-                      <FaCheckCircle /> Confirm Receipt
-                    </button>
                   </div>
                 ) : (
                   <div className="text-sm text-gray-400 italic">No documents yet</div>
