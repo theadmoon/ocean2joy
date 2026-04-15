@@ -1243,6 +1243,46 @@ Issue Date: ${formatDate(projectData.completed_at)}
                 </span>
               )}
             </div>
+            
+            {/* Quote Request Manager Comments */}
+            <div className="col-span-2">
+              <span className="font-semibold">Manager's Notes (Quote Request):</span>{' '}
+              {editMode.quote_request_manager_comments ? (
+                <div className="flex flex-col gap-2 mt-1">
+                  <textarea
+                    value={editedData.quote_request_manager_comments || ''}
+                    onChange={(e) => handleFieldChange('quote_request_manager_comments', e.target.value)}
+                    className="border border-gray-300 rounded px-2 py-1 w-full min-h-[80px]"
+                    placeholder="Add notes for the client about their order activation..."
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => saveField('quote_request_manager_comments')}
+                      disabled={saving}
+                      className="btn-ocean-sm"
+                    >
+                      <FaSave className="inline mr-1" /> Save
+                    </button>
+                    <button
+                      onClick={() => toggleEditMode('quote_request_manager_comments')}
+                      className="btn-ghost-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-gray-700">
+                  {project.quote_request_manager_comments || 'No notes yet'}
+                  <button
+                    onClick={() => toggleEditMode('quote_request_manager_comments')}
+                    className="ml-2 text-sky-600 hover:text-sky-700"
+                  >
+                    <FaEdit className="inline" />
+                  </button>
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

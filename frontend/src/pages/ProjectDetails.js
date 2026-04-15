@@ -1297,9 +1297,18 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
 
             {/* Order Activation Section - Always visible, different modes based on activation status */}
             <div className="card-ocean p-6 mt-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4 text-left flex items-center gap-2">
-                🚀 Order Activation
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900 text-left flex items-center gap-2">
+                  🚀 Order Activation
+                </h3>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  project.order_activated_at 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {project.order_activated_at ? '✅ Activated' : '⏳ Awaiting Activation'}
+                </span>
+              </div>
               
               {!project.order_activated_at ? (
                 // MODE 1: Not activated - show form
@@ -1432,6 +1441,14 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                       </label>
                     </div>
                   </div>
+
+                  {/* Manager Comments - show if exists */}
+                  {project.quote_request_manager_comments && (
+                    <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
+                      <p className="text-xs font-semibold text-blue-900 mb-2">💬 MANAGER'S NOTES</p>
+                      <p className="text-sm text-blue-900 whitespace-pre-wrap">{project.quote_request_manager_comments}</p>
+                    </div>
+                  )}
 
                   {/* Activate Order Button */}
                   {project.reference_materials && project.reference_materials.length > 0 && (
