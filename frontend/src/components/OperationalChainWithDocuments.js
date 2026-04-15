@@ -242,6 +242,40 @@ This confirms the "Buyer-Specific Handoff" requirement for payment
 dispute resolution (PayPal, Stripe protection).`;
         break;
         
+      case 'access_pending':
+        content = `DOWNLOAD CONFIRMATION (Template Preview)
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+Project: ${project.project_number}
+Client: ${project.user_name}
+
+═══════════════════════════════════════════════
+
+FILES READY FOR DOWNLOAD:
+
+Status: ⏳ AWAITING CLIENT CONFIRMATION
+
+Once you download the deliverable files and click 
+"Confirm Access", this document will be automatically 
+generated with the timestamp of your download.
+
+═══════════════════════════════════════════════
+
+DELIVERABLE FILES AVAILABLE:
+${project.deliverables && project.deliverables.length > 0 ? 
+  project.deliverables.filter(d => d.is_final).map((d, idx) => `${idx + 1}. ${d.file_name || 'Video file'}`).join('\n') : 
+  'Final video files'}
+
+IMPORTANT: This confirmation is required for:
+- PayPal/Stripe dispute protection
+- Proof of delivery (ТЗ Step 11: Buyer-Specific Handoff)
+- Payment processing authorization
+
+Please download the files and click "Confirm Access" to proceed.`;
+        break;
+        
       case 'acceptance_act':
         content = `ACCEPTANCE ACT (ТЗ Step 12: Acceptance/Completion)
 ═══════════════════════════════════════════════
@@ -282,6 +316,50 @@ STATUS: ✅ WORK ACCEPTED BY CLIENT
 
 This document satisfies the "Acceptance/Completion" requirement 
 for digital service fulfillment and payment processing.`;
+        break;
+        
+      case 'acceptance_pending':
+        content = `ACCEPTANCE ACT (Template Preview)
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+ACT OF WORK ACCEPTANCE (Акт приёмки-сдачи работ)
+
+Project: ${project.project_number}
+Client: ${project.user_name}
+Service: ${project.service_type}
+
+═══════════════════════════════════════════════
+
+WORK DESCRIPTION:
+
+${project.detailed_brief || 'Digital video production services'}
+
+DELIVERABLES:
+${project.deliverables && project.deliverables.length > 0 ? 
+  project.deliverables.filter(d => d.is_final).map((d, idx) => `${idx + 1}. ${d.file_name || 'Video file'}`).join('\n') : 
+  'Final video files'}
+
+═══════════════════════════════════════════════
+
+STATUS: ⏳ AWAITING CLIENT SIGNATURE
+
+This is a TEMPLATE preview of the Acceptance Act that will be 
+generated once you upload the signed document.
+
+NEXT STEPS:
+1. Download this template
+2. Review all deliverable files
+3. If quality is satisfactory, sign this document
+4. Upload the signed document using the Upload button
+
+═══════════════════════════════════════════════
+
+IMPORTANT: This acceptance is required BEFORE payment.
+It confirms you accept the work quality and completeness.
+
+This satisfies ТЗ Step 12: Acceptance/Completion requirement 
+for PayPal/Stripe payment processing protection.`;
         break;
         
       case 'delivery_receipt':
@@ -558,7 +636,7 @@ Click the Download button to save the file.`;
             createdAt: project.delivered_at,
             status: 'pending_access',
             icon: '📥',
-            actions: ['view:disabled:Not accessed yet', 'download:disabled:Not accessed yet', 'confirm_access']
+            actions: ['view', 'download:disabled:Not accessed yet', 'confirm_access']
           });
         }
         break;
@@ -587,7 +665,7 @@ Click the Download button to save the file.`;
             createdAt: project.files_accessed_at,
             status: 'pending_signature',
             icon: '📝',
-            actions: ['view:disabled:Not signed yet', 'download:disabled:Not signed yet', 'upload']
+            actions: ['view', 'download:disabled:Not signed yet', 'upload']
           });
         }
         break;
