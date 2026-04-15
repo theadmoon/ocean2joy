@@ -96,6 +96,7 @@ class QuickRequest(BaseModel):
     phone: Optional[str] = None
     brief_description: str
     deadline: Optional[str] = None
+    payment_method: Optional[str] = 'paypal'
 
 class QuickRequestResponse(BaseModel):
     request_id: str
@@ -465,6 +466,7 @@ async def create_quick_request(request: QuickRequest):
         detailed_brief=request.brief_description,
         objectives=request.brief_description,
         deadline_preference=request.deadline,
+        order_activation_payment_method=request.payment_method,
         status=ProjectStatus.SUBMITTED
     )
     

@@ -15,7 +15,8 @@ function QuickRequest() {
     phone: '',
     service_type: '',
     brief_description: '',
-    deadline: ''
+    deadline: '',
+    payment_method: 'paypal'
   });
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
@@ -60,7 +61,8 @@ function QuickRequest() {
         phone: '',
         service_type: services[0]?.type || '',
         brief_description: '',
-        deadline: ''
+        deadline: '',
+        payment_method: 'paypal'
       });
 
       // Redirect after 3 seconds
@@ -222,6 +224,62 @@ function QuickRequest() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                     placeholder="e.g., 2 weeks, by end of March"
                   />
+                </div>
+
+                {/* Payment Method Selection */}
+                <div className="mt-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    💳 Preferred Payment Method *
+                  </label>
+                  <div className="space-y-3">
+                    <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-sky-50 transition-colors"
+                      style={{ borderColor: formData.payment_method === 'paypal' ? '#0ea5e9' : '#d1d5db' }}>
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="paypal"
+                        checked={formData.payment_method === 'paypal'}
+                        onChange={handleChange}
+                        className="mr-3"
+                      />
+                      <div className="flex-1 text-left">
+                        <p className="font-semibold text-gray-900">💳 PayPal</p>
+                        <p className="text-xs text-gray-600">Quick and secure online payment</p>
+                      </div>
+                    </label>
+                    
+                    <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-sky-50 transition-colors"
+                      style={{ borderColor: formData.payment_method === 'swift' ? '#0ea5e9' : '#d1d5db' }}>
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="swift"
+                        checked={formData.payment_method === 'swift'}
+                        onChange={handleChange}
+                        className="mr-3"
+                      />
+                      <div className="flex-1 text-left">
+                        <p className="font-semibold text-gray-900">🏦 SWIFT Transfer</p>
+                        <p className="text-xs text-gray-600">International bank transfer (USD)</p>
+                      </div>
+                    </label>
+                    
+                    <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-sky-50 transition-colors"
+                      style={{ borderColor: formData.payment_method === 'qr_code' ? '#0ea5e9' : '#d1d5db' }}>
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="qr_code"
+                        checked={formData.payment_method === 'qr_code'}
+                        onChange={handleChange}
+                        className="mr-3"
+                      />
+                      <div className="flex-1 text-left">
+                        <p className="font-semibold text-gray-900">📱 QR Code</p>
+                        <p className="text-xs text-gray-600">Instant local payment (GEL)</p>
+                      </div>
+                    </label>
+                  </div>
                 </div>
               </div>
 
