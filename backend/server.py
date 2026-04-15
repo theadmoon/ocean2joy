@@ -208,7 +208,6 @@ class Project(BaseModel):
     
     # Order activation
     order_activated_at: Optional[datetime] = None
-    order_activation_brief: Optional[str] = None  # Client's brief text
     order_activation_payment_method: Optional[str] = None  # Selected payment method
     
     # Status tracking
@@ -1155,7 +1154,7 @@ async def activate_order(
     }
     
     if brief:
-        update_data["order_activation_brief"] = brief
+        update_data["detailed_brief"] = brief
     
     if payment_method:
         update_data["order_activation_payment_method"] = payment_method

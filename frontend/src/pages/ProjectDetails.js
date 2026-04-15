@@ -18,6 +18,10 @@ function ProjectDetails() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [showFileModal, setShowFileModal] = useState(false);
   
+  // Edit brief state
+  const [editingBrief, setEditingBrief] = useState(false);
+  const [editedBrief, setEditedBrief] = useState('');
+  
   // Order Activation states
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
@@ -780,6 +784,15 @@ END OF DOCUMENT`
     }
   }, [projectId]);
 
+  // Initialize order brief and payment method from project data
+  useEffect(() => {
+    if (project) {
+      setOrderBrief(project.detailed_brief || '');
+      setOrderPaymentMethod(project.order_activation_payment_method || '');
+    }
+  }, [project]);
+
+
   const fetchProjectDetails = async () => {
     try {
       const response = await axios.get(`${API}/projects/${projectId}`);
@@ -970,6 +983,35 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
     }
   };
 
+  const handleSaveBrief = async () => {
+    if (!editedBrief.trim()) {
+      alert('Brief cannot be empty');
+      return;
+    }
+
+    try {
+      await axios.patch(`${API}/projects/${projectId}`, {
+        detailed_brief: editedBrief
+      });
+      
+      setProject(prev => ({
+        ...prev,
+        detailed_brief: editedBrief
+      }));
+      setEditingBrief(false);
+      alert('Brief updated successfully!');
+    } catch (error) {
+      console.error('Error updating brief:', error);
+      alert('Failed to update brief. Please try again.');
+    }
+  };
+
+  const handleEditBrief = () => {
+    setEditedBrief(project.detailed_brief || '');
+    setEditingBrief(true);
+  };
+
+
   const handleAcceptQuote = async () => {
     try {
       await axios.patch(`${API}/projects/${projectId}/accept-quote`);
@@ -1007,7 +1049,49 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
               <h2 className="text-2xl font-bold text-gray-900 mb-4 text-left">Project Details</h2>
               <div className="space-y-3 text-left">
                 <div className="text-left"><span className="font-semibold">Service:</span> {project.service_type}</div>
-                <div className="text-left"><span className="font-semibold">Brief:</span> <p className="mt-1 text-left">{project.detailed_brief}</p></div>
+                
+                {/* Editable Brief */}
+                <div className="text-left">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold">Brief:</span>
+                    {!editingBrief && (
+                      <button
+                        onClick={handleEditBrief}
+                        className="text-sky-600 hover:text-sky-700 text-sm"
+                      >
+                        ✏️ Edit
+                      </button>
+                    )}
+                  </div>
+                  {editingBrief ? (
+                    <div>
+                      <textarea
+                        value={editedBrief}
+                        onChange={(e) => setEditedBrief(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        rows={6}
+                        placeholder="Describe your project in detail..."
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={handleSaveBrief}
+                          className="btn-ocean-sm"
+                        >
+                          💾 Save
+                        </button>
+                        <button
+                          onClick={() => setEditingBrief(false)}
+                          className="px-4 py-2 text-sm bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-left whitespace-pre-wrap">{project.detailed_brief || 'No brief provided yet'}</p>
+                  )}
+                </div>
+                
                 <div className="text-left"><span className="font-semibold">Objectives:</span> <p className="mt-1 text-left">{project.objectives}</p></div>
                 {project.special_instructions && <div className="text-left"><span className="font-semibold">Special Instructions:</span> <p className="mt-1 text-left">{project.special_instructions}</p></div>}
               </div>
