@@ -250,7 +250,7 @@ Click the Download button to save the file.`;
   };
 
   
-  // Handle Upload Document (Invoice or Delivery Confirmation)
+  // Handle Upload Document (Invoice, Delivery Confirmation, or Payment Proof)
   const handleUploadDocument = async () => {
     if (!uploadFile) {
       alert('Please select a file to upload');
@@ -263,7 +263,7 @@ Click the Download button to save the file.`;
       formData.append('file', uploadFile);
 
       if (uploadContext === 'delivery') {
-        // Upload delivery confirmation and auto-confirm
+        // Upload delivery confirmation
         await axios.post(
           `${API}/projects/${project.id}/upload-confirmation/delivery`,
           formData,
@@ -274,6 +274,18 @@ Click the Download button to save the file.`;
           }
         );
         alert('✅ Delivery confirmation uploaded successfully!');
+      } else if (uploadContext === 'payment') {
+        // Upload payment proof
+        await axios.post(
+          `${API}/projects/${project.id}/upload-confirmation/payment`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+        alert('✅ Payment proof uploaded successfully!');
       } else {
         // Upload signed invoice
         await axios.post(
@@ -449,6 +461,35 @@ Click the Download button to save the file.`;
         }
         break;
         
+      case 'payment_sent':
+        // Payment Proof uploaded by client
+        if (project.payment_sent_at) {
+          // Payment proof already uploaded
+          docs.push({
+            id: 'payment_proof',
+            name: 'Payment Proof',
+            type: 'payment_proof',
+            createdBy: 'Client',
+            createdAt: project.payment_sent_at,
+            status: project.payment_confirmed_by_admin_at ? 'confirmed' : 'pending_confirmation',
+            icon: '💳',
+            actions: ['view', 'download', 'upload']
+          });
+        } else if (project.delivery_confirmed_at) {
+          // Delivery confirmed, waiting for payment
+          docs.push({
+            id: 'payment_pending',
+            name: 'Payment Proof',
+            type: 'payment_pending',
+            createdBy: 'Client',
+            createdAt: project.delivery_confirmed_at,
+            status: 'pending_upload',
+            icon: '💳',
+            actions: ['view:disabled:No payment proof yet', 'download:disabled:No payment proof yet', 'upload']
+          });
+        }
+        break;
+        
       case 'payment_received':
         // Payment Confirmation
         docs.push({
@@ -556,12 +597,20 @@ Click the Download button to save the file.`;
       completed: !!project.delivery_confirmed_at
     },
     {
+      key: 'payment_sent',
+      label: 'Payment Sent',
+      date: project.payment_sent_at,
+      description: 'Payment proof uploaded',
+      color: 'cyan',
+      completed: !!project.payment_sent_at
+    },
+    {
       key: 'payment_received',
       label: 'Payment Received',
-      date: project.completed_at,
-      description: 'Payment confirmed',
+      date: project.payment_confirmed_by_admin_at,
+      description: 'Payment confirmed by manager',
       color: 'emerald',
-      completed: !!project.completed_at
+      completed: !!project.payment_confirmed_by_admin_at
     },
     {
       key: 'completed',
@@ -716,6 +765,7 @@ Click the Download button to save the file.`;
                               // Determine upload context
                               const getUploadContext = () => {
                                 if (doc.id === 'delivery_pending' || doc.id === 'delivery_receipt') return 'delivery';
+                                if (doc.id === 'payment_pending' || doc.id === 'payment_proof') return 'payment';
                                 return 'invoice';
                               };
                               
@@ -800,7 +850,9 @@ Click the Download button to save the file.`;
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900">
-                {uploadContext === 'delivery' ? 'Upload Delivery Confirmation' : 'Upload Signed Invoice'}
+                {uploadContext === 'delivery' ? 'Upload Delivery Confirmation' : 
+                 uploadContext === 'payment' ? 'Upload Payment Proof' :
+                 'Upload Signed Invoice'}
               </h3>
               <button 
                 onClick={() => {
@@ -817,16 +869,21 @@ Click the Download button to save the file.`;
             <p className="text-sm text-gray-600 mb-4">
               {uploadContext === 'delivery' 
                 ? 'Please upload the signed delivery confirmation document to confirm receipt of deliverables.'
+                : uploadContext === 'payment'
+                ? 'Please upload proof of payment (screenshot, receipt, or confirmation) to confirm the transaction.'
                 : 'Please upload the signed invoice PDF to proceed with payment.'}
             </p>
             
             <div className="mb-4">
               <input
                 type="file"
-                accept=".pdf"
+                accept={uploadContext === 'payment' ? 'image/*,.pdf' : '.pdf'}
                 onChange={(e) => setUploadFile(e.target.files[0])}
                 className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none p-2"
               />
+              {uploadContext === 'payment' && (
+                <p className="text-xs text-gray-500 mt-1">Accepted: PDF, PNG, JPG (screenshot or receipt)</p>
+              )}
             </div>
             
             <div className="flex gap-3">
@@ -836,7 +893,9 @@ Click the Download button to save the file.`;
                 className="btn-ocean w-full disabled:opacity-50"
               >
                 {uploadingDocument ? 'Uploading...' : 
-                  uploadContext === 'delivery' ? '✓ Upload Confirmation' : '✓ Upload Invoice'}
+                  uploadContext === 'delivery' ? '✓ Upload Confirmation' : 
+                  uploadContext === 'payment' ? '✓ Upload Payment Proof' :
+                  '✓ Upload Invoice'}
               </button>
               <button 
                 onClick={() => {
