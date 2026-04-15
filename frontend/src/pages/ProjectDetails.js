@@ -1564,8 +1564,41 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                   <p className="text-xs text-gray-500 mt-1">Initial request received</p>
                 </div>
 
-                {/* Quote Sent */}
-                {project.quote_sent_at && (
+                {/* Order Activated */}
+                {project.order_activated_at && (
+                  <div className="border-l-4 border-blue-500 pl-3 py-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-gray-900">Order Activated</span>
+                      <span className="text-gray-700">{new Date(project.order_activated_at).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Client submitted materials & brief</p>
+                  </div>
+                )}
+
+                {/* Invoice Sent (replaces Quote Sent) */}
+                {project.invoice_sent_at && (
+                  <div className="border-l-4 border-purple-500 pl-3 py-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-gray-900">Invoice Sent</span>
+                      <span className="text-gray-700">{new Date(project.invoice_sent_at).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">${project.quote_amount} USD</p>
+                  </div>
+                )}
+
+                {/* Invoice Signed (replaces Quote Accepted) */}
+                {project.invoice_signed_at && (
+                  <div className="border-l-4 border-green-500 pl-3 py-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-gray-900">Invoice Signed</span>
+                      <span className="text-gray-700">{new Date(project.invoice_signed_at).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Client confirmed payment terms</p>
+                  </div>
+                )}
+
+                {/* Legacy: Quote Sent (for backward compatibility) */}
+                {!project.invoice_sent_at && project.quote_sent_at && (
                   <div className="border-l-4 border-purple-500 pl-3 py-1">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-gray-900">Quote Sent</span>
@@ -1575,8 +1608,8 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                   </div>
                 )}
 
-                {/* Quote Accepted */}
-                {project.quote_accepted_at && (
+                {/* Legacy: Quote Accepted (for backward compatibility) */}
+                {!project.invoice_signed_at && project.quote_accepted_at && (
                   <div className="border-l-4 border-green-500 pl-3 py-1">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-gray-900">Quote Accepted</span>
