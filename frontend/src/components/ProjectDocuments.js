@@ -12,12 +12,15 @@ function ProjectDocuments({ project, onUpdate, isClientView = false }) {
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedDocumentContent, setSelectedDocumentContent] = useState('');
   const [selectedDocumentTitle, setSelectedDocumentTitle] = useState('');
+  
+  // Invoice signature upload states
+  const [uploadingInvoiceSignature, setUploadingInvoiceSignature] = useState(false);
+  const [invoiceSignatureFile, setInvoiceSignatureFile] = useState(null);
 
   useEffect(() => {
     // Initialize document names from project or use defaults
     const defaults = {
       quote_request: 'Quote Request',
-      quote: 'Quote Document',
       invoice: 'Invoice',
       receipt: 'Receipt',
       certificate: 'Certificate of Delivery',
@@ -47,28 +50,53 @@ function ProjectDocuments({ project, onUpdate, isClientView = false }) {
     setEditing(false);
   };
 
+  const handleInvoiceSignatureUpload = async () => {
+    if (!invoiceSignatureFile) {
+      alert('Please select a PDF file to upload');
+      return;
+    }
+
+    setUploadingInvoiceSignature(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', invoiceSignatureFile);
+
+      await axios.post(
+        `${API}/projects/${project.id}/upload-confirmation/invoice`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      alert('Signed invoice uploaded successfully!');
+      setInvoiceSignatureFile(null);
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Error uploading signed invoice:', error);
+      alert('Failed to upload signed invoice. Please try again.');
+    } finally {
+      setUploadingInvoiceSignature(false);
+    }
+  };
+
+
   // Define sub-steps for each document
   const getSubSteps = (docType) => {
     const subSteps = {
       quote_request: [
-        { key: 'awaiting_upload', label: 'Awaiting Script Upload', condition: () => !project.reference_materials || project.reference_materials.length === 0 },
-        { key: 'script_uploaded', label: 'Script Uploaded by Client', condition: () => project.reference_materials && project.reference_materials.length > 0 },
-        { key: 'manager_reviewing', label: 'Manager Reviewing', condition: () => project.reference_materials && !project.quote_request_created_at },
-        { key: 'summary_created', label: 'Quote Request Summary Created', condition: () => project.quote_request_created_at },
-        { key: 'sent_for_approval', label: 'Sent to Client for Approval', condition: () => project.quote_request_sent_at },
-        { key: 'approved', label: 'Approved by Client', condition: () => project.quote_request_approved_at }
-      ],
-      quote: [
-        { key: 'draft', label: 'Draft', condition: () => !project.quote_amount },
-        { key: 'prepared', label: 'Quote Prepared', condition: () => project.quote_amount && !project.quote_sent_at },
-        { key: 'sent', label: 'Sent to Client', condition: () => project.quote_sent_at },
-        { key: 'approved', label: 'Approved by Client', condition: () => project.quote_accepted_at }
+        { key: 'awaiting_activation', label: 'Awaiting Order Activation', condition: () => !project.order_activated_at },
+        { key: 'activated', label: 'Order Activated by Client', condition: () => project.order_activated_at },
+        { key: 'manager_reviewing', label: 'Manager Reviewing', condition: () => project.order_activated_at && !project.quote_request_created_at },
+        { key: 'comments_added', label: 'Manager Added Comments', condition: () => project.quote_request_created_at }
       ],
       invoice: [
-        { key: 'draft', label: 'Draft', condition: () => !project.quote_accepted_at },
-        { key: 'generated', label: 'Invoice Generated', condition: () => project.quote_accepted_at },
-        { key: 'sent', label: 'Sent to Client', condition: () => project.quote_accepted_at },
-        { key: 'awaiting_payment', label: 'Awaiting Payment', condition: () => project.quote_accepted_at && !project.payment_confirmed_by_admin }
+        { key: 'pending', label: 'Pending', condition: () => !project.invoice_sent_at },
+        { key: 'sent', label: 'Invoice Sent to Client', condition: () => project.invoice_sent_at },
+        { key: 'awaiting_signature', label: 'Awaiting Client Signature', condition: () => project.invoice_sent_at && !project.invoice_signed_at },
+        { key: 'signed', label: 'Signed by Client', condition: () => project.invoice_signed_at }
       ],
       payment_confirmation: [
         { key: 'awaiting', label: 'Awaiting Payment', condition: () => !project.payment_marked_by_client_at },
@@ -114,11 +142,10 @@ function ProjectDocuments({ project, onUpdate, isClientView = false }) {
 
   const documents = [
     { key: 'quote_request', icon: '📄', description: 'Initial client request', step: 1 },
-    { key: 'quote', icon: '💰', description: 'Project quote with pricing', step: 2 },
-    { key: 'invoice', icon: '📃', description: 'Invoice for payment', step: 3 },
-    { key: 'payment_confirmation', icon: '✅', description: 'Payment confirmation', step: 4 },
-    { key: 'receipt', icon: '🧾', description: 'Payment receipt', step: 5 },
-    { key: 'certificate', icon: '📜', description: 'Delivery certificate', step: 6 }
+    { key: 'invoice', icon: '📃', description: 'Invoice for payment', step: 2 },
+    { key: 'payment_confirmation', icon: '✅', description: 'Payment confirmation', step: 3 },
+    { key: 'receipt', icon: '🧾', description: 'Payment receipt', step: 4 },
+    { key: 'certificate', icon: '📜', description: 'Delivery certificate', step: 5 }
   ];
 
   const viewDocument = (docType) => {
@@ -448,6 +475,42 @@ Project Status: ${project.acceptance_status === 'approved' ? 'APPROVED' : 'Pendi
                     >
                       <FaEye /> View Document
                     </button>
+                  )}
+                  
+                  {/* Invoice Signature Upload (Client View Only) */}
+                  {isClientView && doc.key === 'invoice' && project.invoice_sent_at && !project.invoice_signed_at && (
+                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm font-semibold text-yellow-900 mb-3">
+                        📝 Action Required: Sign and Upload Invoice
+                      </p>
+                      <p className="text-xs text-yellow-700 mb-3">
+                        Please download the invoice, sign it, and upload the signed PDF below.
+                      </p>
+                      <div className="mb-3">
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={(e) => setInvoiceSignatureFile(e.target.files[0])}
+                          className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none p-2"
+                        />
+                      </div>
+                      <button
+                        onClick={handleInvoiceSignatureUpload}
+                        disabled={!invoiceSignatureFile || uploadingInvoiceSignature}
+                        className="btn-ocean-sm w-full"
+                      >
+                        {uploadingInvoiceSignature ? 'Uploading...' : '✓ Upload Signed Invoice'}
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* Invoice Signed Confirmation */}
+                  {doc.key === 'invoice' && project.invoice_signed_at && (
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-800 font-semibold">
+                        ✓ Invoice Signed on {new Date(project.invoice_signed_at).toLocaleDateString()}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>

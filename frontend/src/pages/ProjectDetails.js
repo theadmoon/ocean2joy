@@ -21,6 +21,8 @@ function ProjectDetails() {
   // Order Activation states
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [orderBrief, setOrderBrief] = useState('');
+  const [orderPaymentMethod, setOrderPaymentMethod] = useState('');
   
   // Payment states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -927,10 +929,29 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
       alert('Please upload your script/materials before activating the order.');
       return;
     }
+    
+    if (!orderBrief.trim()) {
+      alert('Please provide a brief description of your project.');
+      return;
+    }
+    
+    if (!orderPaymentMethod) {
+      alert('Please select a payment method.');
+      return;
+    }
 
     try {
-      await axios.patch(`${API}/projects/${projectId}/activate-order`);
-      alert('Order activated! Manager will review and prepare Quote Request.');
+      const formData = new FormData();
+      formData.append('brief', orderBrief);
+      formData.append('payment_method', orderPaymentMethod);
+      
+      await axios.patch(`${API}/projects/${projectId}/activate-order`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      alert('Order activated! Manager will review and prepare your invoice.');
       fetchProjectDetails();
     } catch (error) {
       console.error('Error activating order:', error);
@@ -992,91 +1013,39 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
               </div>
             </div>
 
-            {/* Client Materials - Always visible if files exist */}
-            {project.reference_materials && project.reference_materials.length > 0 && (
-              <div className="card-ocean p-6 bg-gradient-to-br from-teal-50 to-sky-50">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">
-                  📎 Client Materials
-                </h3>
-                <p className="text-gray-700 mb-4 text-left">
-                  Materials uploaded by client for this project (click to view):
-                </p>
-                <div className="space-y-2">
-                  {project.reference_materials.map((file, idx) => {
-                    const fileName = file.split(' (')[0]; // Extract filename before " (uploaded by client)"
-                    const hasContent = staticFileContents[fileName];
-                    
-                    return (
-                      <div 
-                        key={idx} 
-                        onClick={() => hasContent && openFile(fileName)}
-                        className={`flex items-center gap-3 text-sm bg-white p-3 rounded-lg border border-sky-200 ${
-                          hasContent ? 'cursor-pointer hover:bg-sky-50 hover:border-sky-400 transition-all' : ''
-                        }`}
-                      >
-                        <svg className="w-5 h-5 text-sky-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
-                        </svg>
-                        <span className="text-gray-700 text-left flex-1">{file}</span>
-                        {hasContent && (
-                          <span className="text-xs bg-sky-500 text-white px-2 py-1 rounded font-medium">
-                            Click to view
-                          </span>
-                        )}
-                        <span className="text-xs text-teal-600 font-medium">✓</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="mt-4 bg-white p-3 rounded-lg border border-teal-200">
-                  <p className="text-xs text-teal-800 text-left">
-                    <strong>Note:</strong> These materials were used for custom production. Click any file to view its contents.
-                  </p>
-                </div>
-              </div>
-            )}
 
-            {/* Upload Materials - Only for active projects */}
-            {!project.reference_materials?.length && (project.status === 'submitted' || project.status === 'quoted' || project.status === 'quote_accepted' || project.status === 'in_production') && (
-              <div className="card-ocean p-6 bg-gradient-to-br from-teal-50 to-sky-50">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">Upload Materials</h3>
-                <p className="text-gray-700 mb-4 text-left">
-                  Upload your script, reference materials, or any files needed for production.
-                </p>
-                <div className="border-2 border-dashed border-sky-300 rounded-lg p-8 text-center bg-white">
-                  <div className="mb-4">
-                    <svg className="mx-auto h-12 w-12 text-sky-500" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    <label htmlFor="file-upload" className="text-sky-600 hover:text-sky-700 font-semibold cursor-pointer">
-                      Click to upload
-                    </label>
-                    {' '}or drag and drop
-                  </p>
-                  <p className="text-xs text-gray-500">PDF, DOC, DOCX, TXT, ZIP up to 100MB</p>
-                  <input id="file-upload" name="file-upload" type="file" className="hidden" accept=".pdf,.doc,.docx,.txt,.zip" />
-                </div>
-              </div>
-            )}
-
-            {project.quote_amount && (
+            {/* Invoice Section - replaces old Quote section */}
+            {project.invoice_sent_at && (
               <div className="card-ocean p-6 bg-gradient-to-br from-sky-50 to-teal-50">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">Quote</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-4 text-left">📃 Invoice</h3>
                 <div className="text-3xl font-bold text-sky-600 mb-2 text-left">${project.quote_amount}</div>
                 <p className="text-gray-700 mb-4 text-left">{project.quote_details}</p>
-                {project.status === 'quoted' && (
-                  <button onClick={handleAcceptQuote} className="btn-ocean">Accept Quote & Start Production</button>
+                
+                {/* Invoice Signature Status */}
+                {!project.invoice_signed_at && (
+                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded mb-4">
+                    <p className="text-sm text-yellow-800 font-semibold">
+                      ⏳ Waiting for your signature. Please scroll down to the Operational Chain section to upload signed invoice.
+                    </p>
+                  </div>
                 )}
-                {project.status === 'quote_accepted' && !paymentMarked && (
-                  <button 
-                    onClick={() => setShowPaymentModal(true)} 
-                    className="btn-ocean w-full"
-                  >
-                    💳 Make Payment
-                  </button>
+                
+                {project.invoice_signed_at && !paymentMarked && (
+                  <div>
+                    <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded mb-4">
+                      <p className="text-sm text-green-800 font-semibold">
+                        ✓ Invoice Signed on {new Date(project.invoice_signed_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => setShowPaymentModal(true)} 
+                      className="btn-ocean w-full"
+                    >
+                      💳 Make Payment
+                    </button>
+                  </div>
                 )}
+                
                 {paymentMarked && !project.payment_confirmed_by_admin && (
                   <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
                     <p className="text-sm text-yellow-800 font-semibold">
@@ -1084,6 +1053,7 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                     </p>
                   </div>
                 )}
+                
                 {project.payment_confirmed_by_admin && (
                   <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
                     <p className="text-sm text-green-800 font-semibold">
@@ -1201,14 +1171,14 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
             )}
 
 
-            {/* Order Activation Section */}
-            {(!project.reference_materials || project.reference_materials.length === 0 || !project.order_activated_at) && (
+            {/* Order Activation Section - Only show for new projects that haven't been activated and aren't completed */}
+            {(!project.order_activated_at && !['completed', 'delivered', 'in_production', 'in_review', 'invoice_sent', 'invoice_signed', 'quoted', 'quote_accepted'].includes(project.status)) && (
               <div className="card-ocean p-6 mt-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-4 text-left flex items-center gap-2">
                   🚀 Order Activation
                 </h3>
                 <p className="text-sm text-gray-600 mb-6 text-left">
-                  Upload your script and materials to activate your order. Manager will review and prepare official Quote Request.
+                  Complete all fields below to activate your order. Manager will review and prepare your invoice.
                 </p>
 
                 {/* Current Status */}
@@ -1218,19 +1188,38 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                   </p>
                   <p className="text-sm text-sky-700">
                     {!project.reference_materials || project.reference_materials.length === 0 ? (
-                      <span>⏳ Awaiting Script Upload</span>
-                    ) : !project.order_activated_at ? (
-                      <span>✅ Files Uploaded - Ready to Activate Order</span>
+                      <span>⏳ Step 1/3: Upload Script & Materials</span>
+                    ) : !orderBrief ? (
+                      <span>⏳ Step 2/3: Provide Project Brief</span>
+                    ) : !orderPaymentMethod ? (
+                      <span>⏳ Step 3/3: Select Payment Method</span>
                     ) : (
-                      <span>🎬 Order Activated - Manager Reviewing</span>
+                      <span>✅ Ready to Activate Order</span>
                     )}
+                  </p>
+                </div>
+
+                {/* Brief Field */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    📝 Project Brief
+                  </label>
+                  <textarea
+                    value={orderBrief}
+                    onChange={(e) => setOrderBrief(e.target.value)}
+                    placeholder="Describe your project in detail: objectives, style, target audience, specific requirements..."
+                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    rows={6}
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Provide detailed information about your project to help us prepare an accurate quote.
                   </p>
                 </div>
 
                 {/* File Upload */}
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    📎 Attach Script & Materials
+                    📎 Script & Materials
                   </label>
                   <input
                     type="file"
@@ -1261,11 +1250,68 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                   </div>
                 )}
 
+                {/* Payment Method Selection */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    💳 Select Payment Method
+                  </label>
+                  <div className="space-y-3">
+                    <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-sky-50 transition-colors"
+                      style={{ borderColor: orderPaymentMethod === 'paypal' ? '#0ea5e9' : '#d1d5db' }}>
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="paypal"
+                        checked={orderPaymentMethod === 'paypal'}
+                        onChange={(e) => setOrderPaymentMethod(e.target.value)}
+                        className="mr-3"
+                      />
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">💳 PayPal</p>
+                        <p className="text-xs text-gray-600">Quick and secure online payment</p>
+                      </div>
+                    </label>
+                    
+                    <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-sky-50 transition-colors"
+                      style={{ borderColor: orderPaymentMethod === 'swift' ? '#0ea5e9' : '#d1d5db' }}>
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="swift"
+                        checked={orderPaymentMethod === 'swift'}
+                        onChange={(e) => setOrderPaymentMethod(e.target.value)}
+                        className="mr-3"
+                      />
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">🏦 SWIFT Transfer</p>
+                        <p className="text-xs text-gray-600">International bank transfer (USD)</p>
+                      </div>
+                    </label>
+                    
+                    <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-sky-50 transition-colors"
+                      style={{ borderColor: orderPaymentMethod === 'qr_code' ? '#0ea5e9' : '#d1d5db' }}>
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="qr_code"
+                        checked={orderPaymentMethod === 'qr_code'}
+                        onChange={(e) => setOrderPaymentMethod(e.target.value)}
+                        className="mr-3"
+                      />
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">📱 QR Code</p>
+                        <p className="text-xs text-gray-600">Instant local payment (GEL)</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
                 {/* Activate Order Button */}
                 {project.reference_materials && project.reference_materials.length > 0 && !project.order_activated_at && (
                   <button
                     onClick={activateOrder}
-                    className="btn-ocean w-full py-3 text-lg font-semibold"
+                    disabled={!orderBrief.trim() || !orderPaymentMethod}
+                    className="btn-ocean w-full py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     🚀 Activate Order & Submit for Review
                   </button>

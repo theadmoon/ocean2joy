@@ -132,14 +132,17 @@ class DetailedRequestCreate(BaseModel):
 # Project Models
 class ProjectStatus(str):
     SUBMITTED = "submitted"
-    QUOTED = "quoted"
-    QUOTE_ACCEPTED = "quote_accepted"
+    INVOICE_SENT = "invoice_sent"
+    INVOICE_SIGNED = "invoice_signed"
     IN_PRODUCTION = "in_production"
     IN_REVIEW = "in_review"
     REVISION_REQUESTED = "revision_requested"
     DELIVERED = "delivered"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+    # Legacy statuses (kept for backward compatibility)
+    QUOTED = "quoted"
+    QUOTE_ACCEPTED = "quote_accepted"
 
 class Project(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -193,6 +196,20 @@ class Project(BaseModel):
     
     # Document naming (custom names for project documents)
     document_names: Optional[Dict[str, str]] = None  # {"quote": "Custom Quote Name", "invoice": "Custom Invoice", etc.}
+    
+    # Quote Request (manager's comments)
+    quote_request_manager_comments: Optional[str] = None
+    quote_request_created_at: Optional[datetime] = None
+    
+    # Invoice workflow
+    invoice_sent_at: Optional[datetime] = None
+    invoice_signed_at: Optional[datetime] = None
+    invoice_signed_filename: Optional[str] = None
+    
+    # Order activation
+    order_activated_at: Optional[datetime] = None
+    order_activation_brief: Optional[str] = None  # Client's brief text
+    order_activation_payment_method: Optional[str] = None  # Selected payment method
     
     # Status tracking
     status: str = ProjectStatus.SUBMITTED
@@ -348,7 +365,7 @@ def verify_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         return payload
-    except:
+    except Exception:
         return None
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -1108,9 +1125,11 @@ async def upload_project_materials(
 @api_router.patch("/projects/{project_id}/activate-order")
 async def activate_order(
     project_id: str,
+    brief: str = Form(None),
+    payment_method: str = Form(None),
     current_user: User = Depends(get_current_user)
 ):
-    """Client activates order after uploading materials"""
+    """Client activates order with brief and payment method selection"""
     project = await db.projects.find_one({"id": project_id})
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -1123,21 +1142,113 @@ async def activate_order(
     if not project.get('reference_materials') or len(project.get('reference_materials', [])) == 0:
         raise HTTPException(status_code=400, detail="Please upload materials before activating order")
     
+    # Validate payment method
+    valid_payment_methods = ['paypal', 'swift', 'qr_code']
+    if payment_method and payment_method not in valid_payment_methods:
+        raise HTTPException(status_code=400, detail="Invalid payment method")
+    
     # Update project status
+    update_data = {
+        "order_activated_at": datetime.now(timezone.utc).isoformat(),
+        "status": ProjectStatus.SUBMITTED,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if brief:
+        update_data["order_activation_brief"] = brief
+    
+    if payment_method:
+        update_data["order_activation_payment_method"] = payment_method
+    
     await db.projects.update_one(
         {"id": project_id},
-        {
-            "$set": {
-                "order_activated_at": datetime.now(timezone.utc).isoformat(),
-                "status": ProjectStatus.SUBMITTED,  # Move to submitted status
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }
-        }
+        {"$set": update_data}
     )
     
-    logger.info(f"Order activated for project {project_id}")
+    logger.info(f"Order activated for project {project_id} with payment method: {payment_method}")
     
-    return {"message": "Order activated successfully"}
+    return {"message": "Order activated successfully", "payment_method": payment_method}
+
+
+@api_router.patch("/admin/projects/{project_id}/send-invoice")
+async def send_invoice_by_manager(
+    project_id: str,
+    invoice_amount: float = Form(...),
+    invoice_details: str = Form(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Manager sends invoice to client"""
+    if current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    update_data = {
+        "quote_amount": invoice_amount,  # Keep for backward compatibility
+        "quote_details": invoice_details,
+        "invoice_sent_at": datetime.now(timezone.utc).isoformat(),
+        "status": ProjectStatus.INVOICE_SENT,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one({"id": project_id}, {"$set": update_data})
+    
+    logger.info(f"Invoice sent for project {project_id}: ${invoice_amount}")
+    
+    return {
+        "message": "Invoice sent successfully",
+        "invoice_amount": invoice_amount,
+        "status": ProjectStatus.INVOICE_SENT
+    }
+
+@api_router.patch("/projects/{project_id}/sign-invoice")
+async def sign_invoice_by_client(
+    project_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Client confirms invoice signature (without uploading - simplified approval)"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project or project['user_id'] != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if project['status'] != ProjectStatus.INVOICE_SENT:
+        raise HTTPException(status_code=400, detail="Invoice must be sent first")
+    
+    update_data = {
+        "status": ProjectStatus.INVOICE_SIGNED,
+        "invoice_signed_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one({"id": project_id}, {"$set": update_data})
+    
+    return {"message": "Invoice signed", "status": ProjectStatus.INVOICE_SIGNED}
+
+@api_router.patch("/admin/projects/{project_id}/update-quote-request-comments")
+async def update_quote_request_comments(
+    project_id: str,
+    comments: str = Form(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Manager updates comments for Quote Request"""
+    if current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    update_data = {
+        "quote_request_manager_comments": comments,
+        "quote_request_created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one({"id": project_id}, {"$set": update_data})
+    
+    return {"message": "Quote Request comments updated", "comments": comments}
 
 
 
@@ -1193,6 +1304,12 @@ async def upload_client_confirmation(
         f"{doc_type}_confirmed_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
+    
+    # Special handling for invoice - update status when signed
+    if doc_type == 'invoice':
+        update_data['invoice_signed_at'] = datetime.now(timezone.utc).isoformat()
+        update_data['invoice_signed_filename'] = safe_filename
+        update_data['status'] = ProjectStatus.INVOICE_SIGNED
     
     await db.projects.update_one(
         {"id": project_id},
