@@ -162,31 +162,46 @@ Ocean2Joy Digital Video Production
 
 Project: ${project.project_number}
 Client: ${project.user_name}
-Date: ${project.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}
+Email: ${project.user_email}
+Date Submitted: ${project.created_at ? new Date(project.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+${project.order_activated_at ? `Order Activated: ${new Date(project.order_activated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}
 
 ═══════════════════════════════════════════════
 
 PROJECT DETAILS:
 
-Title: ${project.project_title || 'N/A'}
-
 Service Type: ${project.service_type || 'N/A'}
 
-Brief Description:
+${project.order_activation_payment_method ? `Payment Method: ${
+  project.order_activation_payment_method === 'paypal' ? '💳 PayPal' :
+  project.order_activation_payment_method === 'swift' ? '🏦 SWIFT Transfer (USD)' :
+  project.order_activation_payment_method === 'qr_code' ? '📱 QR Code (GEL)' : 
+  project.order_activation_payment_method
+}` : ''}
+
+Brief:
 ${project.detailed_brief || 'No description provided'}
 
 Objectives:
 ${project.objectives || 'Not specified'}
 
-Special Instructions:
-${project.special_instructions || 'None'}
-
-Reference Materials:
-${project.reference_materials ? project.reference_materials.join('\n') : 'None uploaded'}
+${project.special_instructions ? `Special Instructions:\n${project.special_instructions}` : ''}
 
 ═══════════════════════════════════════════════
 
-This quote request has been received and is being reviewed by our production team.`;
+ATTACHED MATERIALS (Script & References):
+
+${project.reference_materials && project.reference_materials.length > 0 ? 
+  project.reference_materials.map((file, idx) => `${idx + 1}. ${file}`).join('\n') : 
+  'No materials uploaded yet'}
+
+═══════════════════════════════════════════════
+
+${project.quote_request_manager_comments ? `MANAGER'S NOTES:\n\n${project.quote_request_manager_comments}\n\n═══════════════════════════════════════════════\n\n` : ''}
+
+STATUS: ${project.order_activated_at ? 'Order Activated - Ready for Review' : 'Awaiting Order Activation'}
+
+This quote request ${project.order_activated_at ? 'has been activated and is' : 'will be'} reviewed by our production team.`;
         break;
 
       case 'quote':
