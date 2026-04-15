@@ -1243,51 +1243,165 @@ Issue Date: ${formatDate(projectData.completed_at)}
                 </span>
               )}
             </div>
-            
-            {/* Quote Request Manager Comments */}
-            <div className="col-span-2">
-              <span className="font-semibold">Manager's Notes (Quote Request):</span>{' '}
-              {editMode.quote_request_manager_comments ? (
-                <div className="flex flex-col gap-2 mt-1">
-                  <textarea
-                    value={editedData.quote_request_manager_comments || ''}
-                    onChange={(e) => handleFieldChange('quote_request_manager_comments', e.target.value)}
-                    className="border border-gray-300 rounded px-2 py-1 w-full min-h-[80px]"
-                    placeholder="Add notes for the client about their order activation..."
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => saveField('quote_request_manager_comments')}
-                      disabled={saving}
-                      className="btn-ocean-sm"
-                    >
-                      <FaSave className="inline mr-1" /> Save
-                    </button>
-                    <button
-                      onClick={() => toggleEditMode('quote_request_manager_comments')}
-                      className="btn-ghost-sm"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <span className="text-gray-700">
-                  {project.quote_request_manager_comments || 'No notes yet'}
-                  <button
-                    onClick={() => toggleEditMode('quote_request_manager_comments')}
-                    className="ml-2 text-sky-600 hover:text-sky-700"
-                  >
-                    <FaEdit className="inline" />
-                  </button>
-                </span>
-              )}
-            </div>
           </div>
         </div>
 
         {/* Project Documents Section */}
         <ProjectDocuments project={project} onUpdate={fetchProjectDetails} />
+
+        {/* Order Activation Management - Admin Editor */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              🚀 Order Activation Management
+            </h2>
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              project.order_activated_at 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-yellow-100 text-yellow-800'
+            }`}>
+              {project.order_activated_at ? '✅ Activated' : '⏳ Not Activated'}
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {/* Brief (Client) - Editable by Admin */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                📝 Client Brief
+              </label>
+              {editMode.detailed_brief ? (
+                <div>
+                  <textarea
+                    value={editedData.detailed_brief || ''}
+                    onChange={(e) => handleFieldChange('detailed_brief', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-3 text-sm"
+                    rows={6}
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => saveField('detailed_brief')} disabled={saving} className="btn-ocean-sm">
+                      <FaSave className="inline mr-1" /> Save
+                    </button>
+                    <button onClick={() => toggleEditMode('detailed_brief')} className="btn-ghost-sm">Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 p-3 rounded">
+                  <p className="text-sm text-gray-900 whitespace-pre-wrap">{project.detailed_brief || 'No brief provided'}</p>
+                  <button onClick={() => toggleEditMode('detailed_brief')} className="mt-2 text-sky-600 hover:text-sky-700">
+                    <FaEdit className="inline mr-1" /> Edit Brief
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Payment Method - Editable by Admin */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                💳 Payment Method
+              </label>
+              {editMode.order_activation_payment_method ? (
+                <div>
+                  <select
+                    value={editedData.order_activation_payment_method || ''}
+                    onChange={(e) => handleFieldChange('order_activation_payment_method', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-2"
+                  >
+                    <option value="">Select payment method</option>
+                    <option value="paypal">💳 PayPal</option>
+                    <option value="swift">🏦 SWIFT Transfer</option>
+                    <option value="qr_code">📱 QR Code</option>
+                  </select>
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => saveField('order_activation_payment_method')} disabled={saving} className="btn-ocean-sm">
+                      <FaSave className="inline mr-1" /> Save
+                    </button>
+                    <button onClick={() => toggleEditMode('order_activation_payment_method')} className="btn-ghost-sm">Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 p-3 rounded">
+                  <p className="text-sm text-gray-900">
+                    {project.order_activation_payment_method === 'paypal' && '💳 PayPal - Quick and secure online payment'}
+                    {project.order_activation_payment_method === 'swift' && '🏦 SWIFT Transfer - International bank transfer (USD)'}
+                    {project.order_activation_payment_method === 'qr_code' && '📱 QR Code - Instant local payment (GEL)'}
+                    {!project.order_activation_payment_method && 'Not selected yet'}
+                  </p>
+                  <button onClick={() => toggleEditMode('order_activation_payment_method')} className="mt-2 text-sky-600 hover:text-sky-700">
+                    <FaEdit className="inline mr-1" /> Edit Payment Method
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Uploaded Materials (Read-only list) */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                📎 Uploaded Materials
+              </label>
+              <div className="bg-gray-50 p-3 rounded">
+                {project.reference_materials && project.reference_materials.length > 0 ? (
+                  <ul className="space-y-1">
+                    {project.reference_materials.map((file, idx) => (
+                      <li key={idx} className="text-sm text-gray-700 flex items-center gap-2">
+                        <span className="text-green-600">✓</span>
+                        <span>{file}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-500">No materials uploaded</p>
+                )}
+              </div>
+            </div>
+
+            {/* Manager Comments - Editable */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                💬 Manager's Notes (Visible to Client)
+              </label>
+              {editMode.quote_request_manager_comments ? (
+                <div>
+                  <textarea
+                    value={editedData.quote_request_manager_comments || ''}
+                    onChange={(e) => handleFieldChange('quote_request_manager_comments', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-3 text-sm"
+                    rows={4}
+                    placeholder="Add notes for the client about their order activation..."
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => saveField('quote_request_manager_comments')} disabled={saving} className="btn-ocean-sm">
+                      <FaSave className="inline mr-1" /> Save
+                    </button>
+                    <button onClick={() => toggleEditMode('quote_request_manager_comments')} className="btn-ghost-sm">Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                  <p className="text-sm text-blue-900 whitespace-pre-wrap">{project.quote_request_manager_comments || 'No notes yet - click edit to add'}</p>
+                  <button onClick={() => toggleEditMode('quote_request_manager_comments')} className="mt-2 text-sky-600 hover:text-sky-700">
+                    <FaEdit className="inline mr-1" /> Edit Notes
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Order Activation Date */}
+            {project.order_activated_at && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm text-green-800 font-semibold">
+                  ✓ Order Activated on {new Date(project.order_activated_at).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Operational Chain Management */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6" id="operational-chain-content">
