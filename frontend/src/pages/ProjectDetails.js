@@ -7,7 +7,8 @@ import OperationalChainWithDocuments from '../components/OperationalChainWithDoc
 import { 
   generateInvoice, 
   generateReceipt, 
-  generateCertificate 
+  generateCertificate,
+  generateClientMaterialTemplate
 } from '../utils/documentGenerators';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -408,6 +409,19 @@ END OF DOCUMENT`
           ...project,
           client_name: project.user_name,
           client_email: project.user_email
+        })
+      };
+    }
+    // Generate template for unknown client materials
+    else if (project && project.reference_materials && project.reference_materials.includes(fileName)) {
+      fileContent = {
+        type: fileName.toLowerCase().includes('script') ? 'script' : 'document',
+        name: fileName,
+        content: generateClientMaterialTemplate({
+          name: fileName,
+          type: fileName.toLowerCase().includes('script') ? 'script' : 'document',
+          uploadedBy: project.user_name || 'Client',
+          uploadedAt: project.order_activated_at || project.created_at
         })
       };
     }

@@ -6,7 +6,8 @@ import {
   generateCertificate,
   generateAcceptanceAct,
   generateDownloadConfirmation,
-  generatePaymentProof
+  generatePaymentProof,
+  generateClientMaterialTemplate
 } from '../utils/documentGenerators';
 import axios from 'axios';
 
@@ -234,18 +235,12 @@ STATUS: ✅ DELIVERY CONFIRMED`;
       default:
         // For client files (scripts, materials)
         if (doc.type === 'client_file') {
-          content = `FILE INFORMATION
-═══════════════════════════════════════════════
-
-Filename: ${doc.name}
-Uploaded by: ${doc.createdBy}
-Date: ${new Date(doc.createdAt).toLocaleDateString()}
-Type: Client Material
-
-═══════════════════════════════════════════════
-
-This file was uploaded by the client as part of the project materials.
-To download this file, click the Download button.`;
+          content = generateClientMaterialTemplate({
+            name: doc.name,
+            type: doc.name.toLowerCase().includes('script') ? 'script' : 'document',
+            uploadedBy: doc.createdBy,
+            uploadedAt: doc.createdAt
+          });
         } else if (doc.type === 'deliverable') {
           content = `VIDEO DELIVERABLE
 ═══════════════════════════════════════════════

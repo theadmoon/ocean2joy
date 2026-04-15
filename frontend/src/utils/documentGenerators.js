@@ -498,3 +498,107 @@ STATUS: ${projectData.payment_confirmed_by_admin_at ?
 
 ${!projectData.payment_confirmed_by_admin_at ? '\nThis payment is awaiting verification by the manager.' : ''}`;
 };
+
+/**
+ * Generate Client Script/Material Template
+ * Shows the expected format for client-uploaded materials
+ * @param {Object} fileData - File information {name, type, uploadedBy, uploadedAt}
+ * @returns {string} Formatted script template or file info
+ */
+export const generateClientMaterialTemplate = (fileData) => {
+  if (!fileData) return '';
+  
+  const fileName = fileData.name || 'Client Material';
+  const fileType = fileData.type || 'document';
+  const uploadedBy = fileData.uploadedBy || 'Client';
+  const uploadedAt = fileData.uploadedAt ? new Date(fileData.uploadedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
+  
+  // If it's a script/screenplay
+  if (fileName.toLowerCase().includes('script') || fileType === 'script') {
+    return `SCRIPT/SCREENPLAY TEMPLATE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Client Material: ${fileName}
+
+Uploaded by: ${uploadedBy}
+Upload Date: ${uploadedAt}
+
+═══════════════════════════════════════════════
+
+EXPECTED FORMAT FOR VIDEO SCRIPTS:
+
+TITLE: [Project Title]
+Duration: [Target runtime in minutes]
+Written by: [Client Name]
+
+═══════════════════════════════════════════════
+
+CHARACTERS:
+- [Character Name] ([Gender], [Age]) - [Role Description]
+- [Character Name] ([Gender], [Age]) - [Role Description]
+
+SETTING: [Primary location/environment]
+
+═══════════════════════════════════════════════
+
+SCENE 1: [SCENE TITLE]
+[INT./EXT.] [LOCATION] - [TIME OF DAY]
+
+[Scene description and action]
+
+CHARACTER NAME
+(direction/emotion)
+Dialogue text...
+
+[Camera directions, special effects notes]
+
+═══════════════════════════════════════════════
+
+PRODUCTION NOTES:
+- Total runtime: [X minutes]
+- Special effects/VFX requirements
+- Costume/prop requirements
+- Location requirements
+- Lighting notes
+
+═══════════════════════════════════════════════
+
+NOTE: This is a template showing the expected format.
+Your actual script content should be uploaded as a PDF or DOC file.
+
+For questions about script format, contact:
+ocean2joy@gmail.com`;
+  }
+  
+  // Generic client material
+  return `CLIENT MATERIAL
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+File: ${fileName}
+Type: ${fileType}
+Uploaded by: ${uploadedBy}
+Upload Date: ${uploadedAt}
+
+═══════════════════════════════════════════════
+
+This file was uploaded by the client as reference material 
+for the project. It may include:
+
+• Scripts and screenplays
+• Character references and casting notes
+• Location photos and setup guides
+• Storyboards and visual references
+• Brand guidelines and style guides
+• Music or audio references
+• Any other project-specific materials
+
+═══════════════════════════════════════════════
+
+To download this file, use the Download button.
+
+For questions about this material:
+ocean2joy@gmail.com`;
+};
