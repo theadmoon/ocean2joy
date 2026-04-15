@@ -211,6 +211,79 @@ STATUS: ${project.payment_confirmed_by_admin_at ?
 ${!project.payment_confirmed_by_admin_at ? '\nThis payment is awaiting verification by the manager.' : ''}`;
         break;
         
+      case 'download_confirmation':
+        content = `DOWNLOAD CONFIRMATION (ТЗ Step 11: Buyer-Specific Handoff)
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+Project: ${project.project_number}
+Client: ${project.user_name}
+
+═══════════════════════════════════════════════
+
+FILES ACCESSED:
+
+Download Confirmed: ${project.files_accessed_at ? new Date(project.files_accessed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+
+This log confirms that the client has successfully downloaded the 
+deliverable files from the portal.
+
+═══════════════════════════════════════════════
+
+DELIVERABLE FILES:
+${project.deliverables && project.deliverables.length > 0 ? 
+  project.deliverables.filter(d => d.is_final).map((d, idx) => `${idx + 1}. ${d.file_name || 'Video file'}`).join('\n') : 
+  'Final video files'}
+
+STATUS: ✅ CLIENT ACCESSED FILES
+
+This confirms the "Buyer-Specific Handoff" requirement for payment 
+dispute resolution (PayPal, Stripe protection).`;
+        break;
+        
+      case 'acceptance_act':
+        content = `ACCEPTANCE ACT (ТЗ Step 12: Acceptance/Completion)
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+ACT OF WORK ACCEPTANCE (Акт приёмки-сдачи работ)
+
+Project: ${project.project_number}
+Client: ${project.user_name}
+Service: ${project.service_type}
+
+═══════════════════════════════════════════════
+
+WORK DESCRIPTION:
+
+${project.detailed_brief || 'Digital video production services'}
+
+DELIVERABLES:
+${project.deliverables && project.deliverables.length > 0 ? 
+  project.deliverables.filter(d => d.is_final).map((d, idx) => `${idx + 1}. ${d.file_name || 'Video file'}`).join('\n') : 
+  'Final video files'}
+
+═══════════════════════════════════════════════
+
+CLIENT CONFIRMATION:
+
+"I, ${project.user_name}, confirm that:
+ 1. I have downloaded and reviewed all deliverable files
+ 2. The work meets the requirements specified in the brief
+ 3. The quality is satisfactory and acceptable
+ 4. I accept the work as completed"
+
+Signed: ${project.work_accepted_at ? new Date(project.work_accepted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Pending'}
+
+═══════════════════════════════════════════════
+
+STATUS: ✅ WORK ACCEPTED BY CLIENT
+
+This document satisfies the "Acceptance/Completion" requirement 
+for digital service fulfillment and payment processing.`;
+        break;
+        
       case 'delivery_receipt':
         content = `DELIVERY CONFIRMATION
 ═══════════════════════════════════════════════
@@ -279,7 +352,7 @@ Click the Download button to save the file.`;
   };
 
   
-  // Handle Upload Document (Invoice, Delivery Confirmation, or Payment Proof)
+  // Handle Upload Document (Invoice, Acceptance Act, or Payment Proof)
   const handleUploadDocument = async () => {
     if (!uploadFile) {
       alert('Please select a file to upload');
@@ -291,10 +364,10 @@ Click the Download button to save the file.`;
       const formData = new FormData();
       formData.append('file', uploadFile);
 
-      if (uploadContext === 'delivery') {
-        // Upload delivery confirmation
+      if (uploadContext === 'acceptance') {
+        // Upload signed acceptance act
         await axios.post(
-          `${API}/projects/${project.id}/upload-confirmation/delivery`,
+          `${API}/projects/${project.id}/upload-confirmation/acceptance`,
           formData,
           {
             headers: {
@@ -302,7 +375,7 @@ Click the Download button to save the file.`;
             }
           }
         );
-        alert('✅ Delivery confirmation uploaded successfully!');
+        alert('✅ Acceptance act uploaded successfully!');
       } else if (uploadContext === 'payment') {
         // Upload payment proof
         await axios.post(
@@ -461,31 +534,60 @@ Click the Download button to save the file.`;
         }
         break;
         
-      case 'delivery_confirmed':
-        // Delivery Confirmation - unified: view, download, upload
-        if (project.delivery_confirmed_at) {
-          // If already confirmed - show the confirmation document
+      case 'files_accessed':
+        // Files Accessed - Client downloaded deliverables (ТЗ Step 11: Buyer-Specific Handoff)
+        if (project.files_accessed_at) {
+          // Files already accessed
           docs.push({
-            id: 'delivery_receipt',
-            name: 'Delivery Confirmation',
-            type: 'confirmation',
-            createdBy: 'Client',
-            createdAt: project.delivery_confirmed_at,
+            id: 'download_confirmation',
+            name: 'Download Confirmation',
+            type: 'access_log',
+            createdBy: 'System',
+            createdAt: project.files_accessed_at,
             status: 'confirmed',
+            icon: '📥',
+            actions: ['view', 'download', 'upload:disabled:Auto-generated log']
+          });
+        } else if (project.delivered_at) {
+          // Waiting for client to access files
+          docs.push({
+            id: 'access_pending',
+            name: 'Confirm Download',
+            type: 'action_required',
+            createdBy: 'Client',
+            createdAt: project.delivered_at,
+            status: 'pending_access',
+            icon: '📥',
+            actions: ['view:disabled:Not accessed yet', 'download:disabled:Not accessed yet', 'confirm_access']
+          });
+        }
+        break;
+        
+      case 'work_accepted':
+        // Work Accepted - Client signed acceptance act (ТЗ Step 12: Acceptance)
+        if (project.work_accepted_at) {
+          // Acceptance document uploaded
+          docs.push({
+            id: 'acceptance_act',
+            name: 'Acceptance Act',
+            type: 'acceptance',
+            createdBy: 'Client',
+            createdAt: project.work_accepted_at,
+            status: 'signed',
             icon: '✅',
             actions: ['view', 'download', 'upload']
           });
-        } else if (project.delivered_at) {
-          // If delivered but not confirmed - show action item (upload required)
+        } else if (project.files_accessed_at) {
+          // Files accessed, waiting for acceptance
           docs.push({
-            id: 'delivery_pending',
-            name: 'Delivery Confirmation',
-            type: 'confirmation_pending',
+            id: 'acceptance_pending',
+            name: 'Acceptance Act',
+            type: 'acceptance_pending',
             createdBy: 'Client',
-            createdAt: project.delivered_at,
-            status: 'pending_upload',
-            icon: '📦',
-            actions: ['view:disabled:No document yet', 'download:disabled:No document yet', 'upload']
+            createdAt: project.files_accessed_at,
+            status: 'pending_signature',
+            icon: '📝',
+            actions: ['view:disabled:Not signed yet', 'download:disabled:Not signed yet', 'upload']
           });
         }
         break;
@@ -618,19 +720,27 @@ Click the Download button to save the file.`;
       completed: !!project.delivered_at
     },
     {
-      key: 'delivery_confirmed',
-      label: 'Delivery Confirmed',
-      date: project.delivery_confirmed_at,
-      description: 'Client confirmed receipt',
+      key: 'files_accessed',
+      label: 'Files Accessed',
+      date: project.files_accessed_at,
+      description: 'Client downloaded files',
+      color: 'cyan',
+      completed: !!project.files_accessed_at
+    },
+    {
+      key: 'work_accepted',
+      label: 'Work Accepted',
+      date: project.work_accepted_at,
+      description: 'Client signed acceptance',
       color: 'emerald',
-      completed: !!project.delivery_confirmed_at
+      completed: !!project.work_accepted_at
     },
     {
       key: 'payment_sent',
       label: 'Payment Sent',
       date: project.payment_marked_by_client_at,
       description: 'Payment proof uploaded',
-      color: 'cyan',
+      color: 'blue',
       completed: !!(project.paypal_transaction_id || project.payment_marked_by_client_at)
     },
     {
@@ -638,15 +748,15 @@ Click the Download button to save the file.`;
       label: 'Payment Received',
       date: project.payment_confirmed_by_admin_at,
       description: 'Payment confirmed by manager',
-      color: 'emerald',
+      color: 'green',
       completed: !!project.payment_confirmed_by_admin_at
     },
     {
       key: 'completed',
       label: 'Completed',
       date: project.completed_at,
-      description: 'Project finished',
-      color: 'green',
+      description: 'Deal closed, all docs signed',
+      color: 'gray',
       completed: !!project.completed_at
     }
   ];
@@ -793,7 +903,7 @@ Click the Download button to save the file.`;
                               
                               // Determine upload context
                               const getUploadContext = () => {
-                                if (doc.id === 'delivery_pending' || doc.id === 'delivery_receipt') return 'delivery';
+                                if (doc.id === 'acceptance_pending' || doc.id === 'acceptance_act') return 'acceptance';
                                 if (doc.id === 'payment_pending' || doc.id === 'payment_proof') return 'payment';
                                 return 'invoice';
                               };
@@ -818,6 +928,28 @@ Click the Download button to save the file.`;
                                 </button>
                               );
                             })()}
+                            
+                            {/* Confirm Access button - for files_accessed step */}
+                            {doc.actions.includes('confirm_access') && (
+                              <button 
+                                onClick={async () => {
+                                  if (confirm('Have you downloaded the deliverable files?')) {
+                                    try {
+                                      await axios.post(`${API}/projects/${project.id}/confirm-access`);
+                                      alert('✅ Download confirmed!');
+                                      if (onUpdate) onUpdate();
+                                    } catch (error) {
+                                      console.error('Error confirming access:', error);
+                                      alert('Failed to confirm download. Please try again.');
+                                    }
+                                  }
+                                }}
+                                className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" 
+                                title="Confirm Download"
+                              >
+                                <FaCheckCircle />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -879,7 +1011,7 @@ Click the Download button to save the file.`;
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900">
-                {uploadContext === 'delivery' ? 'Upload Delivery Confirmation' : 
+                {uploadContext === 'acceptance' ? 'Upload Signed Acceptance Act' : 
                  uploadContext === 'payment' ? 'Upload Payment Proof' :
                  'Upload Signed Invoice'}
               </h3>
@@ -896,8 +1028,8 @@ Click the Download button to save the file.`;
             </div>
             
             <p className="text-sm text-gray-600 mb-4">
-              {uploadContext === 'delivery' 
-                ? 'Please upload the signed delivery confirmation document to confirm receipt of deliverables.'
+              {uploadContext === 'acceptance'
+                ? 'Please upload the signed Acceptance Act (Акт приёмки-сдачи работ) to confirm that the work meets your requirements.'
                 : uploadContext === 'payment'
                 ? 'Please upload proof of payment (screenshot, receipt, or confirmation) to confirm the transaction.'
                 : 'Please upload the signed invoice PDF to proceed with payment.'}
@@ -922,7 +1054,7 @@ Click the Download button to save the file.`;
                 className="btn-ocean w-full disabled:opacity-50"
               >
                 {uploadingDocument ? 'Uploading...' : 
-                  uploadContext === 'delivery' ? '✓ Upload Confirmation' : 
+                  uploadContext === 'acceptance' ? '✓ Upload Acceptance Act' :
                   uploadContext === 'payment' ? '✓ Upload Payment Proof' :
                   '✓ Upload Invoice'}
               </button>
