@@ -682,14 +682,14 @@ Click the Download button to save the file.`;
                               if (!uploadAction) return null;
                               
                               const isDisabled = uploadAction.startsWith('upload:disabled');
-                              const disabledReason = isDisabled ? uploadAction.split(':')[2] : '';
+                              const disabledReason = isDisabled ? uploadAction.split(':')[2] || 'Not available' : '';
                               
                               return (
                                 <button 
                                   onClick={() => !isDisabled && setShowUploadModal(true)}
                                   className={`p-2 rounded-lg transition-colors ${
                                     isDisabled 
-                                      ? 'text-purple-300 cursor-not-allowed opacity-50' 
+                                      ? 'text-gray-400 cursor-not-allowed opacity-40' 
                                       : 'text-purple-600 hover:bg-purple-50'
                                   }`}
                                   title={isDisabled ? `Upload not available: ${disabledReason}` : 'Upload Signed Document'}
