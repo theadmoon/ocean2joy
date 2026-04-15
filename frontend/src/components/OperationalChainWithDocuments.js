@@ -15,138 +15,6 @@ function OperationalChainWithDocuments({ project, onUpdate }) {
   const [invoiceFile, setInvoiceFile] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   
-  // Get all documents for a specific step
-  const getDocumentsForStep = (stepKey) => {
-    const docs = [];
-    
-    switch(stepKey) {
-      case 'submitted':
-        // Quote Request document
-        docs.push({
-          id: 'quote_request',
-          name: 'Quote Request',
-          type: 'system',
-          createdBy: 'System',
-          createdAt: project.created_at,
-          status: 'generated',
-          icon: '📄',
-          actions: ['view']
-        });
-        break;
-        
-      case 'order_activated':
-        // Uploaded materials (each file as separate document)
-        if (project.reference_materials && project.reference_materials.length > 0) {
-          project.reference_materials.forEach((file, idx) => {
-            const fileName = file.split(' (')[0];
-            docs.push({
-              id: `material_${idx}`,
-              name: fileName,
-              type: 'client_file',
-              createdBy: 'Client',
-              createdAt: project.order_activated_at || project.created_at,
-              status: 'uploaded',
-              icon: '📎',
-              actions: ['view', 'download']
-            });
-          });
-        }
-        
-        // Manager's Comments
-        if (project.quote_request_manager_comments) {
-          docs.push({
-            id: 'manager_comments',
-            name: "Manager's Notes",
-            type: 'manager_notes',
-            createdBy: 'Manager',
-            createdAt: project.quote_request_created_at || project.order_activated_at,
-            status: 'added',
-            icon: '💬',
-            actions: ['view']
-          });
-        }
-        break;
-        
-      case 'invoice_sent':
-        // Invoice document
-        docs.push({
-          id: 'invoice',
-          name: `Invoice #${project.project_number?.split('-')[0] || 'N/A'}`,
-          type: 'financial',
-          createdBy: 'Manager',
-          createdAt: project.invoice_sent_at,
-          status: project.invoice_signed_at ? 'signed' : 'awaiting_signature',
-          icon: '📃',
-          amount: project.quote_amount,
-          actions: ['view', 'upload_signed']
-        });
-        break;
-        
-      case 'invoice_signed':
-        // Signed Invoice
-        if (project.invoice_signed_at) {
-          docs.push({
-            id: 'signed_invoice',
-            name: 'Signed Invoice',
-            type: 'client_document',
-            createdBy: 'Client',
-            createdAt: project.invoice_signed_at,
-            status: 'signed_by_client',
-            icon: '✅',
-            actions: ['view', 'download']
-          });
-        }
-        break;
-        
-      case 'production_started':
-        // Production notes (if any)
-        if (project.production_notes) {
-          docs.push({
-            id: 'production_notes',
-            name: 'Production Notes',
-            type: 'notes',
-            createdBy: 'Manager',
-            createdAt: project.production_started_at,
-            status: 'in_progress',
-            icon: '📝',
-            actions: ['view']
-          });
-        }
-        break;
-        
-      case 'delivered':
-        // Deliverables (videos)
-        if (project.deliverables && project.deliverables.length > 0) {
-          project.deliverables.forEach((deliverable, idx) => {
-            docs.push({
-              id: `deliverable_${idx}`,
-              name: deliverable.filename || `Video_${idx + 1}.mp4`,
-              type: 'deliverable',
-              createdBy: 'Production',
-              createdAt: deliverable.uploaded_at || project.delivered_at,
-              status: deliverable.type === 'final' ? 'final' : 'intermediate',
-              icon: '🎬',
-              actions: ['download', 'view']
-            });
-          });
-        }
-        break;
-        
-      case 'payment_received':
-        // Payment Confirmation
-        docs.push({
-          id: 'payment_confirmation',
-          name: 'Payment Confirmation',
-          type: 'payment',
-          createdBy: 'Client',
-          createdAt: project.payment_marked_by_client_at,
-          status: project.payment_confirmed_by_admin ? 'confirmed' : 'pending_confirmation',
-          icon: '💳',
-          actions: ['view']
-        });
-        
-        // Receipt
-
   // Handle View Document
   const handleViewDocument = (doc) => {
     setSelectedDocument(doc);
@@ -387,7 +255,138 @@ Click the Download button to save the file.`;
       setUploadingInvoice(false);
     }
   };
-
+  
+  // Get all documents for a specific step
+  const getDocumentsForStep = (stepKey) => {
+    const docs = [];
+    
+    switch(stepKey) {
+      case 'submitted':
+        // Quote Request document
+        docs.push({
+          id: 'quote_request',
+          name: 'Quote Request',
+          type: 'system',
+          createdBy: 'System',
+          createdAt: project.created_at,
+          status: 'generated',
+          icon: '📄',
+          actions: ['view']
+        });
+        break;
+        
+      case 'order_activated':
+        // Uploaded materials (each file as separate document)
+        if (project.reference_materials && project.reference_materials.length > 0) {
+          project.reference_materials.forEach((file, idx) => {
+            const fileName = file.split(' (')[0];
+            docs.push({
+              id: `material_${idx}`,
+              name: fileName,
+              type: 'client_file',
+              createdBy: 'Client',
+              createdAt: project.order_activated_at || project.created_at,
+              status: 'uploaded',
+              icon: '📎',
+              actions: ['view', 'download']
+            });
+          });
+        }
+        
+        // Manager's Comments
+        if (project.quote_request_manager_comments) {
+          docs.push({
+            id: 'manager_comments',
+            name: "Manager's Notes",
+            type: 'manager_notes',
+            createdBy: 'Manager',
+            createdAt: project.quote_request_created_at || project.order_activated_at,
+            status: 'added',
+            icon: '💬',
+            actions: ['view']
+          });
+        }
+        break;
+        
+      case 'invoice_sent':
+        // Invoice document
+        docs.push({
+          id: 'invoice',
+          name: `Invoice #${project.project_number?.split('-')[0] || 'N/A'}`,
+          type: 'financial',
+          createdBy: 'Manager',
+          createdAt: project.invoice_sent_at,
+          status: project.invoice_signed_at ? 'signed' : 'awaiting_signature',
+          icon: '📃',
+          amount: project.quote_amount,
+          actions: ['view', 'upload_signed']
+        });
+        break;
+        
+      case 'invoice_signed':
+        // Signed Invoice
+        if (project.invoice_signed_at) {
+          docs.push({
+            id: 'signed_invoice',
+            name: 'Signed Invoice',
+            type: 'client_document',
+            createdBy: 'Client',
+            createdAt: project.invoice_signed_at,
+            status: 'signed_by_client',
+            icon: '✅',
+            actions: ['view', 'download']
+          });
+        }
+        break;
+        
+      case 'production_started':
+        // Production notes (if any)
+        if (project.production_notes) {
+          docs.push({
+            id: 'production_notes',
+            name: 'Production Notes',
+            type: 'notes',
+            createdBy: 'Manager',
+            createdAt: project.production_started_at,
+            status: 'in_progress',
+            icon: '📝',
+            actions: ['view']
+          });
+        }
+        break;
+        
+      case 'delivered':
+        // Deliverables (videos)
+        if (project.deliverables && project.deliverables.length > 0) {
+          project.deliverables.forEach((deliverable, idx) => {
+            docs.push({
+              id: `deliverable_${idx}`,
+              name: deliverable.filename || `Video_${idx + 1}.mp4`,
+              type: 'deliverable',
+              createdBy: 'Production',
+              createdAt: deliverable.uploaded_at || project.delivered_at,
+              status: deliverable.type === 'final' ? 'final' : 'intermediate',
+              icon: '🎬',
+              actions: ['download', 'view']
+            });
+          });
+        }
+        break;
+        
+      case 'payment_received':
+        // Payment Confirmation
+        docs.push({
+          id: 'payment_confirmation',
+          name: 'Payment Confirmation',
+          type: 'payment',
+          createdBy: 'Client',
+          createdAt: project.payment_marked_by_client_at,
+          status: project.payment_confirmed_by_admin ? 'confirmed' : 'pending_confirmation',
+          icon: '💳',
+          actions: ['view']
+        });
+        
+        // Receipt
         if (project.payment_confirmed_by_admin) {
           docs.push({
             id: 'receipt',
