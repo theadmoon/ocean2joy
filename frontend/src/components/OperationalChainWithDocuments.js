@@ -443,7 +443,7 @@ Click the Download button to save the file.`;
             createdAt: project.delivered_at,
             status: 'pending_confirmation',
             icon: '📦',
-            actions: ['confirm']
+            actions: ['view:disabled:Action pending', 'download:disabled:Action pending', 'confirm']
           });
         }
         break;
@@ -656,27 +656,53 @@ Click the Download button to save the file.`;
                           
                           {/* Action buttons - UNIFIED ORDER with FIXED ALIGNMENT */}
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            {/* View button */}
-                            {doc.actions.some(a => a === 'view' || a.startsWith('view:')) && (
-                              <button 
-                                onClick={() => handleViewDocument(doc)}
-                                className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors" 
-                                title="View"
-                              >
-                                <FaEye />
-                              </button>
-                            )}
+                            {/* View button - always show if in actions */}
+                            {(() => {
+                              const viewAction = doc.actions.find(a => a === 'view' || a.startsWith('view:'));
+                              if (!viewAction) return null;
+                              
+                              const isDisabled = viewAction.startsWith('view:disabled');
+                              const disabledReason = isDisabled ? viewAction.split(':')[2] || 'Not available' : '';
+                              
+                              return (
+                                <button 
+                                  onClick={() => !isDisabled && handleViewDocument(doc)}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    isDisabled 
+                                      ? 'text-gray-400 cursor-not-allowed opacity-40' 
+                                      : 'text-sky-600 hover:bg-sky-50'
+                                  }`}
+                                  title={isDisabled ? `View not available: ${disabledReason}` : 'View'}
+                                  disabled={isDisabled}
+                                >
+                                  <FaEye />
+                                </button>
+                              );
+                            })()}
                             
-                            {/* Download button */}
-                            {doc.actions.some(a => a === 'download' || a.startsWith('download:')) && (
-                              <button 
-                                onClick={() => handleDownload(doc)}
-                                className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" 
-                                title="Download"
-                              >
-                                <FaDownload />
-                              </button>
-                            )}
+                            {/* Download button - always show if in actions */}
+                            {(() => {
+                              const downloadAction = doc.actions.find(a => a === 'download' || a.startsWith('download:'));
+                              if (!downloadAction) return null;
+                              
+                              const isDisabled = downloadAction.startsWith('download:disabled');
+                              const disabledReason = isDisabled ? downloadAction.split(':')[2] || 'Not available' : '';
+                              
+                              return (
+                                <button 
+                                  onClick={() => !isDisabled && handleDownload(doc)}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    isDisabled 
+                                      ? 'text-gray-400 cursor-not-allowed opacity-40' 
+                                      : 'text-teal-600 hover:bg-teal-50'
+                                  }`}
+                                  title={isDisabled ? `Download not available: ${disabledReason}` : 'Download'}
+                                  disabled={isDisabled}
+                                >
+                                  <FaDownload />
+                                </button>
+                              );
+                            })()}
                             
                             {/* Upload button - always show, but disabled if needed */}
                             {(() => {
