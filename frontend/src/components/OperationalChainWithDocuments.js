@@ -10,10 +10,11 @@ function OperationalChainWithDocuments({ project, onUpdate }) {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [documentContent, setDocumentContent] = useState('');
   
-  // Upload signed invoice
-  const [uploadingInvoice, setUploadingInvoice] = useState(false);
-  const [invoiceFile, setInvoiceFile] = useState(null);
+  // Upload document (invoice or delivery confirmation)
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadContext, setUploadContext] = useState(null); // 'invoice' or 'delivery'
   
   // Handle View Document
   const handleViewDocument = (doc) => {
@@ -248,54 +249,54 @@ Click the Download button to save the file.`;
     // TODO: Implement actual file download from storage
   };
 
-  // Handle Confirm Delivery
-  const handleConfirmDelivery = async () => {
-    if (!confirm('Have you downloaded all deliverables? This confirmation is required for payment.')) {
-      return;
-    }
-    
-    try {
-      await axios.post(`${API}/projects/${project.id}/confirm-delivery`);
-      alert('✅ Delivery confirmed! You can now proceed with payment.');
-      if (onUpdate) onUpdate();
-    } catch (error) {
-      console.error('Error confirming delivery:', error);
-      alert('Failed to confirm delivery. Please try again.');
-    }
-  };
-
   
-  // Handle Upload Signed Invoice
-  const handleUploadSignedInvoice = async () => {
-    if (!invoiceFile) {
-      alert('Please select a PDF file to upload');
+  // Handle Upload Document (Invoice or Delivery Confirmation)
+  const handleUploadDocument = async () => {
+    if (!uploadFile) {
+      alert('Please select a file to upload');
       return;
     }
 
-    setUploadingInvoice(true);
+    setUploadingDocument(true);
     try {
       const formData = new FormData();
-      formData.append('file', invoiceFile);
+      formData.append('file', uploadFile);
 
-      await axios.post(
-        `${API}/projects/${project.id}/upload-confirmation/invoice`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
+      if (uploadContext === 'delivery') {
+        // Upload delivery confirmation and auto-confirm
+        await axios.post(
+          `${API}/projects/${project.id}/upload-confirmation/delivery`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
           }
-        }
-      );
+        );
+        alert('✅ Delivery confirmation uploaded successfully!');
+      } else {
+        // Upload signed invoice
+        await axios.post(
+          `${API}/projects/${project.id}/upload-confirmation/invoice`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+        alert('✅ Signed invoice uploaded successfully!');
+      }
 
-      alert('Signed invoice uploaded successfully!');
-      setInvoiceFile(null);
+      setUploadFile(null);
       setShowUploadModal(false);
+      setUploadContext(null);
       if (onUpdate) onUpdate();
     } catch (error) {
-      console.error('Error uploading signed invoice:', error);
-      alert('Failed to upload signed invoice. Please try again.');
+      console.error('Error uploading document:', error);
+      alert('Failed to upload document. Please try again.');
     } finally {
-      setUploadingInvoice(false);
+      setUploadingDocument(false);
     }
   };
   
@@ -434,16 +435,16 @@ Click the Download button to save the file.`;
             actions: ['view', 'download', 'upload']
           });
         } else if (project.delivered_at) {
-          // If delivered but not confirmed - show action item (confirm only)
+          // If delivered but not confirmed - show action item (upload required)
           docs.push({
             id: 'delivery_pending',
-            name: 'Confirm Receipt',
-            type: 'action_required',
+            name: 'Delivery Confirmation',
+            type: 'confirmation_pending',
             createdBy: 'Client',
             createdAt: project.delivered_at,
-            status: 'pending_confirmation',
+            status: 'pending_upload',
             icon: '📦',
-            actions: ['view:disabled:Action pending', 'download:disabled:Action pending', 'confirm']
+            actions: ['view:disabled:No document yet', 'download:disabled:No document yet', 'upload']
           });
         }
         break;
@@ -712,9 +713,20 @@ Click the Download button to save the file.`;
                               const isDisabled = uploadAction.startsWith('upload:disabled');
                               const disabledReason = isDisabled ? uploadAction.split(':')[2] || 'Not available' : '';
                               
+                              // Determine upload context
+                              const getUploadContext = () => {
+                                if (doc.id === 'delivery_pending' || doc.id === 'delivery_receipt') return 'delivery';
+                                return 'invoice';
+                              };
+                              
                               return (
                                 <button 
-                                  onClick={() => !isDisabled && setShowUploadModal(true)}
+                                  onClick={() => {
+                                    if (!isDisabled) {
+                                      setUploadContext(getUploadContext());
+                                      setShowUploadModal(true);
+                                    }
+                                  }}
                                   className={`p-2 rounded-lg transition-colors ${
                                     isDisabled 
                                       ? 'text-gray-400 cursor-not-allowed opacity-40' 
@@ -727,17 +739,6 @@ Click the Download button to save the file.`;
                                 </button>
                               );
                             })()}
-                            
-                            {/* Confirm button - special action */}
-                            {doc.actions.includes('confirm') && (
-                              <button 
-                                onClick={handleConfirmDelivery}
-                                className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" 
-                                title="Confirm Receipt"
-                              >
-                                <FaCheckCircle />
-                              </button>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -793,14 +794,20 @@ Click the Download button to save the file.`;
         </div>
       )}
       
-      {/* Upload Signed Invoice Modal */}
+      {/* Upload Document Modal (Invoice or Delivery Confirmation) */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Upload Signed Invoice</h3>
+              <h3 className="text-xl font-bold text-gray-900">
+                {uploadContext === 'delivery' ? 'Upload Delivery Confirmation' : 'Upload Signed Invoice'}
+              </h3>
               <button 
-                onClick={() => setShowUploadModal(false)}
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setUploadContext(null);
+                  setUploadFile(null);
+                }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <FaTimes className="text-gray-600" />
@@ -808,28 +815,35 @@ Click the Download button to save the file.`;
             </div>
             
             <p className="text-sm text-gray-600 mb-4">
-              Please upload the signed invoice PDF to proceed with payment.
+              {uploadContext === 'delivery' 
+                ? 'Please upload the signed delivery confirmation document to confirm receipt of deliverables.'
+                : 'Please upload the signed invoice PDF to proceed with payment.'}
             </p>
             
             <div className="mb-4">
               <input
                 type="file"
                 accept=".pdf"
-                onChange={(e) => setInvoiceFile(e.target.files[0])}
+                onChange={(e) => setUploadFile(e.target.files[0])}
                 className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none p-2"
               />
             </div>
             
             <div className="flex gap-3">
               <button
-                onClick={handleUploadSignedInvoice}
-                disabled={!invoiceFile || uploadingInvoice}
+                onClick={handleUploadDocument}
+                disabled={!uploadFile || uploadingDocument}
                 className="btn-ocean w-full disabled:opacity-50"
               >
-                {uploadingInvoice ? 'Uploading...' : '✓ Upload Signed Invoice'}
+                {uploadingDocument ? 'Uploading...' : 
+                  uploadContext === 'delivery' ? '✓ Upload Confirmation' : '✓ Upload Invoice'}
               </button>
               <button 
-                onClick={() => setShowUploadModal(false)}
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setUploadContext(null);
+                  setUploadFile(null);
+                }}
                 className="btn-ghost-sm"
               >
                 Cancel
