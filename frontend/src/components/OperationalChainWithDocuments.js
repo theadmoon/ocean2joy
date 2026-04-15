@@ -637,15 +637,17 @@ Click the Download button to save the file.`;
                   <div className="space-y-2">
                     {documents.map((doc) => (
                       <div key={doc.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-gray-100 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 flex-1">
-                            <span className="text-2xl">{doc.icon}</span>
-                            <div className="flex-1">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <span className="text-2xl flex-shrink-0">{doc.icon}</span>
+                            <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <p className="font-semibold text-sm text-gray-900">{doc.name}</p>
+                                <p className="font-semibold text-sm text-gray-900 truncate" title={doc.name}>
+                                  {doc.name}
+                                </p>
                                 {getStatusBadge(doc.status)}
                               </div>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-gray-500 truncate">
                                 by {doc.createdBy} • {formatDate(doc.createdAt)}
                                 {doc.amount && ` • $${doc.amount}`}
                               </p>
@@ -653,7 +655,7 @@ Click the Download button to save the file.`;
                           </div>
                           
                           {/* Action buttons - UNIFIED ORDER with FIXED ALIGNMENT */}
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-shrink-0">
                             {/* View button */}
                             {doc.actions.some(a => a === 'view' || a.startsWith('view:')) && (
                               <button 
