@@ -182,6 +182,35 @@ Authorized by: Ocean2Joy Production Team
 Date: ${new Date().toLocaleDateString()}`;
         break;
         
+      case 'payment_proof':
+        content = `PAYMENT PROOF
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+Project: ${project.project_number}
+Client: ${project.user_name}
+Invoice Amount: $${project.quote_amount || '0.00'} USD
+
+═══════════════════════════════════════════════
+
+PAYMENT DETAILS:
+
+Transaction ID: ${project.paypal_transaction_id || 'N/A'}
+${project.paypal_payer_email ? `Payer Email: ${project.paypal_payer_email}` : ''}
+Payment Method: ${project.order_activation_payment_method || 'N/A'}
+
+Payment Sent: ${project.payment_marked_by_client_at ? new Date(project.payment_marked_by_client_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+
+═══════════════════════════════════════════════
+
+STATUS: ${project.payment_confirmed_by_admin_at ? 
+  `✅ CONFIRMED by Manager on ${new Date(project.payment_confirmed_by_admin_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}` : 
+  '⏳ PENDING Manager Confirmation'}
+
+${!project.payment_confirmed_by_admin_at ? '\nThis payment is awaiting verification by the manager.' : ''}`;
+        break;
+        
       case 'delivery_receipt':
         content = `DELIVERY CONFIRMATION
 ═══════════════════════════════════════════════
@@ -463,14 +492,14 @@ Click the Download button to save the file.`;
         
       case 'payment_sent':
         // Payment Proof uploaded by client
-        if (project.payment_sent_at) {
+        if (project.paypal_transaction_id || project.payment_marked_by_client_at) {
           // Payment proof already uploaded
           docs.push({
             id: 'payment_proof',
             name: 'Payment Proof',
             type: 'payment_proof',
             createdBy: 'Client',
-            createdAt: project.payment_sent_at,
+            createdAt: project.payment_marked_by_client_at,
             status: project.payment_confirmed_by_admin_at ? 'confirmed' : 'pending_confirmation',
             icon: '💳',
             actions: ['view', 'download', 'upload']
@@ -599,10 +628,10 @@ Click the Download button to save the file.`;
     {
       key: 'payment_sent',
       label: 'Payment Sent',
-      date: project.payment_sent_at,
+      date: project.payment_marked_by_client_at,
       description: 'Payment proof uploaded',
       color: 'cyan',
-      completed: !!project.payment_sent_at
+      completed: !!(project.paypal_transaction_id || project.payment_marked_by_client_at)
     },
     {
       key: 'payment_received',
