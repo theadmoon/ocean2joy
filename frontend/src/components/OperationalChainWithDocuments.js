@@ -383,7 +383,7 @@ Click the Download button to save the file.`;
             createdAt: project.invoice_signed_at,
             status: 'signed_by_client',
             icon: '✅',
-            actions: ['view', 'download']
+            actions: ['view', 'download', 'upload_signed']
           });
         }
         break;
@@ -437,7 +437,7 @@ Click the Download button to save the file.`;
             createdAt: project.delivery_confirmed_at,
             status: 'confirmed',
             icon: '✅',
-            actions: ['view']
+            actions: ['view', 'download', 'upload_signed']
           });
         } else if (project.delivered_at) {
           // If delivered but not confirmed - show action item
@@ -678,7 +678,7 @@ Click the Download button to save the file.`;
                                 <FaDownload />
                               </button>
                             )}
-                            {doc.actions.includes('upload_signed') && !project.invoice_signed_at && (
+                            {doc.actions.includes('upload_signed') && (
                               <button 
                                 onClick={() => setShowUploadModal(true)}
                                 className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" 
