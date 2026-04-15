@@ -644,7 +644,7 @@ Click the Download button to save the file.`;
       case 'work_accepted':
         // Work Accepted - Client signed acceptance act (ТЗ Step 12: Acceptance)
         if (project.work_accepted_at) {
-          // Acceptance document uploaded
+          // Acceptance document uploaded - can view and download signed version
           docs.push({
             id: 'acceptance_act',
             name: 'Acceptance Act',
@@ -653,10 +653,10 @@ Click the Download button to save the file.`;
             createdAt: project.work_accepted_at,
             status: 'signed',
             icon: '✅',
-            actions: ['view', 'download', 'upload']
+            actions: ['view', 'download', 'upload:disabled:Already signed']
           });
         } else if (project.files_accessed_at) {
-          // Files accessed, waiting for acceptance
+          // Files accessed, waiting for acceptance - can view template and upload signed version
           docs.push({
             id: 'acceptance_pending',
             name: 'Acceptance Act',
