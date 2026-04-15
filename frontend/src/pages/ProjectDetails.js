@@ -1549,7 +1549,7 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
             <ProjectDeliverables project={project} />
 
             {/* NEW: Operational Chain with Documents */}
-            <OperationalChainWithDocuments project={project} />
+            <OperationalChainWithDocuments project={project} onUpdate={fetchProjectDetails} />
 
           </div>
 
