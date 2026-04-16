@@ -825,7 +825,7 @@ Click the Download button to save the file.`;
       key: 'production_started',
       label: 'Production Started',
       date: project.production_started_at,
-      description: 'Work in progress',
+      description: (project.completed_at || project.delivered_at) ? 'Completed' : 'Work in progress',
       color: 'orange',
       completed: !!project.production_started_at
     },
