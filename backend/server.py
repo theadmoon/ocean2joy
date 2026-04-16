@@ -3351,6 +3351,301 @@ h1 {{
     
     return html
 
+async def generate_delivery_certificate_html(project: dict) -> str:
+    """Generate Delivery Certificate HTML for PDF - Professional styled version"""
+    delivered_date = project.get('delivered_at', datetime.now(timezone.utc))
+    if isinstance(delivered_date, str):
+        delivered_date = datetime.fromisoformat(delivered_date)
+    delivered_date = delivered_date if delivered_date.tzinfo else delivered_date.replace(tzinfo=timezone.utc)
+    
+    files_accessed_date = project.get('files_accessed_at', delivered_date)
+    if isinstance(files_accessed_date, str):
+        files_accessed_date = datetime.fromisoformat(files_accessed_date)
+    files_accessed_date = files_accessed_date if files_accessed_date.tzinfo else files_accessed_date.replace(tzinfo=timezone.utc)
+    
+    delivery_cert_number = await get_or_generate_document_number(project, 'delivery_certificate', 'DEL', delivered_date)
+    production_start = format_date_utc(project.get('production_started_at')) if project.get('production_started_at') else "N/A"
+    
+    # Build deliverables list
+    deliverables_items = ""
+    if project.get('deliverables'):
+        for idx, d in enumerate(project.get('deliverables', []), 1):
+            deliverables_items += f"<p style='margin: 5px 0;'>{idx}. {d.get('file_name', 'File')}</p>"
+    else:
+        deliverables_items = "<p style='margin: 10px 0;'>1. VAPP6_Final_Video.mp4</p>"
+    
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Certificate of Delivery {delivery_cert_number}</title>
+<style>
+@page {{ size: A4; margin: 2cm; }}
+body {{ 
+  font-family: 'DejaVu Sans', Arial, sans-serif;
+  font-size: 10.5pt; 
+  line-height: 1.6; 
+  color: #1f2937;
+  max-width: 800px;
+  margin: 0 auto;
+}}
+.doc-header {{
+  text-align: center;
+  margin-bottom: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  color: white;
+  border-radius: 8px;
+}}
+.doc-number {{
+  font-size: 11pt;
+  font-weight: 600;
+  margin-bottom: 5px;
+}}
+h1 {{
+  text-align: center;
+  font-size: 20pt;
+  font-weight: 700;
+  margin: 15px 0;
+  color: #6d28d9;
+  letter-spacing: 1px;
+}}
+.subtitle {{
+  text-align: center;
+  color: #6b7280;
+  font-size: 10pt;
+  margin: 5px 0;
+  font-weight: 600;
+}}
+.divider {{
+  border-top: 2px solid #e5e7eb;
+  margin: 20px 0;
+  position: relative;
+}}
+.entity-box {{
+  background: #faf5ff;
+  padding: 15px 20px;
+  margin: 20px 0;
+  border-left: 5px solid #8b5cf6;
+  border-radius: 4px;
+}}
+.section-header {{
+  font-weight: 700;
+  font-size: 11.5pt;
+  color: #6d28d9;
+  margin: 25px 0 12px 0;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #8b5cf6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}}
+.info-table {{
+  width: 100%;
+  margin: 12px 0;
+}}
+.info-table td {{
+  padding: 6px 0;
+  vertical-align: top;
+}}
+.info-table td:first-child {{
+  font-weight: 600;
+  color: #4b5563;
+  width: 180px;
+}}
+.checkmark-list {{
+  list-style: none;
+  padding-left: 0;
+  margin: 12px 0;
+}}
+.checkmark-list li {{
+  padding: 5px 0 5px 25px;
+  position: relative;
+}}
+.checkmark-list li::before {{
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #8b5cf6;
+  font-weight: 700;
+  font-size: 12pt;
+}}
+.confirmation-box {{
+  background: #fffbeb;
+  padding: 20px;
+  margin: 20px 0;
+  border-left: 5px solid #f59e0b;
+  border-radius: 4px;
+}}
+.confirmation-box h3 {{
+  margin: 0 0 15px 0;
+  color: #92400e;
+  font-size: 12pt;
+}}
+.important-box {{
+  background: #f0fdf4;
+  padding: 20px;
+  margin: 20px 0;
+  border-left: 5px solid #10b981;
+  border-radius: 4px;
+}}
+.important-box h3 {{
+  margin: 0 0 15px 0;
+  color: #065f46;
+  font-size: 12pt;
+}}
+.signature-box {{
+  margin: 30px 0;
+  padding: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+}}
+.contact-info {{
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px solid #e5e7eb;
+  font-size: 9.5pt;
+  color: #6b7280;
+}}
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="doc-number">📜<br>{delivery_cert_number}</div>
+</div>
+
+<h1>CERTIFICATE OF DELIVERY</h1>
+<div class="divider"></div>
+
+<div class="entity-box">
+  <p style="margin: 3px 0;"><strong>Individual Entrepreneur Vera Iambaeva</strong></p>
+  <p style="margin: 3px 0;">Electronic Service Delivery Confirmation</p>
+</div>
+
+<table class="info-table">
+  <tr><td>Tax ID:</td><td>302335809</td></tr>
+  <tr><td>Country of Registration:</td><td>Georgia</td></tr>
+</table>
+
+<table class="info-table" style="margin-top: 15px;">
+  <tr><td>Certificate:</td><td><strong>{delivery_cert_number}</strong></td></tr>
+  <tr><td>Project Reference:</td><td>{project['project_number']}</td></tr>
+  <tr><td>Delivery Date:</td><td>{format_date_utc(delivered_date)}</td></tr>
+</table>
+
+<div class="divider"></div>
+
+<div class="section-header">Delivered To:</div>
+<table class="info-table">
+  <tr><td>Client:</td><td>{project.get('user_name', 'Client')}</td></tr>
+  <tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
+  <tr><td>Account:</td><td>Active</td></tr>
+</table>
+
+<div class="divider"></div>
+
+<div class="section-header">Service Delivered:</div>
+<table class="info-table">
+  <tr><td>Service Type:</td><td>{project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</td></tr>
+  <tr><td>Project Title:</td><td>{project.get('project_title', '')}</td></tr>
+  <tr><td>Brief:</td><td>{project.get('detailed_brief', '')}</td></tr>
+  <tr><td>Production Period:</td><td>{production_start} - {format_date_utc(delivered_date)}</td></tr>
+</table>
+
+<div class="divider"></div>
+
+<div class="section-header">Digital Deliverables Transferred:</div>
+<p style="margin: 10px 0;">The following files were made available for download via secure client portal on {format_date_utc(delivered_date)}:</p>
+
+{deliverables_items}
+
+<table class="info-table" style="margin-top: 15px;">
+  <tr><td>Delivery Method:</td><td>Electronic portal download</td></tr>
+  <tr><td>Access Provided:</td><td>{format_date_utc(delivered_date)}</td></tr>
+  <tr><td>Files Accessed:</td><td>{format_datetime_utc(files_accessed_date)}</td></tr>
+</table>
+
+<div class="divider"></div>
+
+<div class="confirmation-box">
+  <h3>DELIVERY CONFIRMATION:</h3>
+  <p style="margin: 10px 0;">By signing this certificate, the Client confirms:</p>
+  <ul class="checkmark-list">
+    <li>Receipt of download access to all listed files</li>
+    <li>Successful download of deliverable files</li>
+    <li>Files are accessible and openable</li>
+    <li>Electronic delivery completed as agreed</li>
+    <li>No physical shipment involved (digital-only service)</li>
+  </ul>
+  <p style="margin: 15px 0; font-weight: 600; color: #92400e;">
+    This is NOT an acceptance of quality or approval.<br>
+    Quality acceptance is documented separately in the Acceptance Act.
+  </p>
+</div>
+
+<div class="divider"></div>
+
+<div class="signature-box">
+  <p style="margin: 0 0 15px 0;"><strong>CLIENT CONFIRMATION:</strong></p>
+  <p style="margin: 10px 0;">I confirm receipt of the above digital files via electronic delivery on the date specified.</p>
+  <table class="info-table" style="margin-top: 20px;">
+    <tr><td>Client Name:</td><td>{project.get('user_name', '')}</td></tr>
+    <tr><td>Client Email:</td><td>{project.get('user_email', '')}</td></tr>
+    <tr><td>Date:</td><td>{format_date_utc(delivered_date)}</td></tr>
+  </table>
+  <br><br>
+  <p style="margin: 10px 0;">Signature: ___________________________________________</p>
+</div>
+
+<div class="divider"></div>
+
+<div class="signature-box">
+  <p style="margin: 0 0 15px 0;"><strong>SERVICE PROVIDER CONFIRMATION:</strong></p>
+  <table class="info-table">
+    <tr><td>Service Provider:</td><td><strong>Individual Entrepreneur Vera Iambaeva</strong></td></tr>
+    <tr><td>Tax ID:</td><td>302335809</td></tr>
+    <tr><td>Country of Registration:</td><td>Georgia</td></tr>
+    <tr><td>Delivered by:</td><td>Production Team</td></tr>
+    <tr><td>Date:</td><td>{format_date_utc(delivered_date)}</td></tr>
+  </table>
+</div>
+
+<div class="divider"></div>
+
+<div class="important-box">
+  <h3>IMPORTANT NOTES FOR PAYPAL/PAYMENT PROCESSORS:</h3>
+  <ul class="checkmark-list">
+    <li>This is a DIGITAL SERVICE delivery (no physical goods)</li>
+    <li>Delivery method: Secure electronic portal</li>
+    <li>Client confirmed file download and accessibility</li>
+    <li>Service Provider: Individual Entrepreneur Vera Iambaeva</li>
+    <li>Transaction ID: {project['project_number']}</li>
+    <li>Service category: Custom digital video production</li>
+    <li>No shipping/tracking (electronic delivery only)</li>
+  </ul>
+  <p style="margin: 15px 0; font-weight: 600;">
+    This certificate serves as proof of service delivery for dispute resolution and compliance purposes.
+  </p>
+</div>
+
+<div class="divider"></div>
+
+<div class="contact-info">
+  <p style="margin: 5px 0;">Legal Entity: Individual Entrepreneur Vera Iambaeva</p>
+  <p style="margin: 5px 0;">Tax ID: 302335809 | Georgia</p>
+  <p style="margin: 5px 0;">Brand: Ocean2Joy Digital Video Production</p>
+  <p style="margin: 10px 0;">Contact: ocean2joy@gmail.com | +995 555 375 032</p>
+  <p style="margin: 5px 0;">Tbilisi, Georgia</p>
+</div>
+
+<div class="divider"></div>
+
+</body>
+</html>"""
+    
+    return html
+
 async def generate_certificate_html(project: dict) -> str:
     """Generate Completion Certificate HTML for PDF - Professional standalone version"""
     completed_date = project.get('completed_at', datetime.now(timezone.utc))
@@ -3872,9 +4167,12 @@ async def download_document_pdf(
     elif doc_type == 'receipt':
         html_content = await generate_receipt_html(project)
         doc_display_name = "Receipt"
-    elif doc_type == 'certificate' or doc_type == 'delivery_certificate':
-        html_content = await generate_certificate_html(project)
+    elif doc_type == 'delivery_certificate':
+        html_content = await generate_delivery_certificate_html(project)
         doc_display_name = "delivery_certificate"
+    elif doc_type == 'certificate':
+        html_content = await generate_certificate_html(project)
+        doc_display_name = "Certificate"
     else:
         raise HTTPException(status_code=400, detail=f"PDF generation not available for {doc_type}")
     
