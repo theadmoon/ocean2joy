@@ -198,6 +198,7 @@ class Project(BaseModel):
     paypal_transaction_id: Optional[str] = None
     paypal_payer_email: Optional[str] = None
     paypal_payment_status: Optional[str] = None  # COMPLETED, PENDING, REFUNDED
+    paypal_payer_note: Optional[str] = None  # Note/comment from client in PayPal transaction
     
     # Payment workflow fields
     payment_method: Optional[str] = None  # "bank_transfer" or "paypal"
@@ -1801,8 +1802,23 @@ Keep this number for all future correspondence.
 """
     
     elif doc_type == 'receipt':
-        payment_date = project.get('payment_confirmed_at', datetime.now(timezone.utc).isoformat())
-        payment_date_formatted = datetime.fromisoformat(payment_date).strftime('%B %d, %Y')
+        payment_date = project.get('payment_confirmed_at')
+        if payment_date is None:
+            payment_date = datetime.now(timezone.utc)
+        elif isinstance(payment_date, str):
+            payment_date = datetime.fromisoformat(payment_date)
+        
+        payment_date_formatted = payment_date.strftime('%B %d, %Y')
+        payment_datetime_formatted = payment_date.strftime('%B %d, %Y at %I:%M %p UTC')
+        
+        # Get actual payment time from client (when they sent payment via PayPal)
+        payment_sent_date = project.get('payment_marked_by_client_at')
+        if payment_sent_date:
+            if isinstance(payment_sent_date, str):
+                payment_sent_date = datetime.fromisoformat(payment_sent_date)
+            payment_sent_formatted = payment_sent_date.strftime('%B %d, %Y at %I:%M %p UTC')
+        else:
+            payment_sent_formatted = 'N/A'
         
         doc_content = f"""PAYMENT RECEIPT
 ═══════════════════════════════════════════════
@@ -1826,8 +1842,10 @@ PAYMENT DETAILS:
 
 Amount Received: ${project.get('quote_amount', 0):.2f} USD
 Payment Method: {project.get('order_activation_payment_method', 'PayPal').upper()}
-Payment Date: {payment_date_formatted}
-Transaction Reference: {project.get('paypal_transaction_id', 'See payment proof')}
+Payment Date: {payment_sent_formatted}
+Payment Confirmed: {payment_datetime_formatted}
+Transaction ID: {project.get('paypal_transaction_id', 'See payment proof')}
+Payment Status: {project.get('paypal_payment_status', 'COMPLETED')}
 
 ═══════════════════════════════════════════════
 
