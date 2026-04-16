@@ -1904,8 +1904,11 @@ For urgent payment issues only: ocean2joy@gmail.com
         doc_content = f"""CERTIFICATE OF DELIVERY
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
+Individual Entrepreneur Vera Iambaeva
 Electronic Service Delivery Confirmation
+
+Tax ID: 302335809
+Country of Registration: Georgia
 
 Certificate: {cert_number}
 Project Reference: {project['project_number']}
@@ -1974,7 +1977,9 @@ Signature: ___________________________________________
 
 SERVICE PROVIDER CONFIRMATION:
 
-Ocean2Joy Digital Production
+Service Provider: Individual Entrepreneur Vera Iambaeva
+Tax ID: 302335809
+Country of Registration: Georgia
 Delivered by: Production Team
 Date: {delivered_date_formatted}
 
@@ -1994,6 +1999,15 @@ IMPORTANT NOTES FOR PAYPAL/PAYMENT PROCESSORS:
 
 This certificate serves as proof of service delivery
 for dispute resolution and compliance purposes.
+
+═══════════════════════════════════════════════
+
+Legal Entity: Individual Entrepreneur Vera Iambaeva
+Tax ID: 302335809 | Georgia
+Brand: Ocean2Joy Digital Video Production
+
+Contact: ocean2joy@gmail.com | +995 555 375 032
+Tbilisi, Georgia
 
 ═══════════════════════════════════════════════
 """
