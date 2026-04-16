@@ -602,3 +602,70 @@ To download this file, use the Download button.
 For questions about this material:
 ocean2joy@gmail.com`;
 };
+
+/**
+ * Generate PayPal Payment Reference/Comment
+ * Text that client copies and pastes into PayPal payment comment field
+ * @param {Object} projectData - Project data from backend
+ * @returns {string} Formatted payment reference for PayPal
+ */
+export const generatePayPalPaymentReference = (projectData) => {
+  if (!projectData) return '';
+  
+  return `PAYPAL PAYMENT INSTRUCTIONS
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+
+Please send $${projectData.quote_amount || '0.00'} to the account:
+
+📧 302335809@postbox.ge
+
+═══════════════════════════════════════════════
+
+COPY THIS TEXT FOR PAYMENT COMMENT:
+─────────────────────────────────────────────
+
+Custom film production according to client's script
+
+- Project Reference: ${projectData.project_number}
+
+Payment terms: 100% post-payment (invoice is issued after delivery).
+
+By completing payment via PayPal, the Client confirms successful receipt of the delivered digital materials and accepts that no refunds apply after delivery.
+
+- No physical shipment – digital service delivered electronically
+
+─────────────────────────────────────────────
+
+═══════════════════════════════════════════════
+
+IMPORTANT INSTRUCTIONS:
+
+1. Log in to your PayPal account
+2. Click "Send Money" or "Send & Request"
+3. Enter recipient email: 302335809@postbox.ge
+4. Enter amount: $${projectData.quote_amount || '0.00'} USD
+5. Select payment type: "Goods & Services"
+6. COPY the text above and PASTE into "Add a note" field
+7. Review and complete payment
+
+═══════════════════════════════════════════════
+
+After payment is completed:
+
+• Your transaction will receive a unique PayPal Transaction ID
+• Return to this portal and navigate to "Payment Sent" section
+• Upload screenshot or enter your Transaction ID
+• Manager will confirm payment within 24 hours
+• Project will be marked as "Completed"
+
+═══════════════════════════════════════════════
+
+For payment support:
+ocean2joy@gmail.com
+
+Project: ${projectData.project_number}
+Amount Due: $${projectData.quote_amount || '0.00'} USD
+Payment Method: PayPal (Goods & Services)`;
+};
