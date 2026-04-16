@@ -499,6 +499,20 @@ Click the Download button to save the file.`;
             icon: '✅',
             actions: ['view', 'download', 'upload:disabled:Already signed']
           });
+          
+          // PayPal Payment Instructions - show AFTER work is accepted
+          if (!project.payment_marked_by_client_at) {
+            docs.push({
+              id: 'paypal_instructions',
+              name: '💳 Next Step: Payment Instructions',
+              type: 'payment_instructions',
+              createdBy: 'System',
+              createdAt: project.work_accepted_at,
+              status: 'payment_due',
+              icon: '📋',
+              actions: ['view', 'download:disabled:Instructions only', 'upload:disabled:Use PayPal directly']
+            });
+          }
         } else if (project.files_accessed_at) {
           // Files accessed, waiting for acceptance - can view template and upload signed version
           docs.push({
@@ -515,20 +529,6 @@ Click the Download button to save the file.`;
         break;
         
       case 'payment_sent':
-        // PayPal Payment Instructions - always show before payment
-        if (!project.payment_marked_by_client_at) {
-          docs.push({
-            id: 'paypal_instructions',
-            name: 'PayPal Payment Instructions',
-            type: 'payment_instructions',
-            createdBy: 'System',
-            createdAt: project.delivered_at || project.invoice_sent_at,
-            status: 'pending_payment',
-            icon: '📋',
-            actions: ['view', 'download:disabled:Instructions only', 'upload:disabled:Use PayPal directly']
-          });
-        }
-        
         // Payment Proof uploaded by client
         if (project.paypal_transaction_id || project.payment_marked_by_client_at) {
           // Payment proof already uploaded
@@ -542,14 +542,14 @@ Click the Download button to save the file.`;
             icon: '💳',
             actions: ['view', 'download', 'upload']
           });
-        } else if (project.delivered_at) {
-          // Delivery done, waiting for payment proof upload
+        } else if (project.work_accepted_at) {
+          // Work accepted, waiting for payment proof upload
           docs.push({
             id: 'payment_pending',
             name: 'Payment Proof',
             type: 'payment_pending',
             createdBy: 'Client',
-            createdAt: project.delivered_at,
+            createdAt: project.work_accepted_at,
             status: 'pending_upload',
             icon: '💳',
             actions: ['view:disabled:No payment proof yet', 'download:disabled:No payment proof yet', 'upload']
