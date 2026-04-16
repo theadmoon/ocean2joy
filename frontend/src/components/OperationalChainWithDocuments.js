@@ -17,6 +17,43 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// UTC Timezone Helper Functions (matching documentGenerators.js)
+const formatDateUTC = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+
+const formatDateTimeUTC = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'UTC'
+  }) + ' UTC';
+};
+
+const formatDateShortUTC = (dateStr) => {
+  if (!dateStr) return 'N/A';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+
 function OperationalChainWithDocuments({ project, onUpdate }) {
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -45,8 +82,8 @@ Ocean2Joy Digital Video Production
 Project: ${project.project_number}
 Client: ${project.user_name}
 Email: ${project.user_email}
-Date Submitted: ${new Date(project.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-${project.order_activated_at ? `Order Activated: ${new Date(project.order_activated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}
+Date Submitted: ${formatDateUTC(project.created_at)}
+${project.order_activated_at ? `Order Activated: ${formatDateTimeUTC(project.order_activated_at)}` : ''}
 
 ═══════════════════════════════════════════════
 
@@ -84,7 +121,7 @@ STATUS: ${project.order_activated_at ? 'Order Activated - Ready for Review' : 'A
 ═══════════════════════════════════════════════
 
 Project: ${project.project_number}
-Date: ${new Date(project.quote_request_created_at || project.order_activated_at).toLocaleDateString()}
+Date: ${formatDateShortUTC(project.quote_request_created_at || project.order_activated_at)}
 
 ═══════════════════════════════════════════════
 
@@ -139,13 +176,9 @@ Status: ${project.payment_confirmed_by_admin ? '✅ Confirmed by Manager' : '⏳
         
       case 'production_notes':
         // Production notes - informational update about work in progress or completed
-        const productionStartDate = project.production_started_at 
-          ? new Date(project.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-          : 'N/A';
+        const productionStartDate = formatDateUTC(project.production_started_at) || 'N/A';
         
-        const deliveredDate = project.delivered_at
-          ? new Date(project.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-          : null;
+        const deliveredDate = formatDateUTC(project.delivered_at);
         
         // Determine current status
         let productionStatus = '🎬 PRODUCTION IN PROGRESS';
@@ -307,8 +340,8 @@ Client: ${project.user_name}
 I, ${project.user_name}, hereby confirm that I have received and 
 downloaded the final deliverables for this project.
 
-Delivery Date: ${project.delivered_at ? new Date(project.delivered_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
-Confirmed on: ${project.delivery_confirmed_at ? new Date(project.delivery_confirmed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+Delivery Date: ${formatDateUTC(project.delivered_at) || 'N/A'}
+Confirmed on: ${formatDateTimeUTC(project.delivery_confirmed_at) || 'N/A'}
 
 ═══════════════════════════════════════════════
 
@@ -334,7 +367,7 @@ STATUS: ✅ DELIVERY CONFIRMED`;
 
 Filename: ${doc.name}
 Type: ${doc.status === 'final' ? 'Final Version' : 'Intermediate Draft'}
-Uploaded: ${new Date(doc.createdAt).toLocaleDateString()}
+Uploaded: ${formatDateShortUTC(doc.createdAt)}
 
 This video file is ready for download.
 Click the Download button to save the file.`;
@@ -892,7 +925,8 @@ Click the Download button to save the file.`;
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
+      timeZone: 'UTC'
     });
   };
   

@@ -7,6 +7,50 @@
 // Contact Email (for support): ocean2joy@gmail.com
 
 /**
+ * UTC Timezone Helper Functions
+ * All timestamps in the system are stored in UTC and displayed in UTC
+ */
+
+// Format date as "Month Day, Year" in UTC
+const formatDateUTC = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+
+// Format date as "Month Day, Year at HH:MM AM/PM UTC"
+const formatDateTimeUTC = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'UTC'
+  }) + ' UTC';
+};
+
+// Format date as "Mon Day, Year" in UTC (short format)
+const formatDateShortUTC = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+
+/**
  * Generate Invoice document content
  * @param {Object} projectData - Project data from backend
  * @returns {string} Formatted invoice content
@@ -14,11 +58,11 @@
 export const generateInvoice = (projectData) => {
   if (!projectData) return '';
   
-  // Use invoice_sent_at as the invoice date
-  const invoiceDate = projectData.invoice_sent_at ? new Date(projectData.invoice_sent_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  // Use invoice_sent_at as the invoice date (UTC)
+  const invoiceDate = formatDateUTC(projectData.invoice_sent_at);
   
-  const productionStart = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-  const productionEnd = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Estimated timeline in agreement';
+  const productionStart = formatDateUTC(projectData.production_started_at);
+  const productionEnd = projectData.delivered_at ? formatDateUTC(projectData.delivered_at) : 'Estimated timeline in agreement';
   
   // Use the short document number from document_numbers.invoice
   const invoiceNumber = projectData.document_numbers?.invoice || projectData.project_number;
@@ -164,13 +208,13 @@ Digital Services - Electronic Delivery Only
 export const generateReceipt = (projectData) => {
   if (!projectData) return '';
   
-  const paymentDate = projectData.payment_confirmed_at ? new Date(projectData.payment_confirmed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-  const paymentDatetime = projectData.payment_confirmed_at ? new Date(projectData.payment_confirmed_at).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZoneName: 'short' }) : '';
+  const paymentDate = formatDateUTC(projectData.payment_confirmed_at);
+  const paymentDatetime = formatDateTimeUTC(projectData.payment_confirmed_at);
   
-  const paymentSentDate = projectData.payment_marked_by_client_at ? new Date(projectData.payment_marked_by_client_at).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZoneName: 'short' }) : 'N/A';
+  const paymentSentDate = formatDateTimeUTC(projectData.payment_marked_by_client_at) || 'N/A';
   
-  const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-  const filesAccessedDate = projectData.files_accessed_at ? new Date(projectData.files_accessed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Pending';
+  const deliveredDate = formatDateUTC(projectData.delivered_at);
+  const filesAccessedDate = formatDateUTC(projectData.files_accessed_at) || 'Pending';
   
   const receiptNumber = projectData.document_numbers?.receipt || projectData.project_number;
   
@@ -260,15 +304,15 @@ Project Reference: ${projectData.project_number}
 export const generateCertificate = (projectData) => {
   if (!projectData) return '';
   
-  const completedDate = projectData.completed_at ? new Date(projectData.completed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  const completedDate = formatDateUTC(projectData.completed_at);
   
-  const orderActivatedDate = projectData.order_activated_at ? new Date(projectData.order_activated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-  const productionStartDate = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-  const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-  const filesAccessedDate = projectData.files_accessed_at ? new Date(projectData.files_accessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-  const deliveryConfirmedDate = projectData.delivery_confirmed_at ? new Date(projectData.delivery_confirmed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-  const workAcceptedDate = projectData.work_accepted_at ? new Date(projectData.work_accepted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-  const paymentReceivedDate = projectData.payment_confirmed_at ? new Date(projectData.payment_confirmed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+  const orderActivatedDate = formatDateShortUTC(projectData.order_activated_at) || 'N/A';
+  const productionStartDate = formatDateShortUTC(projectData.production_started_at) || 'N/A';
+  const deliveredDate = formatDateShortUTC(projectData.delivered_at) || 'N/A';
+  const filesAccessedDate = formatDateShortUTC(projectData.files_accessed_at) || 'N/A';
+  const deliveryConfirmedDate = formatDateShortUTC(projectData.delivery_confirmed_at) || 'N/A';
+  const workAcceptedDate = formatDateShortUTC(projectData.work_accepted_at) || 'N/A';
+  const paymentReceivedDate = formatDateShortUTC(projectData.payment_confirmed_at) || 'N/A';
   
   const certNumber = projectData.document_numbers?.completion_certificate || projectData.project_number;
   
@@ -372,7 +416,7 @@ Professional video production delivered digitally.
 export const generateAcceptanceAct = (projectData) => {
   if (!projectData) return '';
   
-  const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  const deliveredDate = formatDateUTC(projectData.delivered_at);
   
   const actNumber = projectData.document_numbers?.acceptance_act || projectData.project_number;
   
@@ -451,10 +495,20 @@ export const generateDownloadConfirmation = (projectData) => {
     ? projectData.deliverables.filter(d => d.is_final).map((d, idx) => `${idx + 1}. ${d.file_name || 'Video file'}`).join('\n')
     : 'Final video files';
   
-  // Generate realistic time (not rounded to 10 minutes)
+  // Generate realistic time with UTC timezone
   const filesAccessedDate = projectData.files_accessed_at ? new Date(projectData.files_accessed_at) : new Date();
-  const accessDate = filesAccessedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  const accessTime = filesAccessedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  const accessDate = filesAccessedDate.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    timeZone: 'UTC'
+  });
+  const accessTime = filesAccessedDate.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    hour12: true,
+    timeZone: 'UTC'
+  }) + ' UTC';
   
   return `DOWNLOAD CONFIRMATION
 ═══════════════════════════════════════════════
@@ -494,23 +548,10 @@ to all digital files for payment processor protection.`;
 export const generatePaymentProof = (projectData) => {
   if (!projectData) return '';
   
-  // Generate realistic time (not rounded) with GMT+3 timezone
-  const paymentSentDate = projectData.payment_marked_by_client_at ? new Date(projectData.payment_marked_by_client_at) : null;
-  const paymentSentFormatted = paymentSentDate 
-    ? paymentSentDate.toLocaleString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: true 
-      }) + ' GMT+3'
-    : 'N/A';
+  // Generate realistic time with UTC timezone
+  const paymentSentFormatted = formatDateTimeUTC(projectData.payment_marked_by_client_at) || 'N/A';
   
-  const paymentConfirmedDate = projectData.payment_confirmed_by_admin_at ? new Date(projectData.payment_confirmed_by_admin_at) : null;
-  const paymentConfirmedFormatted = paymentConfirmedDate
-    ? paymentConfirmedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-    : null;
+  const paymentConfirmedFormatted = formatDateUTC(projectData.payment_confirmed_by_admin_at);
   
   return `PAYMENT PROOF
 ═══════════════════════════════════════════════
@@ -849,11 +890,11 @@ Keep this number for all future correspondence.
 export const generateDeliveryCertificate = (projectData) => {
   if (!projectData) return '';
   
-  const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  const deliveredDate = formatDateUTC(projectData.delivered_at);
   
-  const filesAccessedDate = projectData.files_accessed_at ? new Date(projectData.files_accessed_at).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZoneName: 'short' }) : 'Not accessed yet';
+  const filesAccessedDate = formatDateTimeUTC(projectData.files_accessed_at) || 'Not accessed yet';
   
-  const productionStartDate = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+  const productionStartDate = formatDateShortUTC(projectData.production_started_at) || 'N/A';
   
   const certNumber = projectData.document_numbers?.delivery_certificate || projectData.project_number;
   

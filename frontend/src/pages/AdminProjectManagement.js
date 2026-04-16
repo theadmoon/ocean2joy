@@ -8,6 +8,32 @@ import './AdminProjectManagement.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// UTC Timezone Helper Functions
+const formatDateTimeUTC = (dateStr) => {
+  if (!dateStr) return 'Not set';
+  const date = new Date(dateStr);
+  return date.toLocaleString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'UTC'
+  }) + ' UTC';
+};
+
+const formatDateUTC = (dateStr) => {
+  if (!dateStr) return 'Not set';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+
 function AdminProjectManagement() {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
@@ -516,7 +542,8 @@ END OF DOCUMENT`
       return new Date(dateStr).toLocaleDateString('en-US', { 
         month: 'long', 
         day: 'numeric', 
-        year: 'numeric' 
+        year: 'numeric',
+        timeZone: 'UTC'
       });
     };
     
@@ -724,9 +751,9 @@ Final video files will be delivered digitally through client portal.
   const generateInvoiceContent = (projectData) => {
     if (!projectData) return '';
     
-    const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    const productionStart = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-    const productionEnd = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const deliveredDate = formatDateUTC(projectData.delivered_at);
+    const productionStart = formatDateUTC(projectData.production_started_at);
+    const productionEnd = formatDateUTC(projectData.delivered_at);
     
     return `INVOICE
 ═══════════════════════════════════════════════
@@ -804,7 +831,7 @@ www.ocean2joy.com
   const generateReceiptContent = (projectData) => {
     if (!projectData) return '';
     
-    const paymentDate = projectData.completed_at ? new Date(projectData.completed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const paymentDate = formatDateUTC(projectData.completed_at);
     const transactionId = projectData.paypal_transaction_id || `PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}`;
     const payerEmail = projectData.paypal_payer_email || projectData.client_email || '';
     const paymentStatus = projectData.paypal_payment_status || 'COMPLETED';
@@ -854,7 +881,12 @@ Ocean2Joy Digital Video Production.
     
     const formatDate = (dateStr) => {
       if (!dateStr) return 'Not set';
-      return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      return new Date(dateStr).toLocaleDateString('en-US', { 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric',
+        timeZone: 'UTC'
+      });
     };
     
     return `PROJECT COMPLETION CERTIFICATE
@@ -996,7 +1028,7 @@ Issue Date: ${formatDate(projectData.completed_at)}
     let allDocs = `OCEAN2JOY DIGITAL VIDEO PRODUCTION\nPROJECT DOCUMENTATION PACKAGE\n\n`;
     allDocs += `Project: ${project.project_number}\n`;
     allDocs += `Client: ${project.user_name || 'Client'}\n`;
-    allDocs += `Generated: ${new Date().toLocaleString()}\n\n`;
+    allDocs += `Generated: ${formatDateTimeUTC(new Date().toISOString())}\n\n`;
     allDocs += `${'='.repeat(80)}\n\n`;
     
     steps.forEach((step, index) => {
@@ -1390,13 +1422,7 @@ Issue Date: ${formatDate(projectData.completed_at)}
             {project.order_activated_at && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <p className="text-sm text-green-800 font-semibold">
-                  ✓ Order Activated on {new Date(project.order_activated_at).toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  ✓ Order Activated on {formatDateTimeUTC(project.order_activated_at)}
                 </p>
               </div>
             )}
@@ -1705,7 +1731,7 @@ Issue Date: ${formatDate(projectData.completed_at)}
                                 )}
                               </div>
                               <p className="text-[10px] text-gray-500 mt-2 italic">
-                                Client materials uploaded on {new Date(project.quote_accepted_at).toLocaleDateString()}
+                                Client materials uploaded on {formatDateUTC(project.quote_accepted_at)}
                               </p>
                             </div>
                           );

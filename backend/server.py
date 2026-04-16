@@ -125,6 +125,40 @@ def format_document_number(project_number: str, doc_type: str, seq: int, doc_dat
     
     return f"{project_short}-{doc_type}-{seq_str}-{date_str}"
 
+def format_date_utc(date_obj, format_str='%B %d, %Y'):
+    """
+    Format datetime object in UTC timezone.
+    All dates are stored in UTC and should be displayed in UTC.
+    
+    Args:
+        date_obj: datetime object or ISO string
+        format_str: strftime format string
+    
+    Returns:
+        Formatted date string in UTC
+    """
+    if not date_obj:
+        return ''
+    
+    # Convert string to datetime if needed
+    if isinstance(date_obj, str):
+        date_obj = datetime.fromisoformat(date_obj)
+    
+    # Ensure timezone aware (assume UTC if naive)
+    if date_obj.tzinfo is None:
+        date_obj = date_obj.replace(tzinfo=timezone.utc)
+    
+    # Convert to UTC
+    date_obj = date_obj.astimezone(timezone.utc)
+    
+    return date_obj.strftime(format_str)
+
+def format_datetime_utc(date_obj):
+    """Format datetime with time and UTC suffix."""
+    if not date_obj:
+        return ''
+    return format_date_utc(date_obj, '%B %d, %Y at %I:%M %p') + ' UTC'
+
 # ==================== MODELS ====================
 
 # User Models
@@ -1558,7 +1592,7 @@ async def generate_and_download_document(
         else:
             invoice_date_dt = invoice_date if invoice_date.tzinfo else invoice_date.replace(tzinfo=timezone.utc)
         
-        invoice_date_formatted = invoice_date_dt.strftime('%B %d, %Y')
+        invoice_date_formatted = format_date_utc(invoice_date_dt)
         
         # Production period is estimated at invoice time (not actual dates)
         production_start = project.get('production_started_at', '')
@@ -1566,12 +1600,12 @@ async def generate_and_download_document(
         
         # If production hasn't started yet, show estimated dates
         if production_start:
-            production_start_formatted = datetime.fromisoformat(production_start).strftime('%B %d, %Y') if isinstance(production_start, str) else production_start.strftime('%B %d, %Y')
+            production_start_formatted = format_date_utc(production_start)
         else:
             production_start_formatted = "To be determined after invoice confirmation"
         
         if production_end:
-            production_end_formatted = datetime.fromisoformat(production_end).strftime('%B %d, %Y') if isinstance(production_end, str) else production_end.strftime('%B %d, %Y')
+            production_end_formatted = format_date_utc(production_end)
         else:
             production_end_formatted = "Estimated timeline in agreement"
         
@@ -1720,7 +1754,7 @@ Digital Services - Electronic Delivery Only
         if delivered_date.tzinfo is None:
             delivered_date = delivered_date.replace(tzinfo=timezone.utc)
         
-        delivered_date_formatted = delivered_date.strftime('%B %d, %Y')
+        delivered_date_formatted = format_date_utc(delivered_date)
         
         # Use work_accepted_at if available, otherwise delivered_at
         acceptance_date = project.get('work_accepted_at', delivered_date)
@@ -1840,7 +1874,7 @@ For urgent payment issues only: ocean2joy@gmail.com
         if delivered_date.tzinfo is None:
             delivered_date = delivered_date.replace(tzinfo=timezone.utc)
         
-        delivered_date_formatted = delivered_date.strftime('%B %d, %Y')
+        delivered_date_formatted = format_date_utc(delivered_date)
         
         files_accessed_date = project.get('files_accessed_at', delivered_date)
         if files_accessed_date:
@@ -1878,7 +1912,7 @@ SERVICE DELIVERED:
 Service Type: {project.get('service_type', 'Custom Video Production')}
 Project Title: {project.get('project_title', '')}
 Brief: {project.get('detailed_brief', '')}
-Production Period: {datetime.fromisoformat(project.get('production_started_at', delivered_date)).strftime('%b %d, %Y') if project.get('production_started_at') else 'N/A'} - {delivered_date_formatted}
+Production Period: {format_date_utc(project.get('production_started_at'), '%b %d, %Y') if project.get('production_started_at') else 'N/A'} - {delivered_date_formatted}
 
 ═══════════════════════════════════════════════
 
@@ -1959,7 +1993,7 @@ for dispute resolution and compliance purposes.
         if order_activated_date.tzinfo is None:
             order_activated_date = order_activated_date.replace(tzinfo=timezone.utc)
         
-        order_activated_formatted = order_activated_date.strftime('%B %d, %Y at %I:%M %p')
+        order_activated_formatted = format_datetime_utc(order_activated_date)
         
         # Generate order confirmation number with sequence (or use existing)
         order_number = await get_or_generate_document_number(
@@ -2054,15 +2088,13 @@ Keep this number for all future correspondence.
         if payment_date.tzinfo is None:
             payment_date = payment_date.replace(tzinfo=timezone.utc)
         
-        payment_date_formatted = payment_date.strftime('%B %d, %Y')
-        payment_datetime_formatted = payment_date.strftime('%B %d, %Y at %I:%M %p UTC')
+        payment_date_formatted = format_date_utc(payment_date)
+        payment_datetime_formatted = format_datetime_utc(payment_date)
         
         # Get actual payment time from client (when they sent payment via PayPal)
         payment_sent_date = project.get('payment_marked_by_client_at')
         if payment_sent_date:
-            if isinstance(payment_sent_date, str):
-                payment_sent_date = datetime.fromisoformat(payment_sent_date)
-            payment_sent_formatted = payment_sent_date.strftime('%B %d, %Y at %I:%M %p UTC')
+            payment_sent_formatted = format_datetime_utc(payment_sent_date)
         else:
             payment_sent_formatted = 'N/A'
         
@@ -2121,10 +2153,10 @@ Balance Due: $0.00 USD
 DELIVERY CONFIRMATION:
 
 Digital files delivered electronically on:
-{datetime.fromisoformat(project.get('delivered_at', payment_date)).strftime('%B %d, %Y')}
+{format_date_utc(project.get('delivered_at', payment_date))}
 
 Delivery Method: Secure client portal
-Files Accessed: {datetime.fromisoformat(project.get('files_accessed_at', payment_date)).strftime('%B %d, %Y') if project.get('files_accessed_at') else 'Pending'}
+Files Accessed: {format_date_utc(project.get('files_accessed_at')) if project.get('files_accessed_at') else 'Pending'}
 
 ═══════════════════════════════════════════════
 
@@ -2152,7 +2184,7 @@ Project Reference: {project['project_number']}
         if completed_date.tzinfo is None:
             completed_date = completed_date.replace(tzinfo=timezone.utc)
         
-        completed_date_formatted = completed_date.strftime('%B %d, %Y')
+        completed_date_formatted = format_date_utc(completed_date)
         
         # Generate completion certificate number with sequence (or use existing)
         cert_number = await get_or_generate_document_number(
@@ -2200,13 +2232,13 @@ DELIVERABLES TRANSFERRED ELECTRONICALLY:
 
 PROJECT TIMELINE:
 
-Order Activated: {datetime.fromisoformat(project.get('order_activated_at', completed_date)).strftime('%b %d, %Y') if project.get('order_activated_at') else 'N/A'}
-Production Started: {datetime.fromisoformat(project.get('production_started_at', completed_date)).strftime('%b %d, %Y') if project.get('production_started_at') else 'N/A'}
-Delivered: {datetime.fromisoformat(project.get('delivered_at', completed_date)).strftime('%b %d, %Y') if project.get('delivered_at') else 'N/A'}
-Files Accessed: {datetime.fromisoformat(project.get('files_accessed_at', completed_date)).strftime('%b %d, %Y') if project.get('files_accessed_at') else 'N/A'}
-Delivery Confirmed: {datetime.fromisoformat(project.get('delivery_confirmed_at', completed_date)).strftime('%b %d, %Y') if project.get('delivery_confirmed_at') else 'N/A'}
-Work Accepted: {datetime.fromisoformat(project.get('work_accepted_at', completed_date)).strftime('%b %d, %Y') if project.get('work_accepted_at') else 'N/A'}
-Payment Received: {datetime.fromisoformat(project.get('payment_confirmed_at', completed_date)).strftime('%b %d, %Y') if project.get('payment_confirmed_at') else 'N/A'}
+Order Activated: {format_date_utc(project.get('order_activated_at'), '%b %d, %Y') if project.get('order_activated_at') else 'N/A'}
+Production Started: {format_date_utc(project.get('production_started_at'), '%b %d, %Y') if project.get('production_started_at') else 'N/A'}
+Delivered: {format_date_utc(project.get('delivered_at'), '%b %d, %Y') if project.get('delivered_at') else 'N/A'}
+Files Accessed: {format_date_utc(project.get('files_accessed_at'), '%b %d, %Y') if project.get('files_accessed_at') else 'N/A'}
+Delivery Confirmed: {format_date_utc(project.get('delivery_confirmed_at'), '%b %d, %Y') if project.get('delivery_confirmed_at') else 'N/A'}
+Work Accepted: {format_date_utc(project.get('work_accepted_at'), '%b %d, %Y') if project.get('work_accepted_at') else 'N/A'}
+Payment Received: {format_date_utc(project.get('payment_confirmed_at'), '%b %d, %Y') if project.get('payment_confirmed_at') else 'N/A'}
 Completed: {completed_date_formatted}
 
 ═══════════════════════════════════════════════

@@ -14,6 +14,32 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// UTC Timezone Helper Functions
+const formatDateTimeUTC = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'UTC'
+  }) + ' UTC';
+};
+
+const formatDateUTC = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+
 function ProjectDetails() {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
@@ -726,13 +752,7 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                 {project.order_activated_at && (
                   <div className="text-left">
                     <span className="font-semibold">Order Activated:</span>{' '}
-                    {new Date(project.order_activated_at).toLocaleString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {formatDateTimeUTC(project.order_activated_at)}
                   </div>
                 )}
                 
@@ -827,12 +847,7 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                             {msg.sender_name}
                           </span>
                           <span className={`text-xs ${msg.sender_role === 'client' ? 'text-sky-100' : 'text-gray-500'}`}>
-                            {new Date(msg.created_at).toLocaleString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            {formatDateTimeUTC(msg.created_at)}
                           </span>
                         </div>
                         <p className="text-sm whitespace-pre-wrap text-left">
@@ -961,13 +976,7 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                   )}
                   
                   <div className="text-xs text-gray-500 pt-2 border-t border-gray-200">
-                    Activated on {new Date(project.order_activated_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    Activated on {formatDateTimeUTC(project.order_activated_at)}
                   </div>
                 </div>
               )}
@@ -983,13 +992,7 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                   ) : (
                     <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
                       <p className="text-sm text-green-800 font-semibold">
-                        ✓ Activated on {new Date(project.order_activated_at).toLocaleString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        ✓ Activated on {formatDateTimeUTC(project.order_activated_at)}
                       </p>
                       <p className="text-xs text-green-700 mt-1">
                         This is the form you submitted. All fields are locked for audit purposes.

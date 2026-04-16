@@ -7,6 +7,18 @@ import { FaPlus, FaEye } from 'react-icons/fa';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// UTC Timezone Helper
+const formatDateUTC = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+
 function ClientDashboard() {
   const { user } = useAuth();
   const [projects, setProjects] = useState([]);
@@ -98,7 +110,7 @@ function ClientDashboard() {
                     <div className="flex gap-4 text-sm text-gray-600">
                       <span>Service: {project.service_type}</span>
                       <span>•</span>
-                      <span>Created: {new Date(project.created_at).toLocaleDateString()}</span>
+                      <span>Created: {formatDateUTC(project.created_at)}</span>
                     </div>
                   </div>
                   <div>
