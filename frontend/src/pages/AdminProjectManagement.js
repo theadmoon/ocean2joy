@@ -986,37 +986,33 @@ Issue Date: ${formatDate(projectData.completed_at)}
     }
   };
 
-  // Export as PDF - improved version
-  const handleExportPDF = () => {
-    console.log('Export PDF button clicked');
+  // Export as PDF - improved version with real PDF download
+  const handleExportPDF = async () => {
+    console.log('Export PDF button clicked - downloading real PDF');
     
-    // Create a printable version
-    const printContent = document.getElementById('operational-chain-content');
-    
-    if (printContent) {
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Project ${project?.project_number} - Operational Chain</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              h1 { color: #0369a1; }
-              .step { margin-bottom: 20px; padding: 15px; border-left: 4px solid #0ea5e9; background: #f0f9ff; }
-              .step-title { font-weight: bold; font-size: 18px; margin-bottom: 10px; }
-              .field { margin: 5px 0; }
-              .label { font-weight: bold; }
-            </style>
-          </head>
-          <body>
-            ${printContent.innerHTML}
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
-    } else {
-      alert('Content not available for export');
+    try {
+      const response = await axios.get(
+        `${API}/projects/${projectId}/operational-chain/pdf`,
+        {
+          responseType: 'blob' // Important for binary data
+        }
+      );
+      
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${project.project_number}_Operational_Chain.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      alert('✅ PDF downloaded successfully!');
+    } catch (error) {
+      console.error('PDF download error:', error);
+      alert('❌ Failed to generate PDF. Please try again.');
     }
   };
 
@@ -1774,7 +1770,7 @@ Issue Date: ${formatDate(projectData.completed_at)}
               onClick={handleExportPDF} 
               className="btn-ocean"
             >
-              📄 Export PDF
+              📥 Download Operational Chain PDF
             </button>
             <button 
               type="button"

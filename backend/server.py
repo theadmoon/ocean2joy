@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import FileResponse, StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -12,6 +13,8 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 import jwt
+from weasyprint import HTML
+import io
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -2465,6 +2468,305 @@ async def download_uploaded_document(
     )
 
 
+# ==================== PDF GENERATION ENDPOINTS ====================
+
+def generate_operational_chain_html(project: dict) -> str:
+    """Generate HTML for operational chain PDF with professional styling"""
+    
+    # Format helper
+    def fmt_date(date_val):
+        if not date_val:
+            return '<span style="color: #dc2626; font-weight: 600;">NOT SET</span>'
+        if isinstance(date_val, str):
+            date_val = datetime.fromisoformat(date_val)
+        date_utc = date_val.astimezone(timezone.utc) if date_val.tzinfo else date_val.replace(tzinfo=timezone.utc)
+        formatted = date_utc.strftime('%b %d, %Y at %I:%M %p')
+        return f'{formatted} UTC'
+    
+    # Operational steps
+    steps = [
+        {'num': 1, 'label': 'Submitted', 'field': 'created_at', 'doc': 'Quote Request'},
+        {'num': 2, 'label': 'Order Activated', 'field': 'order_activated_at', 'doc': 'Order Confirmation'},
+        {'num': 3, 'label': 'Invoice Sent', 'field': 'invoice_sent_at', 'doc': 'Invoice-Offer'},
+        {'num': 4, 'label': 'Invoice Signed', 'field': 'invoice_signed_at', 'doc': 'Signed Invoice'},
+        {'num': 5, 'label': 'Production Started', 'field': 'production_started_at', 'doc': 'Production Order'},
+        {'num': 6, 'label': 'Delivered', 'field': 'delivered_at', 'doc': 'Delivery Note'},
+        {'num': 7, 'label': 'Files Accessed', 'field': 'files_accessed_at', 'doc': 'Download Confirmation'},
+        {'num': 8, 'label': 'Work Accepted', 'field': 'work_accepted_at', 'doc': 'Acceptance Act'},
+        {'num': 9, 'label': 'Payment Sent', 'field': 'payment_marked_by_client_at', 'doc': 'Payment Proof'},
+        {'num': 10, 'label': 'Payment Received', 'field': 'completed_at', 'doc': 'Payment Confirmation'},
+        {'num': 11, 'label': 'Completed', 'field': 'completed_at', 'doc': 'Completion Certificate'},
+    ]
+    
+    # Build rows
+    rows_html = ""
+    for step in steps:
+        date_val = project.get(step['field'])
+        status_class = 'status-complete' if date_val else 'status-pending'
+        status_text = '✓ Complete' if date_val else '⏳ Pending'
+        
+        rows_html += f"""
+        <tr class="{status_class}">
+            <td style="text-align: center; font-weight: 600;">{step['num']}</td>
+            <td style="font-weight: 600;">{step['label']}</td>
+            <td>{fmt_date(date_val)}</td>
+            <td>{step['doc']}</td>
+            <td style="text-align: center;">{status_text}</td>
+        </tr>
+        """
+    
+    # PayPal transaction data
+    paypal_html = ""
+    if project.get('paypal_transaction_id'):
+        paypal_html = f"""
+        <div style="margin-top: 30px; padding: 20px; background: #f0f9ff; border-left: 4px solid #0ea5e9; page-break-inside: avoid;">
+            <h3 style="margin-top: 0; color: #0369a1;">PayPal Transaction Details</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 8px 0; width: 200px; font-weight: 600;">Transaction ID:</td>
+                    <td style="padding: 8px 0;">{project.get('paypal_transaction_id', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; font-weight: 600;">Payer Email:</td>
+                    <td style="padding: 8px 0;">{project.get('paypal_payer_email', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; font-weight: 600;">Payment Status:</td>
+                    <td style="padding: 8px 0;"><strong>{project.get('paypal_payment_status', 'N/A')}</strong></td>
+                </tr>
+            </table>
+        </div>
+        """
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Operational Chain - {project.get('project_number', 'Project')}</title>
+        <style>
+            @page {{
+                size: A4;
+                margin: 2cm;
+            }}
+            body {{
+                font-family: 'DejaVu Sans', Arial, sans-serif;
+                font-size: 10pt;
+                line-height: 1.4;
+                color: #1f2937;
+            }}
+            .header {{
+                text-align: center;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 3px solid #0ea5e9;
+            }}
+            .header h1 {{
+                margin: 0 0 10px 0;
+                color: #0369a1;
+                font-size: 24pt;
+            }}
+            .header .subtitle {{
+                color: #6b7280;
+                font-size: 11pt;
+            }}
+            .legal-entity {{
+                background: #f9fafb;
+                padding: 15px;
+                margin-bottom: 20px;
+                border-left: 4px solid #10b981;
+                page-break-inside: avoid;
+            }}
+            .legal-entity h3 {{
+                margin: 0 0 10px 0;
+                color: #047857;
+                font-size: 12pt;
+            }}
+            .project-info {{
+                margin-bottom: 20px;
+                padding: 15px;
+                background: #fffbeb;
+                border-left: 4px solid #f59e0b;
+                page-break-inside: avoid;
+            }}
+            .project-info table {{
+                width: 100%;
+                border-collapse: collapse;
+            }}
+            .project-info td {{
+                padding: 5px 0;
+            }}
+            .project-info td:first-child {{
+                width: 150px;
+                font-weight: 600;
+                color: #92400e;
+            }}
+            table.operational-chain {{
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                page-break-inside: auto;
+            }}
+            table.operational-chain thead {{
+                background: #0369a1;
+                color: white;
+            }}
+            table.operational-chain th {{
+                padding: 12px 8px;
+                text-align: left;
+                font-weight: 600;
+                font-size: 10pt;
+            }}
+            table.operational-chain td {{
+                padding: 10px 8px;
+                border-bottom: 1px solid #e5e7eb;
+            }}
+            table.operational-chain tr:nth-child(even) {{
+                background: #f9fafb;
+            }}
+            .status-complete {{
+                background: #f0fdf4 !important;
+            }}
+            .status-pending {{
+                background: #fef3c7 !important;
+            }}
+            .footer {{
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 2px solid #e5e7eb;
+                font-size: 9pt;
+                color: #6b7280;
+                page-break-inside: avoid;
+            }}
+            .footer .contact {{
+                margin-top: 10px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>Ocean2Joy Digital Video Production</h1>
+            <div class="subtitle">Complete Operational Chain Report</div>
+        </div>
+        
+        <div class="legal-entity">
+            <h3>Legal Entity Information</h3>
+            <p style="margin: 5px 0;">
+                <strong>Individual Entrepreneur Vera Iambaeva</strong><br>
+                Tax ID: 302335809<br>
+                Country of Registration: Georgia<br>
+                Brand Name: Ocean2Joy Digital Video Production
+            </p>
+        </div>
+        
+        <div class="project-info">
+            <h3 style="margin: 0 0 10px 0; color: #92400e;">Project Information</h3>
+            <table>
+                <tr>
+                    <td>Project Number:</td>
+                    <td><strong>{project.get('project_number', 'N/A')}</strong></td>
+                </tr>
+                <tr>
+                    <td>Project Title:</td>
+                    <td>{project.get('project_title', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td>Client Name:</td>
+                    <td>{project.get('user_name', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td>Client Email:</td>
+                    <td>{project.get('user_email', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td>Service Type:</td>
+                    <td>{project.get('service_type', 'N/A').replace('_', ' ').title()}</td>
+                </tr>
+                <tr>
+                    <td>Amount:</td>
+                    <td><strong>${project.get('quote_amount', 0):.2f} USD</strong></td>
+                </tr>
+                <tr>
+                    <td>Status:</td>
+                    <td><strong>{project.get('status', 'N/A').replace('_', ' ').upper()}</strong></td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2 style="color: #0369a1; margin-top: 30px;">Operational Chain (11 Steps)</h2>
+        
+        <table class="operational-chain">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">#</th>
+                    <th style="width: 150px;">Step</th>
+                    <th style="width: 200px;">Date & Time (UTC)</th>
+                    <th>Document</th>
+                    <th style="width: 100px; text-align: center;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows_html}
+            </tbody>
+        </table>
+        
+        {paypal_html}
+        
+        <div class="footer">
+            <p style="margin: 0 0 10px 0;"><strong>Ocean2Joy Digital Video Production</strong></p>
+            <p style="margin: 0;">
+                All legal documents, contracts, invoices, and official communications are issued in the name of 
+                <strong>Individual Entrepreneur Vera Iambaeva</strong>. "Ocean2Joy Digital Video Production" is a 
+                brand name used for service identification and marketing purposes.
+            </p>
+            <div class="contact">
+                <strong>Contact Information:</strong><br>
+                Email: ocean2joy@gmail.com | Phone: +995 555 375 032 | Location: Tbilisi, Georgia
+            </div>
+            <p style="margin-top: 15px; font-size: 8pt; color: #9ca3af;">
+                Generated: {datetime.now(timezone.utc).strftime('%B %d, %Y at %I:%M %p UTC')}
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html
+
+
+@api_router.get("/projects/{project_id}/operational-chain/pdf")
+async def download_operational_chain_pdf(
+    project_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate and download operational chain as PDF"""
+    project = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify access
+    if project['user_id'] != current_user.id and current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Generate HTML
+    html_content = generate_operational_chain_html(project)
+    
+    # Convert to PDF
+    pdf_bytes = HTML(string=html_content).write_pdf()
+    
+    # Prepare filename
+    filename = f"{project['project_number']}_Operational_Chain.pdf"
+    
+    # Return as streaming response
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+    )
+
+
 @api_router.get("/demo-videos", response_model=List[DemoVideo])
 async def get_demo_videos():
     """Get all demo videos (public endpoint)"""
@@ -2752,7 +3054,6 @@ app.add_middleware(
 )
 
 # Serve uploaded files (videos and thumbnails) with proper CORS headers
-from fastapi.responses import FileResponse
 import mimetypes
 
 @app.get("/api/uploads/{file_type}/{filename}")
