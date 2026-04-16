@@ -3872,9 +3872,9 @@ async def download_document_pdf(
     elif doc_type == 'receipt':
         html_content = await generate_receipt_html(project)
         doc_display_name = "Receipt"
-    elif doc_type == 'certificate':
+    elif doc_type == 'certificate' or doc_type == 'delivery_certificate':
         html_content = await generate_certificate_html(project)
-        doc_display_name = "Certificate"
+        doc_display_name = "delivery_certificate"
     else:
         raise HTTPException(status_code=400, detail=f"PDF generation not available for {doc_type}")
     

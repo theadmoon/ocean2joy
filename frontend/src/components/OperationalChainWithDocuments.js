@@ -419,7 +419,7 @@ Click the Download button to save the file.`;
       const isUploaded = project.client_confirmations && project.client_confirmations[docType];
       
       // PDF-enabled document types
-      const pdfDocTypes = ['invoice', 'acceptance_act', 'receipt', 'certificate'];
+      const pdfDocTypes = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'delivery_certificate'];
       
       let downloadUrl;
       let fileExtension = 'txt';
@@ -1240,7 +1240,7 @@ Click the Download button to save the file.`;
                   onClick={() => handleDownload(selectedDocument)}
                   className="btn-ocean-sm inline-flex items-center gap-2"
                 >
-                  <FaDownload /> Download as {['invoice', 'acceptance_act', 'receipt', 'certificate'].includes(selectedDocument?.id) ? 'PDF' : 'TXT'}
+                  <FaDownload /> Download as {['invoice', 'acceptance_act', 'receipt', 'certificate', 'delivery_certificate'].includes(selectedDocument?.id) ? 'PDF' : 'TXT'}
                 </button>
               )}
               <button 
