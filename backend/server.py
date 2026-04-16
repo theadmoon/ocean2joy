@@ -1642,7 +1642,7 @@ Project Title: {project.get('project_title', '')}
 
 SERVICE DESCRIPTION:
 
-Service Type: {project.get('service_type', 'Custom Video Production')}
+Service Type: Custom Video Production
 
 Project Brief:
 {project.get('detailed_brief', '')}
@@ -1796,7 +1796,7 @@ Service Provider: Ocean2Joy Digital Production
 PROJECT DETAILS:
 
 Title: {project.get('project_title', '')}
-Service Type: {project.get('service_type', 'Custom Video Production')}
+Service Type: Custom Video Production
 Brief: {project.get('detailed_brief', '')}
 
 Deliverables:
@@ -2045,7 +2045,7 @@ Project Title: {project.get('project_title', '')}
 
 ORDER DETAILS:
 
-Service Type: {project.get('service_type', 'Custom Video Production')}
+Service Type: Custom Video Production
 
 Project Brief:
 {project.get('detailed_brief', 'No description provided')}
@@ -2171,7 +2171,7 @@ Payment Status: {project.get('paypal_payment_status', 'COMPLETED')}
 SERVICES RENDERED:
 
 Project Title: {project.get('project_title', '')}
-Service Type: {project.get('service_type', 'Custom Video Production')}
+Service Type: Custom Video Production
 
 Deliverables:
 {chr(10).join([f"- {d.get('file_name', 'File')}" for d in project.get('deliverables', [])])}
@@ -2254,7 +2254,7 @@ Email: {project.get('user_email', '')}
 PROJECT DETAILS:
 
 Project Title: {project.get('project_title', '')}
-Service Type: {project.get('service_type', 'Custom Video Production')}
+Service Type: Custom Video Production
 
 Brief: {project.get('detailed_brief', '')}
 
@@ -2750,7 +2750,7 @@ h1 {{
 <div class="divider"></div>
 
 <div class="section-header">Service Description:</div>
-<p style="margin: 10px 0;"><strong>Service Type:</strong> {project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</p>
+<p style="margin: 10px 0;"><strong>Service Type:</strong> Custom Video Production</p>
 <p style="margin: 10px 0;">
   <strong>Project Brief:</strong><br>
   {project.get('detailed_brief', 'See project details')}
@@ -3066,7 +3066,7 @@ h1 {{
 <div class="section-header">Project Details:</div>
 <table class="info-table">
   <tr><td>Title:</td><td>{project.get('project_title', '')}</td></tr>
-  <tr><td>Service Type:</td><td>{project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</td></tr>
+  <tr><td>Service Type:</td><td>Custom Video Production</td></tr>
   <tr><td>Brief:</td><td>{project.get('detailed_brief', '')}</td></tr>
 </table>
 
