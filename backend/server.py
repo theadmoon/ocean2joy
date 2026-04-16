@@ -1424,6 +1424,361 @@ async def confirm_delivery(
         "confirmed_at": datetime.now(timezone.utc).isoformat()
     }
 
+# ==================== DOCUMENT GENERATION & DOWNLOAD ENDPOINTS ====================
+
+@api_router.get("/projects/{project_id}/documents/{doc_type}/generate")
+async def generate_and_download_document(
+    project_id: str,
+    doc_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate document (Invoice, Acceptance Act, etc.) and return as downloadable file"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify access
+    if project['user_id'] != current_user.id and current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Validate document type
+    valid_doc_types = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'payment_instructions']
+    if doc_type not in valid_doc_types:
+        raise HTTPException(status_code=400, detail="Invalid document type")
+    
+    # Generate document content based on type
+    doc_content = ""
+    filename = f"{project['project_number']}_{doc_type}.txt"
+    
+    if doc_type == 'invoice':
+        delivered_date = project.get('delivered_at', datetime.now(timezone.utc).isoformat())
+        delivered_date_formatted = datetime.fromisoformat(delivered_date).strftime('%B %d, %Y')
+        
+        production_start = project.get('production_started_at', '')
+        production_end = project.get('delivered_at', '')
+        
+        production_start_formatted = datetime.fromisoformat(production_start).strftime('%B %d, %Y') if production_start else ''
+        production_end_formatted = datetime.fromisoformat(production_end).strftime('%B %d, %Y') if production_end else ''
+        
+        doc_content = f"""INVOICE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Custom Digital Video Services
+
+Invoice #: {project['project_number']}
+Date Issued: {delivered_date_formatted}
+Due Date: Upon Receipt
+
+═══════════════════════════════════════════════
+
+BILL TO:
+{project.get('user_name', 'Client')}
+Email: {project.get('user_email', '')}
+Project: {project['project_number']}
+Project Title: {project.get('project_title', '')}
+
+═══════════════════════════════════════════════
+
+PROJECT DETAILS:
+
+Service Type: {project.get('service_type', 'Custom Video Production')}
+Brief: {project.get('detailed_brief', '')}
+Production Period: {production_start_formatted} - {production_end_formatted}
+
+═══════════════════════════════════════════════
+
+PRICING BREAKDOWN:
+
+Base Production Fee                    ${project.get('quote_amount', 0):.2f} USD
+
+═══════════════════════════════════════════════
+
+TOTAL AMOUNT DUE:                      ${project.get('quote_amount', 0):.2f} USD
+
+═══════════════════════════════════════════════
+
+PAYMENT TERMS:
+✓ 100% payment due upon delivery of digital assets
+✓ Payment confirms acceptance of delivered materials
+✓ No refunds after delivery completion
+✓ Digital service delivered electronically via secure portal
+
+PAYMENT METHODS:
+{project.get('order_activation_payment_method', 'PayPal').upper()}
+
+For PayPal payments:
+Account: 302335809@postbox.ge
+
+For general inquiries:
+Contact: ocean2joy@gmail.com
+
+═══════════════════════════════════════════════
+
+Thank you for choosing Ocean2Joy!
+Professional video production delivered digitally.
+
+This is a legal invoice for digital video production services.
+Payment of this invoice constitutes acceptance of delivered materials.
+"""
+    
+    elif doc_type == 'acceptance_act':
+        delivered_date = project.get('delivered_at', datetime.now(timezone.utc).isoformat())
+        delivered_date_formatted = datetime.fromisoformat(delivered_date).strftime('%B %d, %Y')
+        
+        doc_content = f"""ACCEPTANCE ACT
+═══════════════════════════════════════════════
+
+Digital Video Production Service
+Acceptance Certificate
+
+Project: {project['project_number']}
+Client: {project.get('user_name', 'Client')}
+Service Provider: Ocean2Joy Digital Production
+
+═══════════════════════════════════════════════
+
+PROJECT DETAILS:
+
+Title: {project.get('project_title', '')}
+Service Type: {project.get('service_type', 'Custom Video Production')}
+Brief: {project.get('detailed_brief', '')}
+
+Deliverables:
+{chr(10).join(['- ' + d.get('file_name', 'File') for d in project.get('deliverables', [])])}
+
+Delivery Date: {delivered_date_formatted}
+Delivery Method: Secure Digital Portal
+
+═══════════════════════════════════════════════
+
+ACCEPTANCE CONFIRMATION:
+
+By signing this document, the Client confirms:
+
+✓ Receipt of all deliverable digital files
+✓ Access to files via secure download portal
+✓ Acceptance of delivered materials as complete
+✓ Agreement that work meets specified requirements
+✓ Completion of the service contract
+
+═══════════════════════════════════════════════
+
+CLIENT SIGNATURE:
+
+Name: {project.get('user_name', '')}
+Email: {project.get('user_email', '')}
+Date: _________________
+Signature: _________________
+
+═══════════════════════════════════════════════
+
+This document serves as legal confirmation of service delivery
+and client acceptance for project {project['project_number']}.
+
+Ocean2Joy Digital Production
+Contact: ocean2joy@gmail.com
+"""
+    
+    elif doc_type == 'payment_instructions':
+        doc_content = f"""PAYMENT INSTRUCTIONS
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Project: {project['project_number']}
+
+═══════════════════════════════════════════════
+
+AMOUNT DUE: ${project.get('quote_amount', 0):.2f} USD
+
+PAYMENT METHOD: {project.get('order_activation_payment_method', 'PayPal').upper()}
+
+═══════════════════════════════════════════════
+
+PAYPAL PAYMENT DETAILS:
+
+PayPal Account: 302335809@postbox.ge
+
+Steps to Pay:
+1. Log in to your PayPal account
+2. Send payment to: 302335809@postbox.ge
+3. Amount: ${project.get('quote_amount', 0):.2f} USD
+4. Reference: {project['project_number']}
+5. After payment, upload proof in the portal
+
+═══════════════════════════════════════════════
+
+IMPORTANT NOTES:
+✓ Include project number {project['project_number']} in payment notes
+✓ Payment confirms acceptance of delivered materials
+✓ Upload payment receipt/screenshot to project portal
+✓ No refunds after delivery completion
+
+For questions:
+Contact: ocean2joy@gmail.com
+
+═══════════════════════════════════════════════
+"""
+    
+    else:
+        doc_content = f"Document type {doc_type} not yet implemented."
+    
+    # Save generated document to file system
+    gen_docs_dir = Path("/app/backend/uploads/generated_documents")
+    gen_docs_dir.mkdir(parents=True, exist_ok=True)
+    
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    safe_filename = f"{project_id}_{doc_type}_{timestamp}.txt"
+    file_path = gen_docs_dir / safe_filename
+    
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(doc_content)
+    
+    logger.info(f"Generated {doc_type} document for project {project_id}: {safe_filename}")
+    
+    # Return file for download
+    return FileResponse(
+        path=str(file_path),
+        media_type="text/plain",
+        filename=filename,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+    )
+
+@api_router.post("/projects/{project_id}/documents/{doc_type}/upload")
+async def upload_document(
+    project_id: str,
+    doc_type: str,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload signed/confirmed document (Invoice, Acceptance Act, Payment Proof)"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify user owns this project
+    if project['user_id'] != current_user.id and current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Validate document type
+    valid_doc_types = ['invoice', 'acceptance_act', 'payment_proof']
+    if doc_type not in valid_doc_types:
+        raise HTTPException(status_code=400, detail="Invalid document type")
+    
+    # Determine upload directory
+    upload_dir_map = {
+        'invoice': 'invoices',
+        'acceptance_act': 'acceptance_acts',
+        'payment_proof': 'payment_proofs'
+    }
+    
+    upload_dir = Path(f"/app/backend/uploads/{upload_dir_map[doc_type]}")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate unique filename
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    file_extension = Path(file.filename).suffix
+    safe_filename = f"{project_id}_{doc_type}_{timestamp}{file_extension}"
+    file_path = upload_dir / safe_filename
+    
+    # Save file
+    try:
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+    except Exception as e:
+        logger.error(f"Error saving {doc_type} file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save file")
+    
+    # Update project with uploaded document info
+    update_data = {
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Store filename in client_confirmations
+    client_confirmations = project.get('client_confirmations', {})
+    client_confirmations[doc_type] = safe_filename
+    update_data['client_confirmations'] = client_confirmations
+    
+    # Special handling based on document type
+    if doc_type == 'invoice':
+        update_data['invoice_signed_at'] = datetime.now(timezone.utc).isoformat()
+        update_data['invoice_signed_filename'] = safe_filename
+        update_data['status'] = ProjectStatus.INVOICE_SIGNED
+    
+    elif doc_type == 'acceptance_act':
+        update_data['work_accepted_at'] = datetime.now(timezone.utc).isoformat()
+    
+    elif doc_type == 'payment_proof':
+        update_data['payment_marked_by_client_at'] = datetime.now(timezone.utc).isoformat()
+        update_data['payment_receipt_filename'] = safe_filename
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": update_data}
+    )
+    
+    logger.info(f"Uploaded {doc_type} for project {project_id}: {safe_filename}")
+    
+    return {
+        "message": f"{doc_type.replace('_', ' ').title()} uploaded successfully",
+        "filename": safe_filename,
+        "doc_type": doc_type
+    }
+
+@api_router.get("/projects/{project_id}/documents/{doc_type}/download")
+async def download_uploaded_document(
+    project_id: str,
+    doc_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Download previously uploaded document"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify access
+    if project['user_id'] != current_user.id and current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get filename from client_confirmations
+    client_confirmations = project.get('client_confirmations', {})
+    filename = client_confirmations.get(doc_type)
+    
+    if not filename:
+        raise HTTPException(status_code=404, detail=f"{doc_type.replace('_', ' ').title()} not found")
+    
+    # Determine directory
+    upload_dir_map = {
+        'invoice': 'invoices',
+        'acceptance_act': 'acceptance_acts',
+        'payment_proof': 'payment_proofs'
+    }
+    
+    dir_name = upload_dir_map.get(doc_type)
+    if not dir_name:
+        raise HTTPException(status_code=400, detail="Invalid document type")
+    
+    file_path = Path(f"/app/backend/uploads/{dir_name}") / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found on server")
+    
+    # Get MIME type
+    mime_type, _ = mimetypes.guess_type(str(file_path))
+    if not mime_type:
+        mime_type = 'application/octet-stream'
+    
+    return FileResponse(
+        path=str(file_path),
+        media_type=mime_type,
+        filename=filename,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+    )
 
 
 @api_router.get("/demo-videos", response_model=List[DemoVideo])
@@ -1719,7 +2074,12 @@ import mimetypes
 @app.get("/api/uploads/{file_type}/{filename}")
 async def serve_uploaded_file(file_type: str, filename: str):
     """Serve uploaded files with proper CORS headers"""
-    if file_type not in ["demo-videos", "thumbnails", "payment-assets", "payment-receipts"]:
+    allowed_types = [
+        "demo-videos", "thumbnails", "payment-assets", "payment-receipts",
+        "invoices", "acceptance_acts", "payment_proofs", "client_materials", 
+        "generated_documents", "confirmations"
+    ]
+    if file_type not in allowed_types:
         raise HTTPException(status_code=404, detail="Not found")
     
     file_path = Path(f"/app/backend/uploads/{file_type}") / filename

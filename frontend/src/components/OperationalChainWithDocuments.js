@@ -267,10 +267,55 @@ Click the Download button to save the file.`;
   };
   
   // Handle Download
-  const handleDownload = (doc) => {
-    // For now, show alert - would implement actual download
-    alert(`Download functionality for "${doc.name}" will be implemented with actual file storage.`);
-    // TODO: Implement actual file download from storage
+  const handleDownload = async (doc) => {
+    try {
+      // Map document IDs to backend doc_types
+      const docTypeMap = {
+        'invoice': 'invoice',
+        'acceptance_act': 'acceptance_act',
+        'payment_proof': 'payment_proof',
+        'payment_instructions': 'payment_instructions',
+        'receipt': 'receipt',
+        'certificate': 'certificate'
+      };
+      
+      const docType = docTypeMap[doc.id];
+      
+      if (!docType) {
+        alert(`Download not available for this document type.`);
+        return;
+      }
+      
+      // Check if this is an uploaded document (signed/confirmed)
+      const isUploaded = project.client_confirmations && project.client_confirmations[docType];
+      
+      let downloadUrl;
+      if (isUploaded) {
+        // Download uploaded/signed version
+        downloadUrl = `${API}/projects/${project.id}/documents/${docType}/download`;
+      } else {
+        // Generate and download document
+        downloadUrl = `${API}/projects/${project.id}/documents/${docType}/generate`;
+      }
+      
+      // Create a temporary link and trigger download
+      const response = await axios.get(downloadUrl, {
+        responseType: 'blob',
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${project.project_number}_${docType}.txt`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      alert('Failed to download document. Please try again.');
+    }
   };
 
   
@@ -286,43 +331,38 @@ Click the Download button to save the file.`;
       const formData = new FormData();
       formData.append('file', uploadFile);
 
-      if (uploadContext === 'acceptance') {
-        // Upload signed acceptance act
-        await axios.post(
-          `${API}/projects/${project.id}/upload-confirmation/acceptance`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          }
-        );
-        alert('✅ Acceptance act uploaded successfully!');
-      } else if (uploadContext === 'payment') {
-        // Upload payment proof
-        await axios.post(
-          `${API}/projects/${project.id}/upload-confirmation/payment`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          }
-        );
-        alert('✅ Payment proof uploaded successfully!');
-      } else {
-        // Upload signed invoice
-        await axios.post(
-          `${API}/projects/${project.id}/upload-confirmation/invoice`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          }
-        );
-        alert('✅ Signed invoice uploaded successfully!');
+      // Map upload context to backend doc_type
+      const docTypeMap = {
+        'invoice': 'invoice',
+        'acceptance': 'acceptance_act',
+        'payment': 'payment_proof'
+      };
+      
+      const docType = docTypeMap[uploadContext];
+      
+      if (!docType) {
+        alert('Invalid upload context');
+        return;
       }
+
+      // Use new upload endpoint
+      await axios.post(
+        `${API}/projects/${project.id}/documents/${docType}/upload`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      const successMessages = {
+        'invoice': '✅ Signed invoice uploaded successfully!',
+        'acceptance': '✅ Acceptance act uploaded successfully!',
+        'payment': '✅ Payment proof uploaded successfully!'
+      };
+      
+      alert(successMessages[uploadContext] || '✅ Document uploaded successfully!');
 
       setUploadFile(null);
       setShowUploadModal(false);
