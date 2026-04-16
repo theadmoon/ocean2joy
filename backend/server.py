@@ -32,6 +32,62 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# ==================== HELPER FUNCTIONS ====================
+
+async def get_next_sequence_number(doc_type: str) -> int:
+    """
+    Get next sequence number for document type.
+    Uses MongoDB findAndModify to ensure atomic increment.
+    
+    Args:
+        doc_type: Type of document (invoice, receipt, delivery_certificate, etc.)
+    
+    Returns:
+        Next sequence number (1-based)
+    """
+    counter_id = f"{doc_type}_seq"
+    
+    # Atomic increment and return new value
+    result = await db.counters.find_one_and_update(
+        {"_id": counter_id},
+        {"$inc": {"value": 1}},
+        return_document=True,
+        upsert=True
+    )
+    
+    return result['value']
+
+def format_document_number(project_number: str, doc_type: str, seq: int, doc_date: datetime) -> str:
+    """
+    Format document number according to standard:
+    {PROJECT_SHORT}-{DOC_TYPE}-{SEQ}-{DATE}
+    
+    Example: VAPP6-INV-0042-260217
+    
+    Args:
+        project_number: Full project number (e.g., VAPP-6-Custom1050USD-13Mar2026)
+        doc_type: Document type code (INV, RCP, DEL, ACC, CRT, ORD)
+        seq: Sequence number
+        doc_date: Document creation date
+    
+    Returns:
+        Formatted document number
+    """
+    # Extract short project ID (e.g., VAPP-6 -> VAPP6)
+    parts = project_number.split('-')
+    if len(parts) >= 2:
+        project_short = parts[0] + parts[1]  # VAPP + 6 = VAPP6
+    else:
+        project_short = parts[0]
+    
+    # Format sequence as 4-digit number
+    seq_str = f"{seq:04d}"
+    
+    # Format date as YYMMDD
+    date_str = doc_date.strftime('%y%m%d')
+    
+    return f"{project_short}-{doc_type}-{seq_str}-{date_str}"
+
 # ==================== MODELS ====================
 
 # User Models
@@ -1454,11 +1510,13 @@ async def generate_and_download_document(
     
     if doc_type == 'invoice':
         # Invoice is sent BEFORE production starts, so use invoice_sent_at or order_activated_at
-        invoice_date = project.get('invoice_sent_at') or project.get('order_activated_at') or datetime.now(timezone.utc).isoformat()
-        if isinstance(invoice_date, datetime):
-            invoice_date_formatted = invoice_date.strftime('%B %d, %Y')
+        invoice_date = project.get('invoice_sent_at') or project.get('order_activated_at') or datetime.now(timezone.utc)
+        if isinstance(invoice_date, str):
+            invoice_date_dt = datetime.fromisoformat(invoice_date)
         else:
-            invoice_date_formatted = datetime.fromisoformat(invoice_date).strftime('%B %d, %Y')
+            invoice_date_dt = invoice_date if invoice_date.tzinfo else invoice_date.replace(tzinfo=timezone.utc)
+        
+        invoice_date_formatted = invoice_date_dt.strftime('%B %d, %Y')
         
         # Production period is estimated at invoice time (not actual dates)
         production_start = project.get('production_started_at', '')
@@ -1475,8 +1533,9 @@ async def generate_and_download_document(
         else:
             production_end_formatted = "Estimated timeline in agreement"
         
-        # Shortened invoice number for readability
-        invoice_number = project['project_number'].replace('Custom1050USD-', '').replace('-', '/')
+        # Generate invoice number with sequence
+        seq = await get_next_sequence_number('invoice')
+        invoice_number = format_document_number(project['project_number'], 'INV', seq, invoice_date_dt)
         
         doc_content = f"""INVOICE
 ═══════════════════════════════════════════════
@@ -1576,8 +1635,24 @@ Digital Services - Electronic Delivery Only
 """
     
     elif doc_type == 'acceptance_act':
-        delivered_date = project.get('delivered_at', datetime.now(timezone.utc).isoformat())
-        delivered_date_formatted = datetime.fromisoformat(delivered_date).strftime('%B %d, %Y')
+        delivered_date = project.get('delivered_at', datetime.now(timezone.utc))
+        if isinstance(delivered_date, str):
+            delivered_date = datetime.fromisoformat(delivered_date)
+        if delivered_date.tzinfo is None:
+            delivered_date = delivered_date.replace(tzinfo=timezone.utc)
+        
+        delivered_date_formatted = delivered_date.strftime('%B %d, %Y')
+        
+        # Use work_accepted_at if available, otherwise delivered_at
+        acceptance_date = project.get('work_accepted_at', delivered_date)
+        if isinstance(acceptance_date, str):
+            acceptance_date = datetime.fromisoformat(acceptance_date)
+        if acceptance_date.tzinfo is None:
+            acceptance_date = acceptance_date.replace(tzinfo=timezone.utc)
+        
+        # Generate acceptance act number with sequence
+        seq = await get_next_sequence_number('acceptance_act')
+        act_number = format_document_number(project['project_number'], 'ACC', seq, acceptance_date)
         
         doc_content = f"""ACCEPTANCE ACT
 ═══════════════════════════════════════════════
@@ -1585,7 +1660,8 @@ Digital Services - Electronic Delivery Only
 Digital Video Production Service
 Acceptance Certificate
 
-Project: {project['project_number']}
+Act: {act_number}
+Project Reference: {project['project_number']}
 Client: {project.get('user_name', 'Client')}
 Service Provider: Ocean2Joy Digital Production
 
@@ -1674,10 +1750,25 @@ Contact: ocean2joy@gmail.com
 """
     
     elif doc_type == 'delivery_certificate':
-        delivered_date = project.get('delivered_at', datetime.now(timezone.utc).isoformat())
-        delivered_date_formatted = datetime.fromisoformat(delivered_date).strftime('%B %d, %Y')
+        delivered_date = project.get('delivered_at', datetime.now(timezone.utc))
+        if isinstance(delivered_date, str):
+            delivered_date = datetime.fromisoformat(delivered_date)
+        if delivered_date.tzinfo is None:
+            delivered_date = delivered_date.replace(tzinfo=timezone.utc)
+        
+        delivered_date_formatted = delivered_date.strftime('%B %d, %Y')
+        
         files_accessed_date = project.get('files_accessed_at', delivered_date)
-        files_accessed_formatted = datetime.fromisoformat(files_accessed_date).strftime('%B %d, %Y at %I:%M %p UTC') if files_accessed_date else 'Not accessed yet'
+        if files_accessed_date:
+            if isinstance(files_accessed_date, str):
+                files_accessed_date = datetime.fromisoformat(files_accessed_date)
+            files_accessed_formatted = files_accessed_date.strftime('%B %d, %Y at %I:%M %p UTC')
+        else:
+            files_accessed_formatted = 'Not accessed yet'
+        
+        # Generate delivery certificate number with sequence
+        seq = await get_next_sequence_number('delivery_certificate')
+        cert_number = format_document_number(project['project_number'], 'DEL', seq, delivered_date)
         
         doc_content = f"""CERTIFICATE OF DELIVERY
 ═══════════════════════════════════════════════
@@ -1685,7 +1776,7 @@ Contact: ocean2joy@gmail.com
 Ocean2Joy Digital Video Production
 Electronic Service Delivery Confirmation
 
-Certificate #: {project['project_number']}-DEL
+Certificate: {cert_number}
 Project Reference: {project['project_number']}
 Delivery Date: {delivered_date_formatted}
 
@@ -1773,8 +1864,17 @@ for dispute resolution and compliance purposes.
 """
     
     elif doc_type == 'order_confirmation':
-        order_activated_date = project.get('order_activated_at', datetime.now(timezone.utc).isoformat())
-        order_activated_formatted = datetime.fromisoformat(order_activated_date).strftime('%B %d, %Y at %I:%M %p')
+        order_activated_date = project.get('order_activated_at', datetime.now(timezone.utc))
+        if isinstance(order_activated_date, str):
+            order_activated_date = datetime.fromisoformat(order_activated_date)
+        if order_activated_date.tzinfo is None:
+            order_activated_date = order_activated_date.replace(tzinfo=timezone.utc)
+        
+        order_activated_formatted = order_activated_date.strftime('%B %d, %Y at %I:%M %p')
+        
+        # Generate order confirmation number with sequence
+        seq = await get_next_sequence_number('order_confirmation')
+        order_number = format_document_number(project['project_number'], 'ORD', seq, order_activated_date)
         
         doc_content = f"""ORDER CONFIRMATION
 ═══════════════════════════════════════════════
@@ -1782,7 +1882,8 @@ for dispute resolution and compliance purposes.
 Ocean2Joy Digital Video Production
 Order Activation Confirmation
 
-Order #: {project['project_number']}
+Order: {order_number}
+Project Reference: {project['project_number']}
 Date Activated: {order_activated_formatted}
 
 ═══════════════════════════════════════════════
@@ -1859,6 +1960,10 @@ Keep this number for all future correspondence.
         elif isinstance(payment_date, str):
             payment_date = datetime.fromisoformat(payment_date)
         
+        # Ensure timezone aware
+        if payment_date.tzinfo is None:
+            payment_date = payment_date.replace(tzinfo=timezone.utc)
+        
         payment_date_formatted = payment_date.strftime('%B %d, %Y')
         payment_datetime_formatted = payment_date.strftime('%B %d, %Y at %I:%M %p UTC')
         
@@ -1871,13 +1976,17 @@ Keep this number for all future correspondence.
         else:
             payment_sent_formatted = 'N/A'
         
+        # Generate receipt number with sequence
+        seq = await get_next_sequence_number('receipt')
+        receipt_number = format_document_number(project['project_number'], 'RCP', seq, payment_date)
+        
         doc_content = f"""PAYMENT RECEIPT
 ═══════════════════════════════════════════════
 
 Ocean2Joy Digital Video Production
 Official Payment Receipt
 
-Receipt #: {project['project_number']}-RCP
+Receipt: {receipt_number}
 Date Issued: {payment_date_formatted}
 
 ═══════════════════════════════════════════════
@@ -1885,7 +1994,7 @@ Date Issued: {payment_date_formatted}
 PAYMENT RECEIVED FROM:
 Client: {project.get('user_name', 'Client')}
 Email: {project.get('user_email', '')}
-Project: {project['project_number']}
+Project Reference: {project['project_number']}
 
 ═══════════════════════════════════════════════
 
@@ -1946,8 +2055,17 @@ Project Reference: {project['project_number']}
 """
     
     elif doc_type == 'certificate':
-        completed_date = project.get('completed_at', datetime.now(timezone.utc).isoformat())
-        completed_date_formatted = datetime.fromisoformat(completed_date).strftime('%B %d, %Y')
+        completed_date = project.get('completed_at', datetime.now(timezone.utc))
+        if isinstance(completed_date, str):
+            completed_date = datetime.fromisoformat(completed_date)
+        if completed_date.tzinfo is None:
+            completed_date = completed_date.replace(tzinfo=timezone.utc)
+        
+        completed_date_formatted = completed_date.strftime('%B %d, %Y')
+        
+        # Generate completion certificate number with sequence
+        seq = await get_next_sequence_number('completion_certificate')
+        cert_number = format_document_number(project['project_number'], 'CRT', seq, completed_date)
         
         doc_content = f"""CERTIFICATE OF COMPLETION
 ═══════════════════════════════════════════════
@@ -1955,7 +2073,7 @@ Project Reference: {project['project_number']}
 Ocean2Joy Digital Video Production
 Project Completion Certificate
 
-Certificate #: {project['project_number']}-CRT
+Certificate: {cert_number}
 Project Reference: {project['project_number']}
 Completion Date: {completed_date_formatted}
 
