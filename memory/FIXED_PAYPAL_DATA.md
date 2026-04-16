@@ -37,3 +37,13 @@ Customer film production according to client's script - Project Reference: VAPP-
 - `payment_confirmed_at`: Can use realistic time (but AFTER payment_marked_by_client_at)
 
 **Rule:** Any time that appears in PayPal transaction = LOCKED FOREVER
+
+## EMAIL CORRECTION
+
+**FIXED:** PayPal payer email was using fake `@example.com` domain.
+
+**Corrected:**
+- ❌ Old (FAKE): `marcos.knight@example.com`
+- ✅ New (REAL): `mek110@yahoo.com` (same as client email)
+
+**Rule:** PayPal payer email = Client email (user_email)
