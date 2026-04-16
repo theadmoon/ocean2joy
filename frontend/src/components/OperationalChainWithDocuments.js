@@ -393,10 +393,11 @@ Click the Download button to save the file.`;
         'quote_request': 'quote_request',
         'order_confirmation': 'order_confirmation',
         'invoice': 'invoice',
-        'signed_invoice': 'invoice', // Signed version downloads from client_confirmations
+        'signed_invoice': 'invoice',
         'delivery_certificate': 'delivery_certificate',
+        'download_confirmation': 'delivery_certificate', // Maps to delivery certificate
         'acceptance_act': 'acceptance_act',
-        'acceptance_pending': 'acceptance_act', // Pending version generates template
+        'acceptance_pending': 'acceptance_act',
         'paypal_instructions': 'payment_instructions',
         'payment_proof': 'payment_proof',
         'payment_pending': 'payment_proof',
