@@ -2,6 +2,10 @@
 // These functions create standardized document content for invoices, receipts, certificates, etc.
 // Used across the application to ensure consistent document formatting
 
+// IMPORTANT: Email addresses
+// PayPal Account (for payments): 302335809@postbox.ge
+// Contact Email (for support): ocean2joy@gmail.com
+
 /**
  * Generate Invoice document content
  * @param {Object} projectData - Project data from backend
@@ -130,7 +134,8 @@ From: ${projectData.client_name || projectData.user_name || 'Client'}
 Email: ${payerEmail}
 
 To: Ocean2Joy Digital Video Production
-Email: 302335809@postbox.ge
+PayPal Business Account: 302335809@postbox.ge
+(Payment receiving account)
 
 ═══════════════════════════════════════════════
 
@@ -168,7 +173,8 @@ Processing Time: Instant
 MERCHANT INFORMATION:
 
 Business Name: Ocean2Joy Digital Video Production
-Business Email: 302335809@postbox.ge
+PayPal Business Account: 302335809@postbox.ge
+Contact Email: ocean2joy@gmail.com
 Business Type: Digital Services Provider
 Service Description: Custom video production services
 
@@ -617,13 +623,14 @@ export const generatePayPalPaymentReference = (projectData) => {
 
 Ocean2Joy Digital Video Production
 
-Please send $${projectData.quote_amount || '0.00'} to the account:
+Please send $${projectData.quote_amount || '0.00'} USD to:
 
-📧 302335809@postbox.ge
+📧 PayPal Account: 302335809@postbox.ge
+(This is our payment receiving account)
 
 ═══════════════════════════════════════════════
 
-COPY THIS TEXT FOR PAYMENT COMMENT:
+✂️ COPY THIS TEXT FOR PAYMENT COMMENT:
 ─────────────────────────────────────────────
 
 Custom film production according to client's script
@@ -637,35 +644,67 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
 - No physical shipment – digital service delivered electronically
 
 ─────────────────────────────────────────────
+(Click anywhere in the text box above, press Ctrl+A to select all, 
+then Ctrl+C to copy)
 
 ═══════════════════════════════════════════════
 
-IMPORTANT INSTRUCTIONS:
+STEP-BY-STEP PAYMENT INSTRUCTIONS:
 
-1. Log in to your PayPal account
+1. Log in to your PayPal account (www.paypal.com)
+
 2. Click "Send Money" or "Send & Request"
+
 3. Enter recipient email: 302335809@postbox.ge
+   (This is our PayPal business account for receiving payments)
+
 4. Enter amount: $${projectData.quote_amount || '0.00'} USD
+
 5. Select payment type: "Goods & Services"
-6. COPY the text above and PASTE into "Add a note" field
-7. Review and complete payment
+   (IMPORTANT: This protects both parties)
+
+6. In the "Add a note" or "What's this payment for?" field:
+   → PASTE the text you copied above
+
+7. Review all details carefully
+
+8. Click "Send" to complete payment
 
 ═══════════════════════════════════════════════
 
-After payment is completed:
+AFTER COMPLETING PAYMENT:
 
-• Your transaction will receive a unique PayPal Transaction ID
-• Return to this portal and navigate to "Payment Sent" section
-• Upload screenshot or enter your Transaction ID
+• You will receive a PayPal Transaction ID
+  (Example: 12ABC34567DEF890)
+
+• Screenshot your payment confirmation (optional but recommended)
+
+• Return to this portal:
+  → Navigate to "Payment Sent" section
+  → Click "Upload" button
+  → Upload screenshot or enter Transaction ID
+
 • Manager will confirm payment within 24 hours
+
 • Project will be marked as "Completed"
 
 ═══════════════════════════════════════════════
 
-For payment support:
-ocean2joy@gmail.com
+NEED HELP?
+
+For payment support or technical questions:
+📧 Contact: ocean2joy@gmail.com
+(This is our support email - NOT for payments)
+
+For PayPal issues:
+Visit: www.paypal.com/support
+
+═══════════════════════════════════════════════
 
 Project: ${projectData.project_number}
 Amount Due: $${projectData.quote_amount || '0.00'} USD
-Payment Method: PayPal (Goods & Services)`;
+Payment Method: PayPal (Goods & Services)
+
+Ocean2Joy Digital Video Production
+www.ocean2joy.com`;
 };
