@@ -2182,6 +2182,8 @@ PROJECT TIMELINE:
 Order Activated: {datetime.fromisoformat(project.get('order_activated_at', completed_date)).strftime('%b %d, %Y') if project.get('order_activated_at') else 'N/A'}
 Production Started: {datetime.fromisoformat(project.get('production_started_at', completed_date)).strftime('%b %d, %Y') if project.get('production_started_at') else 'N/A'}
 Delivered: {datetime.fromisoformat(project.get('delivered_at', completed_date)).strftime('%b %d, %Y') if project.get('delivered_at') else 'N/A'}
+Files Accessed: {datetime.fromisoformat(project.get('files_accessed_at', completed_date)).strftime('%b %d, %Y') if project.get('files_accessed_at') else 'N/A'}
+Delivery Confirmed: {datetime.fromisoformat(project.get('delivery_confirmed_at', completed_date)).strftime('%b %d, %Y') if project.get('delivery_confirmed_at') else 'N/A'}
 Work Accepted: {datetime.fromisoformat(project.get('work_accepted_at', completed_date)).strftime('%b %d, %Y') if project.get('work_accepted_at') else 'N/A'}
 Payment Received: {datetime.fromisoformat(project.get('payment_confirmed_at', completed_date)).strftime('%b %d, %Y') if project.get('payment_confirmed_at') else 'N/A'}
 Completed: {completed_date_formatted}
@@ -2191,7 +2193,8 @@ Completed: {completed_date_formatted}
 PROJECT STATUS: ✓ SUCCESSFULLY COMPLETED
 
 ✓ All deliverables transferred electronically
-✓ Client confirmed receipt of files
+✓ Client accessed and downloaded files
+✓ Client confirmed delivery receipt
 ✓ Work accepted by client
 ✓ Payment received and confirmed
 ✓ Project closed successfully

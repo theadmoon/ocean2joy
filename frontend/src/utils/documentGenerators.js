@@ -246,6 +246,8 @@ export const generateCertificate = (projectData) => {
   const orderActivatedDate = projectData.order_activated_at ? new Date(projectData.order_activated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
   const productionStartDate = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
   const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+  const filesAccessedDate = projectData.files_accessed_at ? new Date(projectData.files_accessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+  const deliveryConfirmedDate = projectData.delivery_confirmed_at ? new Date(projectData.delivery_confirmed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
   const workAcceptedDate = projectData.work_accepted_at ? new Date(projectData.work_accepted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
   const paymentReceivedDate = projectData.payment_confirmed_at ? new Date(projectData.payment_confirmed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
   
@@ -299,6 +301,8 @@ PROJECT TIMELINE:
 Order Activated: ${orderActivatedDate}
 Production Started: ${productionStartDate}
 Delivered: ${deliveredDate}
+Files Accessed: ${filesAccessedDate}
+Delivery Confirmed: ${deliveryConfirmedDate}
 Work Accepted: ${workAcceptedDate}
 Payment Received: ${paymentReceivedDate}
 Completed: ${completedDate}
@@ -308,6 +312,8 @@ Completed: ${completedDate}
 PROJECT STATUS: ✓ SUCCESSFULLY COMPLETED
 
 ✓ All deliverables transferred electronically
+✓ Client accessed and downloaded files
+✓ Client confirmed delivery receipt
 ✓ Client confirmed receipt of files
 ✓ Work accepted by client
 ✓ Payment received and confirmed
