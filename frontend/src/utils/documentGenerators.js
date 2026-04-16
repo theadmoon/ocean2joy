@@ -111,6 +111,25 @@ NOTES:
 
 ═══════════════════════════════════════════════
 
+LEGAL FRAMEWORK & TERMS:
+
+This Invoice-Offer is governed by:
+
+• Terms of Service: ocean2joy.com/terms
+• Service Agreement: ocean2joy.com/service-agreement
+• Refund Policy: ocean2joy.com/refund-policy
+• Privacy Policy: ocean2joy.com/privacy
+
+By signing below, Client confirms:
+✓ Reading and accepting all documents listed above
+✓ Agreement with 100% post-payment terms
+✓ Understanding that no refunds apply after delivery
+✓ Acceptance that this is a digital service (no physical goods)
+
+Full legal documentation: ocean2joy.com/legal
+
+═══════════════════════════════════════════════
+
 CLIENT ACCEPTANCE & SIGNATURE:
 
 By signing below, the Client confirms:
