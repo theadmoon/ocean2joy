@@ -240,6 +240,12 @@ Project Reference: ${projectData.project_number}
 
 ═══════════════════════════════════════════════
 
+PAYMENT RECEIVED BY:
+Ocean2Joy Digital Production
+PayPal Account: 302335809@postbox.ge
+
+═══════════════════════════════════════════════
+
 PAYMENT DETAILS:
 
 Amount Received: $${projectData.quote_amount?.toFixed(2)} USD
