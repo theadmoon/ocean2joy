@@ -111,6 +111,23 @@ NOTES:
 
 ═══════════════════════════════════════════════
 
+CLIENT ACCEPTANCE & SIGNATURE:
+
+By signing below, the Client confirms:
+✓ Agreement with all terms and pricing stated above
+✓ Authorization to begin production
+✓ Understanding of payment terms (due upon delivery)
+
+Client Name: ${projectData.user_name || ''}
+Email: ${projectData.user_email || ''}
+Date: ${invoiceDate}
+
+
+Signature: ___________________________________________
+
+
+═══════════════════════════════════════════════
+
 Thank you for choosing Ocean2Joy!
 Professional digital video production services.
 
@@ -380,8 +397,11 @@ CLIENT SIGNATURE:
 
 Name: ${projectData.user_name || ''}
 Email: ${projectData.user_email || ''}
-Date: _________________
-Signature: _________________
+Date: ${deliveredDate}
+
+
+Signature: ___________________________________________
+
 
 ═══════════════════════════════════════════════
 
@@ -847,10 +867,13 @@ CLIENT CONFIRMATION:
 I confirm receipt of the above digital files via
 electronic delivery on the date specified.
 
-Client Name: _________________________________
-Client Email: _________________________________
-Date: _________________________________
-Signature: _________________________________
+Client Name: ${projectData.user_name || ''}
+Client Email: ${projectData.user_email || ''}
+Date: ${deliveredDate}
+
+
+Signature: ___________________________________________
+
 
 ═══════════════════════════════════════════════
 

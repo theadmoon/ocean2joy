@@ -1666,6 +1666,23 @@ NOTES:
 
 ═══════════════════════════════════════════════
 
+CLIENT ACCEPTANCE & SIGNATURE:
+
+By signing below, the Client confirms:
+✓ Agreement with all terms and pricing stated above
+✓ Authorization to begin production
+✓ Understanding of payment terms (due upon delivery)
+
+Client Name: {project.get('user_name', '')}
+Email: {project.get('user_email', '')}
+Date: {invoice_date_formatted}
+
+
+Signature: ___________________________________________
+
+
+═══════════════════════════════════════════════
+
 Thank you for choosing Ocean2Joy!
 Professional digital video production services.
 
@@ -1739,8 +1756,11 @@ CLIENT SIGNATURE:
 
 Name: {project.get('user_name', '')}
 Email: {project.get('user_email', '')}
-Date: _________________
-Signature: _________________
+Date: {delivered_date_formatted}
+
+
+Signature: ___________________________________________
+
 
 ═══════════════════════════════════════════════
 
@@ -1874,10 +1894,13 @@ CLIENT CONFIRMATION:
 I confirm receipt of the above digital files via
 electronic delivery on the date specified.
 
-Client Name: _________________________________
-Client Email: _________________________________
-Date: _________________________________
-Signature: _________________________________
+Client Name: {project.get('user_name', '')}
+Client Email: {project.get('user_email', '')}
+Date: {delivered_date_formatted}
+
+
+Signature: ___________________________________________
+
 
 ═══════════════════════════════════════════════
 
@@ -3065,7 +3088,7 @@ You can request:
         
         if not receipt_message_exists:
             # Find last message to determine correct timestamp
-            last_message = await db.messages.find_one(
+            _ = await db.messages.find_one(
                 {"project_id": project_id},
                 sort=[("created_at", -1)]
             )

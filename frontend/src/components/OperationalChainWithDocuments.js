@@ -8,7 +8,9 @@ import {
   generateDownloadConfirmation,
   generatePaymentProof,
   generateClientMaterialTemplate,
-  generatePayPalPaymentReference
+  generatePayPalPaymentReference,
+  generateOrderConfirmation,
+  generateDeliveryCertificate
 } from '../utils/documentGenerators';
 import axios from 'axios';
 
@@ -115,6 +117,15 @@ Status: ${project.payment_confirmed_by_admin ? '✅ Confirmed by Manager' : '⏳
         
       case 'certificate':
         content = generateCertificate(project);
+        break;
+        
+      case 'order_confirmation':
+        content = generateOrderConfirmation(project);
+        break;
+        
+      case 'delivery_certificate':
+      case 'delivery_certificate_pending':
+        content = generateDeliveryCertificate(project);
         break;
         
       case 'payment_proof':
