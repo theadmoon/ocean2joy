@@ -452,6 +452,9 @@ export const generateAcceptanceAct = (projectData) => {
   
   const deliveredDate = formatDateUTC(projectData.delivered_at);
   
+  // Use work_accepted_at for signature date (not delivered_at)
+  const acceptedDate = formatDateUTC(projectData.work_accepted_at || projectData.delivered_at);
+  
   const actNumber = projectData.document_numbers?.acceptance_act || projectData.project_number;
   
   const deliverablesList = projectData.deliverables && projectData.deliverables.length > 0
@@ -505,7 +508,7 @@ CLIENT SIGNATURE:
 
 Name: ${projectData.user_name || ''}
 Email: ${projectData.user_email || ''}
-Date: ${deliveredDate}
+Date: ${acceptedDate}
 
 
 Signature: ___________________________________________
@@ -601,7 +604,7 @@ export const generatePaymentProof = (projectData) => {
   return `PAYMENT PROOF
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
+Individual Entrepreneur Vera Iambaeva
 
 Project: ${projectData.project_number}
 Client: ${projectData.user_name || 'Client'}

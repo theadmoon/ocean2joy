@@ -143,7 +143,8 @@ Payment Method: ${project.order_activation_payment_method || 'paypal'}
 Transaction ID: ${project.paypal_transaction_id || 'N/A'}
 
 From (Payer): ${project.paypal_payer_email || project.user_email || 'N/A'}
-To (Recipient): 302335809@postbox.ge
+To (Recipient): Individual Entrepreneur Vera Iambaeva
+                PayPal Account: 302335809@postbox.ge
 
 Status: ${project.payment_confirmed_by_admin ? '✅ Confirmed by Manager' : '⏳ Pending Manager Confirmation'}
 
