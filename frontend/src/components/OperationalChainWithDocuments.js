@@ -442,33 +442,23 @@ Click the Download button to save the file.`;
       
       console.log('🌐 Download URL:', downloadUrl);
       
-      // Create a temporary link and trigger download
-      const response = await axios.get(downloadUrl, {
-        responseType: 'blob',
-      });
-      
-      console.log('✅ Response received, size:', response.data.size);
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      // Method 2: Direct download link (better for browser compatibility)
       const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${project.project_number}_${docType}.${fileExtension}`);
+      link.href = downloadUrl;
+      link.download = `${project.project_number}_${docType}.${fileExtension}`;
+      link.target = '_blank';
       link.style.display = 'none';
       document.body.appendChild(link);
+      
+      console.log('✅ Triggering download...');
       link.click();
       
-      // Cleanup after a short delay
+      // Cleanup
       setTimeout(() => {
         document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
       }, 100);
       
-      console.log('✅ Document downloaded successfully');
-      
-      // Show brief success message
-      setTimeout(() => {
-        alert(`✅ ${doc.name} downloaded as ${fileExtension.toUpperCase()}!`);
-      }, 200);
+      console.log('✅ Document download initiated');
       
     } catch (error) {
       console.error('❌ Download error:', error);
@@ -1000,37 +990,30 @@ Click the Download button to save the file.`;
     try {
       console.log('📥 Starting Operational Chain PDF download...');
       
-      const response = await axios.get(
-        `${API}/projects/${project.id}/operational-chain/pdf`,
-        { responseType: 'blob' }
-      );
+      // Method 2: Direct link (bypasses blob issues)
+      const downloadUrl = `${API}/projects/${project.id}/operational-chain/pdf`;
       
-      console.log('✅ Response received, creating download...');
-      
-      // Method 1: Blob URL (primary)
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
+      // Create temporary link
       const link = document.createElement('a');
-      link.href = url;
+      link.href = downloadUrl;
       link.download = `${project.project_number}_Operational_Chain.pdf`;
+      link.target = '_blank'; // Open in new tab if download fails
       link.style.display = 'none';
       document.body.appendChild(link);
+      
+      console.log('✅ Triggering download...');
       link.click();
       
       // Cleanup
       setTimeout(() => {
         document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
       }, 100);
       
-      console.log('✅ Operational Chain PDF downloaded successfully');
-      
-      // Show success message to user
-      alert('✅ PDF downloaded! Check your Downloads folder.');
+      console.log('✅ Operational Chain PDF download initiated');
       
     } catch (error) {
       console.error('❌ PDF download error:', error);
-      alert(`Failed to download Operational Chain PDF: ${error.message}`);
+      alert(`Failed to download: ${error.message}`);
     }
   };
 
