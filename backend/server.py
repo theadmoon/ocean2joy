@@ -1988,7 +1988,7 @@ IMPORTANT NOTES FOR PAYPAL/PAYMENT PROCESSORS:
 ✓ This is a DIGITAL SERVICE delivery (no physical goods)
 ✓ Delivery method: Secure electronic portal
 ✓ Client confirmed file download and accessibility
-✓ Transaction ID: {project['project_number']}
+✓ Transaction ID: {project.get('paypal_transaction_id', 'See PayPal payment receipt')}
 ✓ Service category: Custom digital video production
 ✓ No shipping/tracking (electronic delivery only)
 
@@ -3620,7 +3620,7 @@ h1 {{
     <li>Delivery method: Secure electronic portal</li>
     <li>Client confirmed file download and accessibility</li>
     <li>Service Provider: Individual Entrepreneur Vera Iambaeva</li>
-    <li>Transaction ID: {project['project_number']}</li>
+    <li>Transaction ID: {project.get('paypal_transaction_id', 'See PayPal payment receipt')}</li>
     <li>Service category: Custom digital video production</li>
     <li>No shipping/tracking (electronic delivery only)</li>
   </ul>
