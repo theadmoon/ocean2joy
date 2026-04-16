@@ -494,7 +494,7 @@ to all digital files for payment processor protection.`;
 export const generatePaymentProof = (projectData) => {
   if (!projectData) return '';
   
-  // Generate realistic time (not rounded)
+  // Generate realistic time (not rounded) with GMT+3 timezone
   const paymentSentDate = projectData.payment_marked_by_client_at ? new Date(projectData.payment_marked_by_client_at) : null;
   const paymentSentFormatted = paymentSentDate 
     ? paymentSentDate.toLocaleString('en-US', { 
@@ -504,7 +504,7 @@ export const generatePaymentProof = (projectData) => {
         hour: '2-digit', 
         minute: '2-digit',
         hour12: true 
-      })
+      }) + ' GMT+3'
     : 'N/A';
   
   const paymentConfirmedDate = projectData.payment_confirmed_by_admin_at ? new Date(projectData.payment_confirmed_by_admin_at) : null;
