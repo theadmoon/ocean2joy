@@ -1924,7 +1924,7 @@ Account: Active
 ═══════════════════════════════════════════════
 
 SERVICE DELIVERED:
-Service Type: {project.get('service_type', 'Custom Video Production')}
+Service Type: Custom Video Production
 Project Title: {project.get('project_title', '')}
 Brief: {project.get('detailed_brief', '')}
 Production Period: {format_date_utc(project.get('production_started_at'), '%b %d, %Y') if project.get('production_started_at') else 'N/A'} - {delivered_date_formatted}
@@ -1983,9 +1983,6 @@ Country of Registration: Georgia
 Delivered by: Production Team
 Date: {delivered_date_formatted}
 
-All communication through secure client portal chat.
-For urgent matters only: ocean2joy@gmail.com
-
 ═══════════════════════════════════════════════
 
 IMPORTANT NOTES FOR PAYPAL/PAYMENT PROCESSORS:
@@ -1993,6 +1990,7 @@ IMPORTANT NOTES FOR PAYPAL/PAYMENT PROCESSORS:
 ✓ This is a DIGITAL SERVICE delivery (no physical goods)
 ✓ Delivery method: Secure electronic portal
 ✓ Client confirmed file download and accessibility
+✓ Service Provider: Individual Entrepreneur Vera Iambaeva
 ✓ Transaction ID: {project.get('paypal_transaction_id', 'See PayPal payment receipt')}
 ✓ Service category: Custom digital video production
 ✓ No shipping/tracking (electronic delivery only)
