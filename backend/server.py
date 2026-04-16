@@ -2517,7 +2517,7 @@ def generate_base_html_template(title: str, content: str, project: dict) -> str:
 </html>"""
 
 async def generate_invoice_html(project: dict) -> str:
-    """Generate Invoice HTML for PDF - Full professional version"""
+    """Generate Invoice HTML for PDF - Professional styled version with approved text"""
     invoice_date = project.get('invoice_sent_at') or project.get('order_activated_at') or datetime.now(timezone.utc)
     if isinstance(invoice_date, str):
         invoice_date = datetime.fromisoformat(invoice_date)
@@ -2528,113 +2528,361 @@ async def generate_invoice_html(project: dict) -> str:
     production_end = format_date_utc(project.get('delivered_at')) if project.get('delivered_at') else "Per agreed timeline"
     amount = project.get('quote_amount', 0)
     
-    content = f"""
-<div class="section-title">INVOICE</div>
-<p style="text-align: center; margin: 10px 0; padding: 10px; background: #f0f9ff; border-left: 4px solid #0ea5e9;">
-<strong>Individual Entrepreneur Vera Iambaeva</strong><br>
-Tax ID: 302335809 | Country of Registration: Georgia<br>
-Custom Digital Video Services
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Invoice {invoice_number}</title>
+<style>
+@page {{ size: A4; margin: 2cm; }}
+body {{ 
+  font-family: 'DejaVu Sans', Arial, sans-serif;
+  font-size: 10.5pt; 
+  line-height: 1.6; 
+  color: #1f2937;
+  max-width: 800px;
+  margin: 0 auto;
+}}
+.doc-header {{
+  text-align: center;
+  margin-bottom: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+  color: white;
+  border-radius: 8px;
+}}
+.doc-number {{
+  font-size: 11pt;
+  font-weight: 600;
+  margin-bottom: 5px;
+}}
+h1 {{
+  text-align: center;
+  font-size: 20pt;
+  font-weight: 700;
+  margin: 15px 0;
+  color: #0369a1;
+  letter-spacing: 1px;
+}}
+.divider {{
+  border-top: 2px solid #e5e7eb;
+  margin: 20px 0;
+  position: relative;
+}}
+.divider::after {{
+  content: '◆';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 0 10px;
+  color: #0ea5e9;
+}}
+.entity-box {{
+  background: #f0fdf4;
+  padding: 15px 20px;
+  margin: 20px 0;
+  border-left: 5px solid #10b981;
+  border-radius: 4px;
+}}
+.entity-box p {{
+  margin: 3px 0;
+  line-height: 1.5;
+}}
+.section-header {{
+  font-weight: 700;
+  font-size: 11.5pt;
+  color: #0369a1;
+  margin: 25px 0 12px 0;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #0ea5e9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}}
+.info-table {{
+  width: 100%;
+  margin: 12px 0;
+}}
+.info-table td {{
+  padding: 6px 0;
+  vertical-align: top;
+}}
+.info-table td:first-child {{
+  font-weight: 600;
+  color: #4b5563;
+  width: 180px;
+}}
+.pricing-table {{
+  width: 100%;
+  margin: 15px 0;
+  border-collapse: collapse;
+}}
+.pricing-table td {{
+  padding: 10px;
+}}
+.pricing-table td:last-child {{
+  text-align: right;
+  font-weight: 600;
+}}
+.pricing-row {{
+  border-top: 1px solid #e5e7eb;
+}}
+.total-row {{
+  border-top: 3px double #0369a1;
+  background: #f0f9ff;
+  font-size: 12pt;
+}}
+.total-row td {{
+  padding: 15px 10px;
+  font-weight: 700;
+  color: #0369a1;
+}}
+.checkmark-list {{
+  list-style: none;
+  padding-left: 0;
+  margin: 12px 0;
+}}
+.checkmark-list li {{
+  padding: 5px 0 5px 25px;
+  position: relative;
+}}
+.checkmark-list li::before {{
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #10b981;
+  font-weight: 700;
+  font-size: 12pt;
+}}
+.payment-method {{
+  background: #fffbeb;
+  padding: 15px 20px;
+  margin: 15px 0;
+  border-left: 5px solid #f59e0b;
+  border-radius: 4px;
+}}
+.important-note {{
+  color: #dc2626;
+  font-weight: 600;
+  margin: 10px 0;
+}}
+.signature-box {{
+  margin: 30px 0;
+  padding: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+}}
+.signature-line {{
+  margin-top: 40px;
+  border-top: 2px solid #000;
+  width: 60%;
+  display: inline-block;
+}}
+.footer-box {{
+  text-align: center;
+  margin: 30px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-top: 3px solid #0ea5e9;
+  border-radius: 8px;
+}}
+.footer-box strong {{
+  font-size: 12pt;
+  color: #0369a1;
+}}
+.contact-info {{
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px solid #e5e7eb;
+  font-size: 9.5pt;
+  color: #6b7280;
+}}
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="doc-number">📃<br>{invoice_number}</div>
+</div>
+
+<h1>INVOICE</h1>
+<div class="divider"></div>
+
+<div class="entity-box">
+  <p><strong>Individual Entrepreneur Vera Iambaeva</strong></p>
+  <p>Tax ID: 302335809</p>
+  <p>Country of Registration: Georgia</p>
+</div>
+
+<p style="margin: 15px 0; font-weight: 600;">Custom Digital Video Services</p>
+
+<table class="info-table">
+  <tr><td>Invoice:</td><td><strong>{invoice_number}</strong></td></tr>
+  <tr><td>Date Issued:</td><td>{format_date_utc(invoice_date)}</td></tr>
+  <tr><td>Due Date:</td><td>Upon Delivery of Digital Assets</td></tr>
+</table>
+
+<div class="divider"></div>
+
+<div class="section-header">Bill To:</div>
+<p style="margin: 10px 0;">
+  {project.get('user_name', 'Client')}<br>
+  Email: {project.get('user_email', '')}<br>
+  Project Reference: {project['project_number']}<br>
+  Project Title: {project.get('project_title', '')}
 </p>
-<table style="margin: 20px 0;">
-<tr><td><strong>Invoice:</strong></td><td>{invoice_number}</td></tr>
-<tr><td><strong>Date Issued:</strong></td><td>{format_date_utc(invoice_date)}</td></tr>
-<tr><td><strong>Due Date:</strong></td><td>Upon Delivery of Digital Assets</td></tr>
+
+<div class="divider"></div>
+
+<div class="section-header">Service Description:</div>
+<p style="margin: 10px 0;"><strong>Service Type:</strong> {project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</p>
+<p style="margin: 10px 0;">
+  <strong>Project Brief:</strong><br>
+  {project.get('detailed_brief', 'See project details')}
+</p>
+<p style="margin: 10px 0;">
+  <strong>Estimated Production Period:</strong><br>
+  Start: {production_start}<br>
+  Delivery: {production_end}
+</p>
+
+<div class="divider"></div>
+
+<div class="section-header">Pricing:</div>
+<table class="pricing-table">
+  <tr>
+    <td>Service Fee</td>
+    <td>${amount:.2f} USD</td>
+  </tr>
 </table>
 
-<div class="section-title">BILL TO:</div>
-<p>{project.get('user_name', 'Client')}<br>
-Email: {project.get('user_email', '')}<br>
-Project Reference: {project['project_number']}<br>
-Project Title: {project.get('project_title', '')}</p>
+<div class="divider"></div>
 
-<div class="section-title">SERVICE DESCRIPTION:</div>
-<p><strong>Service Type:</strong> {project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</p>
-<p><strong>Project Brief:</strong><br>{project.get('detailed_brief', 'See project details')}</p>
-<p><strong>Estimated Production Period:</strong><br>
-Start: {production_start}<br>
-Delivery: {production_end}</p>
-
-<div class="section-title">PRICING:</div>
-<table style="width: 100%; margin: 10px 0;">
-<tr><td>Service Fee</td><td style="text-align: right;"><strong>${amount:.2f} USD</strong></td></tr>
-</table>
-<table style="width: 100%; margin: 20px 0; border-top: 2px solid #e5e7eb; padding-top: 10px;">
-<tr><td><strong>SUBTOTAL:</strong></td><td style="text-align: right;"><strong>${amount:.2f} USD</strong></td></tr>
-<tr><td>Tax (Digital Services):</td><td style="text-align: right;">$0.00</td></tr>
-<tr style="border-top: 3px double #0369a1;"><td><strong>TOTAL AMOUNT DUE:</strong></td><td style="text-align: right; font-size: 14pt; color: #0369a1;"><strong>${amount:.2f} USD</strong></td></tr>
+<table class="pricing-table">
+  <tr class="pricing-row">
+    <td>SUBTOTAL:</td>
+    <td>${amount:.2f} USD</td>
+  </tr>
+  <tr class="pricing-row">
+    <td>Tax (Digital Services):</td>
+    <td>$0.00</td>
+  </tr>
+  <tr><td colspan="2" style="padding: 5px 0;"></td></tr>
+  <tr class="total-row">
+    <td>TOTAL AMOUNT DUE:</td>
+    <td>${amount:.2f} USD</td>
+  </tr>
 </table>
 
-<div class="section-title">PAYMENT TERMS:</div>
-<ul>
-<li>✓ 100% post-payment model (pay after delivery)</li>
-<li>✓ Invoice issued before production begins</li>
-<li>✓ Payment due upon delivery of digital files</li>
-<li>✓ Payment confirms acceptance of delivered work</li>
-<li>✓ No refunds after delivery completion</li>
-<li>✓ All deliverables provided electronically</li>
+<div class="divider"></div>
+
+<div class="section-header">Payment Terms:</div>
+<ul class="checkmark-list">
+  <li>100% post-payment model (pay after delivery)</li>
+  <li>Invoice issued before production begins</li>
+  <li>Payment due upon delivery of digital files</li>
+  <li>Payment confirms acceptance of delivered work</li>
+  <li>No refunds after delivery completion</li>
+  <li>All deliverables provided electronically</li>
 </ul>
 
-<div class="section-title">PAYMENT METHOD:</div>
-<p><strong>{project.get('order_activation_payment_method', 'PayPal').upper()}</strong></p>
-<p>PayPal Account: <strong>302335809@postbox.ge</strong></p>
-<p style="color: #dc2626;"><em>Important: Include project reference "{project['project_number']}" in payment notes for proper tracking.</em></p>
+<div class="divider"></div>
 
-<div class="section-title">COMMUNICATION:</div>
-<p>All project communication should be conducted through the <strong>secure client portal chat system</strong>.</p>
-<p>For urgent technical matters only: <strong>ocean2joy@gmail.com</strong></p>
+<div class="section-header">Payment Method:</div>
+<div class="payment-method">
+  <p style="margin: 5px 0;"><strong>{project.get('order_activation_payment_method', 'PayPal').upper()}</strong></p>
+  <p style="margin: 5px 0;">PayPal Account: <strong>302335809@postbox.ge</strong></p>
+  <p class="important-note">Important: Include project reference "{project['project_number']}" in payment notes for proper tracking.</p>
+</div>
 
-<div class="section-title">NOTES:</div>
-<ul>
-<li>• This is a digital service - no physical goods shipped</li>
-<li>• All files delivered via secure client portal</li>
-<li>• By signing this invoice, you agree to the terms above</li>
-<li>• Production begins after invoice confirmation</li>
-<li>• Delivery timeline confirmed after production start</li>
+<div class="divider"></div>
+
+<div class="section-header">Communication:</div>
+<p style="margin: 10px 0;">
+  All project communication should be conducted through<br>
+  the secure client portal chat system.
+</p>
+<p style="margin: 10px 0;">
+  For urgent technical matters only:<br>
+  <strong>ocean2joy@gmail.com</strong>
+</p>
+
+<div class="divider"></div>
+
+<div class="section-header">Notes:</div>
+<p style="margin: 8px 0;">• This is a digital service - no physical goods shipped</p>
+<p style="margin: 8px 0;">• All files delivered via secure client portal</p>
+<p style="margin: 8px 0;">• By signing this invoice, you agree to the terms above</p>
+<p style="margin: 8px 0;">• Production begins after invoice confirmation</p>
+<p style="margin: 8px 0;">• Delivery timeline confirmed after production start</p>
+
+<div class="divider"></div>
+
+<div class="section-header">Legal Framework & Terms:</div>
+<p style="margin: 12px 0;">This Invoice-Offer is governed by:</p>
+<p style="margin: 8px 0;">• <strong>Terms of Service:</strong> ocean2joy.com/terms</p>
+<p style="margin: 8px 0;">• <strong>Service Agreement:</strong> ocean2joy.com/service-agreement</p>
+<p style="margin: 8px 0;">• <strong>Refund Policy:</strong> ocean2joy.com/refund-policy</p>
+<p style="margin: 8px 0;">• <strong>Privacy Policy:</strong> ocean2joy.com/privacy</p>
+
+<p style="margin: 15px 0;"><strong>By signing below, Client confirms:</strong></p>
+<ul class="checkmark-list">
+  <li>Reading and accepting all documents listed above</li>
+  <li>Agreement with 100% post-payment terms</li>
+  <li>Understanding that no refunds apply after delivery</li>
+  <li>Acceptance that this is a digital service (no physical goods)</li>
 </ul>
 
-<div class="section-title">LEGAL FRAMEWORK & TERMS:</div>
-<p>This Invoice-Offer is governed by:</p>
-<ul>
-<li>• <strong>Terms of Service:</strong> Available in client portal</li>
-<li>• <strong>Refund Policy:</strong> Available in client portal</li>
-<li>• <strong>Privacy Policy:</strong> Available in client portal</li>
-<li>• <strong>Digital Delivery Policy:</strong> Available in client portal</li>
-</ul>
-<p><strong>By signing below, Client confirms:</strong></p>
-<ul>
-<li>✓ Reading and accepting all policy documents</li>
-<li>✓ Agreement with 100% post-payment terms</li>
-<li>✓ Understanding that no refunds apply after delivery</li>
-<li>✓ Acceptance that this is a digital service (no physical goods)</li>
-</ul>
+<p style="margin: 10px 0;">Full legal documentation: <strong>ocean2joy.com/legal</strong></p>
+
+<div class="divider"></div>
 
 <div class="signature-box">
-<p><strong>CLIENT ACCEPTANCE & SIGNATURE:</strong></p>
-<p style="margin: 15px 0;">By signing below, the Client confirms:</p>
-<ul>
-<li>✓ Agreement with all terms and pricing stated above</li>
-<li>✓ Authorization to begin production</li>
-<li>✓ Understanding of payment terms (due upon delivery)</li>
-</ul>
-<table style="margin-top: 20px;">
-<tr><td>Client Name:</td><td>{project.get('user_name', '')}</td></tr>
-<tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
-<tr><td>Date:</td><td>{format_date_utc(invoice_date)}</td></tr>
-</table>
-<div class="signature-line" style="margin-top: 40px;"></div>
-<p style="margin-top: 5px; font-size: 9pt;">Client Signature</p>
+  <p style="margin: 0 0 15px 0;"><strong>CLIENT ACCEPTANCE & SIGNATURE:</strong></p>
+  <p style="margin: 10px 0;">By signing below, the Client confirms:</p>
+  <ul class="checkmark-list">
+    <li>Agreement with all terms and pricing stated above</li>
+    <li>Authorization to begin production</li>
+    <li>Understanding of payment terms (due upon delivery)</li>
+  </ul>
+  <table class="info-table" style="margin-top: 20px;">
+    <tr><td>Client Name:</td><td>{project.get('user_name', '')}</td></tr>
+    <tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
+    <tr><td>Date:</td><td>{format_date_utc(invoice_date)}</td></tr>
+  </table>
+  <br><br>
+  <p style="margin: 10px 0;">Signature: ___________________________________________</p>
 </div>
 
-<div style="text-align: center; margin: 30px 0; padding: 15px; background: #f0f9ff; border-top: 3px solid #0ea5e9;">
-<p style="margin: 0; font-size: 12pt;"><strong>Thank you for choosing Ocean2Joy!</strong></p>
-<p style="margin: 5px 0; font-size: 10pt;">Professional digital video production services</p>
+<br>
+<div class="divider"></div>
+
+<div class="footer-box">
+  <p style="margin: 0;"><strong>Thank you for choosing Ocean2Joy!</strong></p>
+  <p style="margin: 5px 0; font-size: 10pt;">Professional digital video production services.</p>
 </div>
-"""
+
+<div class="divider"></div>
+
+<div class="contact-info">
+  <p style="margin: 5px 0;">Legal Entity: Individual Entrepreneur Vera Iambaeva</p>
+  <p style="margin: 5px 0;">Tax ID: 302335809 | Georgia</p>
+  <p style="margin: 5px 0;">Brand: Ocean2Joy Digital Video Production</p>
+  <p style="margin: 10px 0;">Contact: ocean2joy@gmail.com | +995 555 375 032</p>
+  <p style="margin: 5px 0;">Tbilisi, Georgia</p>
+</div>
+
+<div class="divider"></div>
+
+</body>
+</html>"""
     
-    return generate_base_html_template(f"Invoice {invoice_number}", content, project)
+    return html
 
 async def generate_acceptance_act_html(project: dict) -> str:
-    """Generate Acceptance Act HTML for PDF"""
+    """Generate Acceptance Act HTML for PDF - Professional standalone version"""
     delivered_date = project.get('delivered_at', datetime.now(timezone.utc))
     if isinstance(delivered_date, str):
         delivered_date = datetime.fromisoformat(delivered_date)
@@ -2644,122 +2892,650 @@ async def generate_acceptance_act_html(project: dict) -> str:
         acceptance_date = datetime.fromisoformat(acceptance_date)
     acceptance_date = acceptance_date if acceptance_date.tzinfo else acceptance_date.replace(tzinfo=timezone.utc)
     act_number = await get_or_generate_document_number(project, 'acceptance_act', 'ACC', acceptance_date)
-    deliverables_html = "<ul>" + "".join([f"<li>{d.get('file_name', 'File')}</li>" for d in project.get('deliverables', [])]) + "</ul>" if project.get('deliverables') else "<p><em>Digital video files delivered via secure portal</em></p>"
     
-    content = f"""<div class="section"><h2 style="text-align: center; color: #0369a1; margin: 20px 0;">ACCEPTANCE ACT</h2>
-<p style="text-align: center; color: #6b7280;">Digital Video Production Service - Acceptance Certificate</p>
-<table style="margin-top: 20px;"><tr><td>Act Number:</td><td><strong>{act_number}</strong></td></tr>
-<tr><td>Project Reference:</td><td>{project['project_number']}</td></tr>
-<tr><td>Client:</td><td>{project.get('user_name', 'Client')}</td></tr>
-<tr><td>Service Provider:</td><td>Individual Entrepreneur Vera Iambaeva</td></tr></table></div>
-<div class="section-title">PROJECT DETAILS:</div>
-<table><tr><td>Title:</td><td>{project.get('project_title', '')}</td></tr>
-<tr><td>Service Type:</td><td>{project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</td></tr>
-<tr><td>Brief:</td><td>{project.get('detailed_brief', '')}</td></tr></table>
-<div class="section-title">DELIVERABLES:</div>{deliverables_html}
-<table><tr><td>Delivery Date:</td><td>{format_date_utc(delivered_date)}</td></tr>
-<tr><td>Delivery Method:</td><td>Secure Digital Portal</td></tr></table>
-<div class="highlight-box"><h3 style="margin: 0 0 10px 0; color: #92400e;">ACCEPTANCE CONFIRMATION</h3>
-<p>By signing this document, the Client confirms:</p>
-<ul><li><span class="checkmark">✓</span> Receipt of all deliverable digital files</li>
-<li><span class="checkmark">✓</span> Access to files via secure download portal</li>
-<li><span class="checkmark">✓</span> Acceptance of delivered materials as complete</li>
-<li><span class="checkmark">✓</span> Agreement that work meets specified requirements</li>
-<li><span class="checkmark">✓</span> Completion of the service contract</li></ul></div>
-<div class="signature-box"><p><strong>CLIENT SIGNATURE:</strong></p>
-<table style="margin-top: 20px;"><tr><td>Name:</td><td>{project.get('user_name', '')}</td></tr>
-<tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
-<tr><td>Date:</td><td>{format_date_utc(acceptance_date)}</td></tr></table>
-<div class="signature-line" style="margin-top: 40px;"></div>
-<p style="margin-top: 5px; font-size: 9pt;">Client Signature</p></div>
-<p style="margin-top: 30px; text-align: center; color: #6b7280; font-size: 10pt;">This document serves as legal confirmation of service delivery<br>and client acceptance for project {project['project_number']}.</p>"""
+    # Build deliverables list
+    deliverables_items = ""
+    if project.get('deliverables'):
+        for d in project.get('deliverables', []):
+            deliverables_items += f"<p style='margin: 5px 0;'>• {d.get('file_name', 'File')}</p>"
+    else:
+        deliverables_items = "<p style='margin: 10px 0; font-style: italic;'>Digital video files delivered via secure portal</p>"
     
-    return generate_base_html_template(f"Acceptance Act {act_number}", content, project)
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Acceptance Act {act_number}</title>
+<style>
+@page {{ size: A4; margin: 2cm; }}
+body {{ 
+  font-family: 'DejaVu Sans', Arial, sans-serif;
+  font-size: 10.5pt; 
+  line-height: 1.6; 
+  color: #1f2937;
+  max-width: 800px;
+  margin: 0 auto;
+}}
+.doc-header {{
+  text-align: center;
+  margin-bottom: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+  color: white;
+  border-radius: 8px;
+}}
+.doc-number {{
+  font-size: 11pt;
+  font-weight: 600;
+  margin-bottom: 5px;
+}}
+h1 {{
+  text-align: center;
+  font-size: 20pt;
+  font-weight: 700;
+  margin: 15px 0;
+  color: #047857;
+  letter-spacing: 1px;
+}}
+.subtitle {{
+  text-align: center;
+  color: #6b7280;
+  font-size: 10pt;
+  margin: 10px 0 20px 0;
+}}
+.entity-box {{
+  background: #f0fdf4;
+  padding: 15px 20px;
+  margin: 20px 0;
+  border-left: 5px solid #10b981;
+  border-radius: 4px;
+}}
+.section-header {{
+  font-weight: 700;
+  font-size: 11.5pt;
+  color: #047857;
+  margin: 25px 0 12px 0;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #10b981;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}}
+.info-table {{
+  width: 100%;
+  margin: 12px 0;
+}}
+.info-table td {{
+  padding: 6px 0;
+  vertical-align: top;
+}}
+.info-table td:first-child {{
+  font-weight: 600;
+  color: #4b5563;
+  width: 180px;
+}}
+.checkmark-list {{
+  list-style: none;
+  padding-left: 0;
+  margin: 12px 0;
+}}
+.checkmark-list li {{
+  padding: 5px 0 5px 25px;
+  position: relative;
+}}
+.checkmark-list li::before {{
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #10b981;
+  font-weight: 700;
+  font-size: 12pt;
+}}
+.confirmation-box {{
+  background: #fffbeb;
+  padding: 20px;
+  margin: 20px 0;
+  border-left: 5px solid #f59e0b;
+  border-radius: 4px;
+}}
+.confirmation-box h3 {{
+  margin: 0 0 15px 0;
+  color: #92400e;
+  font-size: 12pt;
+}}
+.signature-box {{
+  margin: 30px 0;
+  padding: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+}}
+.signature-line {{
+  margin-top: 40px;
+  border-top: 2px solid #000;
+  width: 60%;
+  display: inline-block;
+}}
+.footer-note {{
+  text-align: center;
+  margin: 30px 0;
+  padding: 15px;
+  color: #6b7280;
+  font-size: 10pt;
+  border-top: 2px solid #e5e7eb;
+}}
+.contact-info {{
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px solid #e5e7eb;
+  font-size: 9.5pt;
+  color: #6b7280;
+}}
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="doc-number">📋<br>{act_number}</div>
+</div>
+
+<h1>ACCEPTANCE ACT</h1>
+<p class="subtitle">Digital Video Production Service - Acceptance Certificate</p>
+
+<table class="info-table">
+  <tr><td>Act Number:</td><td><strong>{act_number}</strong></td></tr>
+  <tr><td>Project Reference:</td><td>{project['project_number']}</td></tr>
+  <tr><td>Client:</td><td>{project.get('user_name', 'Client')}</td></tr>
+  <tr><td>Service Provider:</td><td><strong>Individual Entrepreneur Vera Iambaeva</strong></td></tr>
+</table>
+
+<div class="section-header">Project Details:</div>
+<table class="info-table">
+  <tr><td>Title:</td><td>{project.get('project_title', '')}</td></tr>
+  <tr><td>Service Type:</td><td>{project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</td></tr>
+  <tr><td>Brief:</td><td>{project.get('detailed_brief', '')}</td></tr>
+</table>
+
+<div class="section-header">Deliverables:</div>
+{deliverables_items}
+
+<table class="info-table" style="margin-top: 15px;">
+  <tr><td>Delivery Date:</td><td>{format_date_utc(delivered_date)}</td></tr>
+  <tr><td>Delivery Method:</td><td>Secure Digital Portal</td></tr>
+</table>
+
+<div class="confirmation-box">
+  <h3>ACCEPTANCE CONFIRMATION</h3>
+  <p style="margin: 10px 0;">By signing this document, the Client confirms:</p>
+  <ul class="checkmark-list">
+    <li>Receipt of all deliverable digital files</li>
+    <li>Access to files via secure download portal</li>
+    <li>Acceptance of delivered materials as complete</li>
+    <li>Agreement that work meets specified requirements</li>
+    <li>Completion of the service contract</li>
+  </ul>
+</div>
+
+<div class="signature-box">
+  <p style="margin: 0 0 15px 0;"><strong>CLIENT SIGNATURE:</strong></p>
+  <table class="info-table" style="margin-top: 20px;">
+    <tr><td>Name:</td><td>{project.get('user_name', '')}</td></tr>
+    <tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
+    <tr><td>Date:</td><td>{format_date_utc(acceptance_date)}</td></tr>
+  </table>
+  <br><br>
+  <p style="margin: 10px 0;">Signature: ___________________________________________</p>
+</div>
+
+<p class="footer-note">
+  This document serves as legal confirmation of service delivery<br>
+  and client acceptance for project <strong>{project['project_number']}</strong>.
+</p>
+
+<div class="contact-info">
+  <p style="margin: 5px 0;">Legal Entity: Individual Entrepreneur Vera Iambaeva</p>
+  <p style="margin: 5px 0;">Tax ID: 302335809 | Georgia</p>
+  <p style="margin: 5px 0;">Brand: Ocean2Joy Digital Video Production</p>
+  <p style="margin: 10px 0;">Contact: ocean2joy@gmail.com | +995 555 375 032</p>
+  <p style="margin: 5px 0;">Tbilisi, Georgia</p>
+</div>
+
+</body>
+</html>"""
+    
+    return html
 
 async def generate_receipt_html(project: dict) -> str:
-    """Generate Payment Receipt HTML for PDF"""
+    """Generate Payment Receipt HTML for PDF - Professional standalone version"""
     payment_date = project.get('completed_at') or project.get('payment_confirmed_at') or datetime.now(timezone.utc)
     if isinstance(payment_date, str):
         payment_date = datetime.fromisoformat(payment_date)
     payment_date = payment_date if payment_date.tzinfo else payment_date.replace(tzinfo=timezone.utc)
     receipt_number = await get_or_generate_document_number(project, 'receipt', 'RCP', payment_date)
     payment_sent = format_datetime_utc(project.get('payment_marked_by_client_at')) if project.get('payment_marked_by_client_at') else 'N/A'
-    deliverables_html = "<ul>" + "".join([f"<li>{d.get('file_name', 'File')}</li>" for d in project.get('deliverables', [])]) + "</ul>" if project.get('deliverables') else "<p><em>Digital video files</em></p>"
+    amount = project.get('quote_amount', 0)
     
-    content = f"""<div class="section"><h2 style="text-align: center; color: #0369a1; margin: 20px 0;">PAYMENT RECEIPT</h2>
-<p style="text-align: center; color: #6b7280;">Official Payment Confirmation</p>
-<table style="margin-top: 20px;"><tr><td>Receipt Number:</td><td><strong>{receipt_number}</strong></td></tr>
-<tr><td>Date Issued:</td><td>{format_date_utc(payment_date)}</td></tr></table></div>
-<div class="section-title">PAYMENT RECEIVED FROM:</div>
-<table><tr><td>Client:</td><td>{project.get('user_name', 'Client')}</td></tr>
-<tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
-<tr><td>Project Reference:</td><td>{project['project_number']}</td></tr></table>
-<div class="section-title">PAYMENT RECEIVED BY:</div>
-<table><tr><td>Recipient:</td><td><strong>Individual Entrepreneur Vera Iambaeva</strong></td></tr>
-<tr><td>Tax ID:</td><td>302335809</td></tr>
-<tr><td>PayPal Account:</td><td>302335809@postbox.ge</td></tr>
-<tr><td>Country:</td><td>Georgia</td></tr></table>
-<div class="highlight-box"><h3 style="margin: 0 0 10px 0; color: #92400e;">PAYMENT DETAILS</h3>
-<table><tr><td>Amount Received:</td><td><strong style="font-size: 14pt;">${project.get('quote_amount', 0):.2f} USD</strong></td></tr>
-<tr><td>Payment Method:</td><td>{project.get('order_activation_payment_method', 'PayPal').upper()}</td></tr>
-<tr><td>Payment Date:</td><td>{payment_sent}</td></tr>
-<tr><td>Payment Confirmed:</td><td>{format_datetime_utc(payment_date)}</td></tr>
-<tr><td>Transaction ID:</td><td>{project.get('paypal_transaction_id', 'See payment proof')}</td></tr>
-<tr><td>Payment Status:</td><td><strong>{project.get('paypal_payment_status', 'COMPLETED')}</strong></td></tr></table></div>
-<div class="section-title">SERVICES RENDERED:</div>
-<table><tr><td>Project Title:</td><td>{project.get('project_title', '')}</td></tr>
-<tr><td>Service Type:</td><td>{project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</td></tr></table>
-<p><strong>Deliverables:</strong></p>{deliverables_html}
-<div style="text-align: center; margin: 30px 0;"><div class="paid-stamp">✓ PAID IN FULL</div></div>
-<table style="margin: 20px 0;"><tr><td>Total Amount:</td><td>${project.get('quote_amount', 0):.2f} USD</td></tr>
-<tr><td>Amount Paid:</td><td>${project.get('quote_amount', 0):.2f} USD</td></tr>
-<tr style="border-top: 2px solid #10b981;"><td><strong>Balance Due:</strong></td><td><strong>$0.00 USD</strong></td></tr></table>
-<div class="section-title">DELIVERY CONFIRMATION:</div>
-<table><tr><td>Delivered On:</td><td>{format_date_utc(project.get('delivered_at', payment_date))}</td></tr>
-<tr><td>Delivery Method:</td><td>Secure client portal</td></tr>
-<tr><td>Files Accessed:</td><td>{format_date_utc(project.get('files_accessed_at')) if project.get('files_accessed_at') else 'Confirmed'}</td></tr></table>
-<p style="margin-top: 30px; text-align: center; font-size: 10pt; color: #047857;"><strong>This receipt confirms full payment for digital video production services.</strong><br>No further payment is required.</p>"""
+    # Build deliverables list
+    deliverables_items = ""
+    if project.get('deliverables'):
+        for d in project.get('deliverables', []):
+            deliverables_items += f"<p style='margin: 5px 0;'>• {d.get('file_name', 'File')}</p>"
+    else:
+        deliverables_items = "<p style='margin: 10px 0; font-style: italic;'>Digital video files</p>"
     
-    return generate_base_html_template(f"Receipt {receipt_number}", content, project)
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Receipt {receipt_number}</title>
+<style>
+@page {{ size: A4; margin: 2cm; }}
+body {{ 
+  font-family: 'DejaVu Sans', Arial, sans-serif;
+  font-size: 10.5pt; 
+  line-height: 1.6; 
+  color: #1f2937;
+  max-width: 800px;
+  margin: 0 auto;
+}}
+.doc-header {{
+  text-align: center;
+  margin-bottom: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+  color: white;
+  border-radius: 8px;
+}}
+.doc-number {{
+  font-size: 11pt;
+  font-weight: 600;
+  margin-bottom: 5px;
+}}
+h1 {{
+  text-align: center;
+  font-size: 20pt;
+  font-weight: 700;
+  margin: 15px 0;
+  color: #0369a1;
+  letter-spacing: 1px;
+}}
+.subtitle {{
+  text-align: center;
+  color: #6b7280;
+  font-size: 10pt;
+  margin: 10px 0 20px 0;
+}}
+.section-header {{
+  font-weight: 700;
+  font-size: 11.5pt;
+  color: #0369a1;
+  margin: 25px 0 12px 0;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #0ea5e9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}}
+.info-table {{
+  width: 100%;
+  margin: 12px 0;
+}}
+.info-table td {{
+  padding: 6px 0;
+  vertical-align: top;
+}}
+.info-table td:first-child {{
+  font-weight: 600;
+  color: #4b5563;
+  width: 180px;
+}}
+.payment-details-box {{
+  background: #fffbeb;
+  padding: 20px;
+  margin: 20px 0;
+  border-left: 5px solid #f59e0b;
+  border-radius: 4px;
+}}
+.payment-details-box h3 {{
+  margin: 0 0 15px 0;
+  color: #92400e;
+  font-size: 12pt;
+}}
+.paid-stamp {{
+  display: inline-block;
+  padding: 15px 30px;
+  background: #d1fae5;
+  border: 4px solid #10b981;
+  color: #047857;
+  font-weight: 700;
+  font-size: 16pt;
+  transform: rotate(-5deg);
+  margin: 20px 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}}
+.summary-table {{
+  width: 100%;
+  margin: 20px 0;
+  border-collapse: collapse;
+}}
+.summary-table td {{
+  padding: 10px;
+}}
+.summary-table td:last-child {{
+  text-align: right;
+  font-weight: 600;
+}}
+.summary-row {{
+  border-top: 1px solid #e5e7eb;
+}}
+.total-row {{
+  border-top: 3px solid #10b981;
+  background: #f0fdf4;
+  font-size: 12pt;
+}}
+.total-row td {{
+  padding: 15px 10px;
+  font-weight: 700;
+  color: #047857;
+}}
+.confirmation-note {{
+  text-align: center;
+  margin: 30px 0;
+  padding: 15px;
+  font-size: 10pt;
+  color: #047857;
+  font-weight: 600;
+  background: #f0fdf4;
+  border-radius: 8px;
+  border-top: 3px solid #10b981;
+}}
+.contact-info {{
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px solid #e5e7eb;
+  font-size: 9.5pt;
+  color: #6b7280;
+}}
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="doc-number">🧾<br>{receipt_number}</div>
+</div>
+
+<h1>PAYMENT RECEIPT</h1>
+<p class="subtitle">Official Payment Confirmation</p>
+
+<table class="info-table">
+  <tr><td>Receipt Number:</td><td><strong>{receipt_number}</strong></td></tr>
+  <tr><td>Date Issued:</td><td>{format_date_utc(payment_date)}</td></tr>
+</table>
+
+<div class="section-header">Payment Received From:</div>
+<table class="info-table">
+  <tr><td>Client:</td><td>{project.get('user_name', 'Client')}</td></tr>
+  <tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
+  <tr><td>Project Reference:</td><td>{project['project_number']}</td></tr>
+</table>
+
+<div class="section-header">Payment Received By:</div>
+<table class="info-table">
+  <tr><td>Recipient:</td><td><strong>Individual Entrepreneur Vera Iambaeva</strong></td></tr>
+  <tr><td>Tax ID:</td><td>302335809</td></tr>
+  <tr><td>PayPal Account:</td><td>302335809@postbox.ge</td></tr>
+  <tr><td>Country:</td><td>Georgia</td></tr>
+</table>
+
+<div class="payment-details-box">
+  <h3>PAYMENT DETAILS</h3>
+  <table class="info-table">
+    <tr><td>Amount Received:</td><td><strong style="font-size: 14pt; color: #047857;">${amount:.2f} USD</strong></td></tr>
+    <tr><td>Payment Method:</td><td>{project.get('order_activation_payment_method', 'PayPal').upper()}</td></tr>
+    <tr><td>Payment Date:</td><td>{payment_sent}</td></tr>
+    <tr><td>Payment Confirmed:</td><td>{format_datetime_utc(payment_date)}</td></tr>
+    <tr><td>Transaction ID:</td><td>{project.get('paypal_transaction_id', 'See payment proof')}</td></tr>
+    <tr><td>Payment Status:</td><td><strong>{project.get('paypal_payment_status', 'COMPLETED')}</strong></td></tr>
+  </table>
+</div>
+
+<div class="section-header">Services Rendered:</div>
+<table class="info-table">
+  <tr><td>Project Title:</td><td>{project.get('project_title', '')}</td></tr>
+  <tr><td>Service Type:</td><td>{project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</td></tr>
+</table>
+
+<p style="margin: 15px 0; font-weight: 600;">Deliverables:</p>
+{deliverables_items}
+
+<div style="text-align: center; margin: 30px 0;">
+  <div class="paid-stamp">✓ PAID IN FULL</div>
+</div>
+
+<table class="summary-table">
+  <tr class="summary-row">
+    <td>Total Amount:</td>
+    <td>${amount:.2f} USD</td>
+  </tr>
+  <tr class="summary-row">
+    <td>Amount Paid:</td>
+    <td>${amount:.2f} USD</td>
+  </tr>
+  <tr class="total-row">
+    <td>Balance Due:</td>
+    <td>$0.00 USD</td>
+  </tr>
+</table>
+
+<div class="section-header">Delivery Confirmation:</div>
+<table class="info-table">
+  <tr><td>Delivered On:</td><td>{format_date_utc(project.get('delivered_at', payment_date))}</td></tr>
+  <tr><td>Delivery Method:</td><td>Secure client portal</td></tr>
+  <tr><td>Files Accessed:</td><td>{format_date_utc(project.get('files_accessed_at')) if project.get('files_accessed_at') else 'Confirmed'}</td></tr>
+</table>
+
+<p class="confirmation-note">
+  <strong>This receipt confirms full payment for digital video production services.</strong><br>
+  No further payment is required.
+</p>
+
+<div class="contact-info">
+  <p style="margin: 5px 0;">Legal Entity: Individual Entrepreneur Vera Iambaeva</p>
+  <p style="margin: 5px 0;">Tax ID: 302335809 | Georgia</p>
+  <p style="margin: 5px 0;">Brand: Ocean2Joy Digital Video Production</p>
+  <p style="margin: 10px 0;">Contact: ocean2joy@gmail.com | +995 555 375 032</p>
+  <p style="margin: 5px 0;">Tbilisi, Georgia</p>
+</div>
+
+</body>
+</html>"""
+    
+    return html
 
 async def generate_certificate_html(project: dict) -> str:
-    """Generate Completion Certificate HTML for PDF"""
+    """Generate Completion Certificate HTML for PDF - Professional standalone version"""
     completed_date = project.get('completed_at', datetime.now(timezone.utc))
     if isinstance(completed_date, str):
         completed_date = datetime.fromisoformat(completed_date)
     completed_date = completed_date if completed_date.tzinfo else completed_date.replace(tzinfo=timezone.utc)
     cert_number = await get_or_generate_document_number(project, 'certificate', 'CRT', completed_date)
     
-    content = f"""<div style="border: 5px double #0369a1; padding: 30px; margin: 20px 0;">
-<h2 style="text-align: center; color: #0369a1; margin: 20px 0; font-size: 20pt;">CERTIFICATE OF COMPLETION</h2>
-<p style="text-align: center; color: #6b7280; margin-bottom: 30px;">Official Project Completion Documentation</p>
-<table style="margin: 20px 0;"><tr><td>Certificate Number:</td><td><strong>{cert_number}</strong></td></tr>
-<tr><td>Project Number:</td><td>{project['project_number']}</td></tr>
-<tr><td>Issue Date:</td><td>{format_date_utc(completed_date)}</td></tr></table></div>
-<div class="section-title">PROJECT INFORMATION:</div>
-<table><tr><td>Project Title:</td><td><strong>{project.get('project_title', '')}</strong></td></tr>
-<tr><td>Service Type:</td><td>Custom Digital Video Production</td></tr>
-<tr><td>Client:</td><td>{project.get('user_name', 'Client')} ({project.get('user_email', '')})</td></tr></table>
-<div class="section-title">PROJECT TIMELINE:</div>
-<table><tr><td>Request Submitted:</td><td>{format_date_utc(project.get('created_at'))}</td></tr>
-<tr><td>Production Started:</td><td>{format_date_utc(project.get('production_started_at'))}</td></tr>
-<tr><td>Deliverables Provided:</td><td>{format_date_utc(project.get('delivered_at'))}</td></tr>
-<tr><td>Payment Received:</td><td>{format_date_utc(project.get('completed_at'))}</td></tr>
-<tr><td>Project Closed:</td><td>{format_date_utc(completed_date)}</td></tr></table>
-<div class="section-title">FINANCIAL SETTLEMENT:</div>
-<table><tr><td>Total Project Value:</td><td><strong>${project.get('quote_amount', 0):.2f} USD</strong></td></tr>
-<tr><td>Payment Method:</td><td>{project.get('order_activation_payment_method', 'PayPal').upper()}</td></tr>
-<tr><td>Payment Status:</td><td><span class="checkmark">✓</span> <strong>PAID IN FULL</strong></td></tr>
-<tr><td>Payment Date:</td><td>{format_date_utc(project.get('completed_at'))}</td></tr></table>
-<div style="text-align: center; margin: 40px 0; padding: 30px; background: #f0fdf4; border: 3px solid #10b981;">
-<p style="font-size: 16pt; color: #047857; margin: 0;"><strong>✓ PROJECT SUCCESSFULLY COMPLETED</strong></p>
-<p style="margin: 10px 0; color: #065f46;">All services delivered, payment received in full</p></div>
-<div class="section-title" style="margin-top: 40px;">ISSUED BY:</div>
-<p><strong>Ocean2Joy Digital Video Production</strong><br>Individual Entrepreneur Vera Iambaeva<br>
-Tax ID: 302335809<br>Issue Date: {format_date_utc(completed_date)}<br>Project Reference: {project['project_number']}</p>
-<p style="margin-top: 40px; text-align: center; color: #6b7280; font-size: 10pt;">This certificate confirms successful completion of all contractual obligations<br>for the above-referenced digital video production project.</p>"""
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Certificate {cert_number}</title>
+<style>
+@page {{ size: A4; margin: 2cm; }}
+body {{ 
+  font-family: 'DejaVu Sans', Arial, sans-serif;
+  font-size: 10.5pt; 
+  line-height: 1.6; 
+  color: #1f2937;
+  max-width: 800px;
+  margin: 0 auto;
+}}
+.certificate-frame {{
+  border: 6px double #0369a1;
+  padding: 30px;
+  margin: 20px 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+}}
+h1 {{
+  text-align: center;
+  font-size: 22pt;
+  font-weight: 700;
+  margin: 20px 0;
+  color: #0369a1;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}}
+.subtitle {{
+  text-align: center;
+  color: #6b7280;
+  font-size: 11pt;
+  margin: 10px 0 30px 0;
+}}
+.section-header {{
+  font-weight: 700;
+  font-size: 11.5pt;
+  color: #0369a1;
+  margin: 25px 0 12px 0;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #0ea5e9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}}
+.info-table {{
+  width: 100%;
+  margin: 12px 0;
+}}
+.info-table td {{
+  padding: 6px 0;
+  vertical-align: top;
+}}
+.info-table td:first-child {{
+  font-weight: 600;
+  color: #4b5563;
+  width: 200px;
+}}
+.completion-badge {{
+  text-align: center;
+  margin: 40px 0;
+  padding: 30px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 4px solid #10b981;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}}
+.completion-badge p:first-child {{
+  font-size: 18pt;
+  color: #047857;
+  margin: 0 0 10px 0;
+  font-weight: 700;
+}}
+.completion-badge p:last-child {{
+  margin: 10px 0 0 0;
+  color: #065f46;
+  font-size: 11pt;
+}}
+.issuer-box {{
+  margin: 40px 0 20px 0;
+  padding: 20px;
+  background: #f9fafb;
+  border-left: 5px solid #0ea5e9;
+  border-radius: 4px;
+}}
+.checkmark {{
+  color: #10b981;
+  font-weight: 700;
+  font-size: 12pt;
+}}
+.footer-note {{
+  text-align: center;
+  margin: 30px 0;
+  padding: 15px;
+  color: #6b7280;
+  font-size: 10pt;
+}}
+.contact-info {{
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px solid #e5e7eb;
+  font-size: 9.5pt;
+  color: #6b7280;
+  text-align: center;
+}}
+</style>
+</head>
+<body>
+
+<div class="certificate-frame">
+  <h1>🏆<br>Certificate of Completion</h1>
+  <p class="subtitle">Official Project Completion Documentation</p>
+  
+  <table class="info-table" style="margin: 30px 0;">
+    <tr><td>Certificate Number:</td><td><strong>{cert_number}</strong></td></tr>
+    <tr><td>Project Number:</td><td>{project['project_number']}</td></tr>
+    <tr><td>Issue Date:</td><td>{format_date_utc(completed_date)}</td></tr>
+  </table>
+</div>
+
+<div class="section-header">Project Information:</div>
+<table class="info-table">
+  <tr><td>Project Title:</td><td><strong>{project.get('project_title', '')}</strong></td></tr>
+  <tr><td>Service Type:</td><td>Custom Digital Video Production</td></tr>
+  <tr><td>Client:</td><td>{project.get('user_name', 'Client')} ({project.get('user_email', '')})</td></tr>
+</table>
+
+<div class="section-header">Project Timeline:</div>
+<table class="info-table">
+  <tr><td>Request Submitted:</td><td>{format_date_utc(project.get('created_at'))}</td></tr>
+  <tr><td>Production Started:</td><td>{format_date_utc(project.get('production_started_at'))}</td></tr>
+  <tr><td>Deliverables Provided:</td><td>{format_date_utc(project.get('delivered_at'))}</td></tr>
+  <tr><td>Payment Received:</td><td>{format_date_utc(project.get('completed_at'))}</td></tr>
+  <tr><td>Project Closed:</td><td>{format_date_utc(completed_date)}</td></tr>
+</table>
+
+<div class="section-header">Financial Settlement:</div>
+<table class="info-table">
+  <tr><td>Total Project Value:</td><td><strong>${project.get('quote_amount', 0):.2f} USD</strong></td></tr>
+  <tr><td>Payment Method:</td><td>{project.get('order_activation_payment_method', 'PayPal').upper()}</td></tr>
+  <tr><td>Payment Status:</td><td><span class="checkmark">✓</span> <strong>PAID IN FULL</strong></td></tr>
+  <tr><td>Payment Date:</td><td>{format_date_utc(project.get('completed_at'))}</td></tr>
+</table>
+
+<div class="completion-badge">
+  <p><strong>✓ PROJECT SUCCESSFULLY COMPLETED</strong></p>
+  <p>All services delivered, payment received in full</p>
+</div>
+
+<div class="issuer-box">
+  <div class="section-header" style="margin-top: 0; border: none;">Issued By:</div>
+  <p style="margin: 10px 0;"><strong>Ocean2Joy Digital Video Production</strong></p>
+  <p style="margin: 5px 0;">Individual Entrepreneur Vera Iambaeva</p>
+  <p style="margin: 5px 0;">Tax ID: 302335809</p>
+  <p style="margin: 5px 0;">Issue Date: {format_date_utc(completed_date)}</p>
+  <p style="margin: 5px 0;">Project Reference: {project['project_number']}</p>
+</div>
+
+<p class="footer-note">
+  This certificate confirms successful completion of all contractual obligations<br>
+  for the above-referenced digital video production project.
+</p>
+
+<div class="contact-info">
+  <p style="margin: 5px 0;">Legal Entity: Individual Entrepreneur Vera Iambaeva</p>
+  <p style="margin: 5px 0;">Tax ID: 302335809 | Georgia</p>
+  <p style="margin: 5px 0;">Brand: Ocean2Joy Digital Video Production</p>
+  <p style="margin: 10px 0;">Contact: ocean2joy@gmail.com | +995 555 375 032</p>
+  <p style="margin: 5px 0;">Tbilisi, Georgia</p>
+</div>
+
+</body>
+</html>"""
     
-    return generate_base_html_template(f"Certificate {cert_number}", content, project)
+    return html
 
 
 def generate_operational_chain_html(project: dict) -> str:
