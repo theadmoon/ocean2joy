@@ -453,12 +453,23 @@ Click the Download button to save the file.`;
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `${project.project_number}_${docType}.${fileExtension}`);
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      
+      // Cleanup after a short delay
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
       
       console.log('✅ Document downloaded successfully');
+      
+      // Show brief success message
+      setTimeout(() => {
+        alert(`✅ ${doc.name} downloaded as ${fileExtension.toUpperCase()}!`);
+      }, 200);
+      
     } catch (error) {
       console.error('❌ Download error:', error);
       console.error('Error details:', error.response?.data);
@@ -987,25 +998,39 @@ Click the Download button to save the file.`;
   // Download Operational Chain PDF
   const handleDownloadOperationalChainPDF = async () => {
     try {
+      console.log('📥 Starting Operational Chain PDF download...');
+      
       const response = await axios.get(
         `${API}/projects/${project.id}/operational-chain/pdf`,
         { responseType: 'blob' }
       );
       
+      console.log('✅ Response received, creating download...');
+      
+      // Method 1: Blob URL (primary)
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `${project.project_number}_Operational_Chain.pdf`;
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
       
       console.log('✅ Operational Chain PDF downloaded successfully');
+      
+      // Show success message to user
+      alert('✅ PDF downloaded! Check your Downloads folder.');
+      
     } catch (error) {
-      console.error('PDF download error:', error);
-      alert('Failed to download Operational Chain PDF. Please try again.');
+      console.error('❌ PDF download error:', error);
+      alert(`Failed to download Operational Chain PDF: ${error.message}`);
     }
   };
 
