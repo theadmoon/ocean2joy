@@ -568,9 +568,11 @@ Invoice Amount: $${projectData.quote_amount || '0.00'} USD
 PAYMENT DETAILS:
 
 Transaction ID: ${projectData.paypal_transaction_id || 'N/A'}
-${projectData.paypal_payer_email ? `Payer Email: ${projectData.paypal_payer_email}` : ''}
-Payment Method: ${projectData.order_activation_payment_method || 'N/A'}
 
+From (Payer): ${projectData.paypal_payer_email || projectData.user_email || 'N/A'}
+To (Recipient): 302335809@postbox.ge
+
+Payment Method: ${projectData.order_activation_payment_method || 'paypal'}
 Payment Sent: ${paymentSentFormatted}
 
 ═══════════════════════════════════════════════
