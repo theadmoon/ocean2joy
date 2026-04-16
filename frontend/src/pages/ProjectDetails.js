@@ -33,6 +33,9 @@ function ProjectDetails() {
   const [orderBrief, setOrderBrief] = useState('');
   const [orderPaymentMethod, setOrderPaymentMethod] = useState('');
   
+  // Order Form expansion state - auto-collapsed after activation
+  const [isOrderFormExpanded, setIsOrderFormExpanded] = useState(false);
+  
   // Payment states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentSettings, setPaymentSettings] = useState(null);
@@ -450,6 +453,9 @@ END OF DOCUMENT`
     if (project) {
       setOrderBrief(project.detailed_brief || '');
       setOrderPaymentMethod(project.order_activation_payment_method || '');
+      
+      // Auto-collapse: expanded if NOT activated, collapsed if activated
+      setIsOrderFormExpanded(!project.order_activated_at);
     }
   }, [project]);
 
@@ -877,23 +883,97 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
             )}
 
 
-            {/* Order Activation Section - Unified form (same fields in both states) */}
+            {/* Order Activation Section - Unified form with auto-collapse */}
             <div className="card-ocean p-6 mt-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-gray-900 text-left flex items-center gap-2">
                   🚀 Order Activation
                 </h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  project.order_activated_at 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {project.order_activated_at ? '✅ Completed' : '⏳ Pending'}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    project.order_activated_at 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {project.order_activated_at ? '✅ Completed' : '⏳ Pending'}
+                  </span>
+                  
+                  {/* Toggle button - only show after activation */}
+                  {project.order_activated_at && (
+                    <button
+                      onClick={() => setIsOrderFormExpanded(!isOrderFormExpanded)}
+                      className="text-sm text-sky-600 hover:text-sky-800 font-medium flex items-center gap-1"
+                    >
+                      {isOrderFormExpanded ? (
+                        <>Hide Details <span>▲</span></>
+                      ) : (
+                        <>View Details <span>▼</span></>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
               
-              {/* Unified Form - Same fields always visible */}
-              <div className="space-y-6">
+              {/* Compact Summary - shown when collapsed and activated */}
+              {project.order_activated_at && !isOrderFormExpanded && (
+                <div className="space-y-3 text-sm">
+                  {/* Brief summary */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-gray-500 font-semibold min-w-[80px]">📝 Brief:</span>
+                    <span className="text-gray-700 flex-1">
+                      {project.detailed_brief 
+                        ? (project.detailed_brief.length > 120 
+                            ? project.detailed_brief.substring(0, 120) + '...' 
+                            : project.detailed_brief)
+                        : 'No brief provided'}
+                    </span>
+                  </div>
+                  
+                  {/* Files & Payment on same line */}
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 font-semibold">📎 Files:</span>
+                      <span className="text-gray-700">
+                        {project.reference_materials?.length || 0} file{project.reference_materials?.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 font-semibold">💳 Payment:</span>
+                      <span className="text-gray-700">
+                        {project.order_activation_payment_method === 'paypal' && 'PayPal'}
+                        {project.order_activation_payment_method === 'swift' && 'SWIFT Transfer'}
+                        {project.order_activation_payment_method === 'qr_code' && 'QR Code'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Manager comments summary */}
+                  {project.quote_request_manager_comments && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-gray-500 font-semibold min-w-[80px]">💬 Manager:</span>
+                      <span className="text-gray-700 flex-1">
+                        {project.quote_request_manager_comments.length > 80
+                          ? project.quote_request_manager_comments.substring(0, 80) + '...'
+                          : project.quote_request_manager_comments}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="text-xs text-gray-500 pt-2 border-t border-gray-200">
+                    Activated on {new Date(project.order_activated_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {/* Full Form - shown when expanded OR not activated */}
+              {(!project.order_activated_at || isOrderFormExpanded) && (
                 {/* Status Info */}
                 {!project.order_activated_at ? (
                   <p className="text-sm text-gray-600 text-left">
