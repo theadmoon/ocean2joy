@@ -448,9 +448,10 @@ Click the Download button to save the file.`;
         
       case 'invoice_sent':
         // Invoice document - unified: view, download, upload (if unsigned)
+        const invoiceNumber = project.document_numbers?.invoice || `Invoice #${project.project_number?.split('-')[0] || 'N/A'}`;
         docs.push({
           id: 'invoice',
-          name: `Invoice #${project.project_number?.split('-')[0] || 'N/A'}`,
+          name: invoiceNumber,
           type: 'financial',
           createdBy: 'Manager',
           createdAt: project.invoice_sent_at,
@@ -547,9 +548,10 @@ Click the Download button to save the file.`;
         // Delivery Confirmed - Client signed Certificate of Delivery (CRITICAL for PayPal)
         if (project.delivery_confirmed_at) {
           // Certificate of Delivery uploaded and signed
+          const delCertNumber = project.document_numbers?.delivery_certificate || 'Certificate of Delivery';
           docs.push({
             id: 'delivery_certificate',
-            name: 'Certificate of Delivery',
+            name: delCertNumber,
             type: 'delivery_certificate',
             createdBy: 'Client',
             createdAt: project.delivery_confirmed_at,
@@ -559,9 +561,10 @@ Click the Download button to save the file.`;
           });
         } else if (project.files_accessed_at) {
           // Files accessed, waiting for delivery certificate signature
+          const delCertNumber = project.document_numbers?.delivery_certificate || 'Certificate of Delivery';
           docs.push({
             id: 'delivery_certificate',
-            name: 'Certificate of Delivery',
+            name: delCertNumber,
             type: 'delivery_certificate_pending',
             createdBy: 'System',
             createdAt: project.files_accessed_at,
@@ -576,9 +579,10 @@ Click the Download button to save the file.`;
         // Work Accepted - Client signed acceptance act (ТЗ Step 12: Acceptance)
         if (project.work_accepted_at) {
           // Acceptance document uploaded - can view and download signed version
+          const accActNumber = project.document_numbers?.acceptance_act || 'Acceptance Act';
           docs.push({
             id: 'acceptance_act',
-            name: 'Acceptance Act',
+            name: accActNumber,
             type: 'acceptance',
             createdBy: 'Client',
             createdAt: project.work_accepted_at,
@@ -601,9 +605,10 @@ Click the Download button to save the file.`;
           });
         } else if (project.files_accessed_at) {
           // Files accessed, waiting for acceptance - can view template and upload signed version
+          const accActNumber = project.document_numbers?.acceptance_act || 'Acceptance Act';
           docs.push({
             id: 'acceptance_pending',
-            name: 'Acceptance Act',
+            name: accActNumber,
             type: 'acceptance_pending',
             createdBy: 'Client',
             createdAt: project.files_accessed_at,
@@ -657,10 +662,11 @@ Click the Download button to save the file.`;
         });
         
         // Receipt
-        if (project.payment_confirmed_by_admin) {
+        if (project.payment_confirmed_by_admin_at) {
+          const receiptNumber = project.document_numbers?.receipt || 'Receipt';
           docs.push({
             id: 'receipt',
-            name: 'Receipt',
+            name: receiptNumber,
             type: 'financial',
             createdBy: 'System',
             createdAt: project.completed_at,
@@ -674,9 +680,10 @@ Click the Download button to save the file.`;
       case 'completed':
         // Certificate of Completion - NEW
         if (project.completed_at) {
+          const certNumber = project.document_numbers?.completion_certificate || 'Certificate of Completion';
           docs.push({
             id: 'certificate',
-            name: 'Certificate of Completion',
+            name: certNumber,
             type: 'certificate_completion',
             createdBy: 'System',
             createdAt: project.completed_at,

@@ -57,6 +57,43 @@ async def get_next_sequence_number(doc_type: str) -> int:
     
     return result['value']
 
+async def get_or_generate_document_number(
+    project: dict,
+    doc_type: str,
+    doc_type_code: str,
+    doc_date: datetime
+) -> str:
+    """
+    Get existing document number or generate new one with sequence.
+    Saves to database if new.
+    
+    Args:
+        project: Project document from MongoDB
+        doc_type: Document type for storage (invoice, receipt, etc.)
+        doc_type_code: Code for formatting (INV, RCP, DEL, etc.)
+        doc_date: Document creation date
+    
+    Returns:
+        Document number (e.g., "VAPP6-INV-0042-260217")
+    """
+    document_numbers = project.get('document_numbers', {})
+    
+    if document_numbers and doc_type in document_numbers:
+        # Use existing number
+        return document_numbers[doc_type]
+    else:
+        # Generate new number
+        seq = await get_next_sequence_number(doc_type)
+        doc_number = format_document_number(project['project_number'], doc_type_code, seq, doc_date)
+        
+        # Save to database
+        await db.projects.update_one(
+            {"id": project['id']},
+            {"$set": {f"document_numbers.{doc_type}": doc_number}}
+        )
+        
+        return doc_number
+
 def format_document_number(project_number: str, doc_type: str, seq: int, doc_date: datetime) -> str:
     """
     Format document number according to standard:
@@ -265,6 +302,9 @@ class Project(BaseModel):
     
     # Document naming (custom names for project documents)
     document_names: Optional[Dict[str, str]] = None  # {"quote": "Custom Quote Name", "invoice": "Custom Invoice", etc.}
+    
+    # Document numbers (generated with sequence system)
+    document_numbers: Optional[Dict[str, str]] = None  # {"invoice": "VAPP6-INV-0001-260217", "receipt": "VAPP6-RCP-0001-260313", etc.}
     
     # Quote Request (manager's comments)
     quote_request_manager_comments: Optional[str] = None
@@ -1533,9 +1573,10 @@ async def generate_and_download_document(
         else:
             production_end_formatted = "Estimated timeline in agreement"
         
-        # Generate invoice number with sequence
-        seq = await get_next_sequence_number('invoice')
-        invoice_number = format_document_number(project['project_number'], 'INV', seq, invoice_date_dt)
+        # Generate invoice number with sequence (or use existing)
+        invoice_number = await get_or_generate_document_number(
+            project, 'invoice', 'INV', invoice_date_dt
+        )
         
         doc_content = f"""INVOICE
 ═══════════════════════════════════════════════
@@ -1650,9 +1691,10 @@ Digital Services - Electronic Delivery Only
         if acceptance_date.tzinfo is None:
             acceptance_date = acceptance_date.replace(tzinfo=timezone.utc)
         
-        # Generate acceptance act number with sequence
-        seq = await get_next_sequence_number('acceptance_act')
-        act_number = format_document_number(project['project_number'], 'ACC', seq, acceptance_date)
+        # Generate acceptance act number with sequence (or use existing)
+        act_number = await get_or_generate_document_number(
+            project, 'acceptance_act', 'ACC', acceptance_date
+        )
         
         doc_content = f"""ACCEPTANCE ACT
 ═══════════════════════════════════════════════
@@ -1766,9 +1808,10 @@ Contact: ocean2joy@gmail.com
         else:
             files_accessed_formatted = 'Not accessed yet'
         
-        # Generate delivery certificate number with sequence
-        seq = await get_next_sequence_number('delivery_certificate')
-        cert_number = format_document_number(project['project_number'], 'DEL', seq, delivered_date)
+        # Generate delivery certificate number with sequence (or use existing)
+        cert_number = await get_or_generate_document_number(
+            project, 'delivery_certificate', 'DEL', delivered_date
+        )
         
         doc_content = f"""CERTIFICATE OF DELIVERY
 ═══════════════════════════════════════════════
@@ -1872,9 +1915,10 @@ for dispute resolution and compliance purposes.
         
         order_activated_formatted = order_activated_date.strftime('%B %d, %Y at %I:%M %p')
         
-        # Generate order confirmation number with sequence
-        seq = await get_next_sequence_number('order_confirmation')
-        order_number = format_document_number(project['project_number'], 'ORD', seq, order_activated_date)
+        # Generate order confirmation number with sequence (or use existing)
+        order_number = await get_or_generate_document_number(
+            project, 'order_confirmation', 'ORD', order_activated_date
+        )
         
         doc_content = f"""ORDER CONFIRMATION
 ═══════════════════════════════════════════════
@@ -1976,9 +2020,10 @@ Keep this number for all future correspondence.
         else:
             payment_sent_formatted = 'N/A'
         
-        # Generate receipt number with sequence
-        seq = await get_next_sequence_number('receipt')
-        receipt_number = format_document_number(project['project_number'], 'RCP', seq, payment_date)
+        # Generate receipt number with sequence (or use existing)
+        receipt_number = await get_or_generate_document_number(
+            project, 'receipt', 'RCP', payment_date
+        )
         
         doc_content = f"""PAYMENT RECEIPT
 ═══════════════════════════════════════════════
@@ -2063,9 +2108,10 @@ Project Reference: {project['project_number']}
         
         completed_date_formatted = completed_date.strftime('%B %d, %Y')
         
-        # Generate completion certificate number with sequence
-        seq = await get_next_sequence_number('completion_certificate')
-        cert_number = format_document_number(project['project_number'], 'CRT', seq, completed_date)
+        # Generate completion certificate number with sequence (or use existing)
+        cert_number = await get_or_generate_document_number(
+            project, 'completion_certificate', 'CRT', completed_date
+        )
         
         doc_content = f"""CERTIFICATE OF COMPLETION
 ═══════════════════════════════════════════════
