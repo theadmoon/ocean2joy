@@ -15,11 +15,11 @@ function LegalInformation() {
           </p>
         </div>
 
-        {/* Legal Entity Structure - NEW */}
+        {/* Legal Entity & Brand Relationship */}
         <div className="bg-gradient-to-r from-sky-50 to-blue-50 border-2 border-sky-200 rounded-xl shadow-lg p-8 mb-6">
           <div className="flex items-center gap-3 mb-6">
             <FaBuilding className="text-3xl text-sky-600" />
-            <h2 className="text-2xl font-bold text-gray-900">Legal Entity Structure</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Legal Entity & Brand Relationship</h2>
           </div>
           
           <div className="bg-white rounded-lg p-6 space-y-4">
@@ -45,28 +45,34 @@ function LegalInformation() {
 
             <div className="border-t pt-4">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Legal Name
+                Legal Entity
               </label>
               <p className="text-lg font-bold text-gray-900">
                 Individual Entrepreneur Vera Iambaeva
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                Registered in Georgia: February 17, 2025
               </p>
             </div>
 
             <div className="border-t pt-4">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Trade Name (DBA)
+                Brand Name
               </label>
               <p className="text-lg font-bold text-sky-600">
                 Ocean2Joy Digital Video Production
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                Used for service identification and marketing
               </p>
             </div>
 
             <div className="bg-sky-50 rounded-lg p-4 border-l-4 border-sky-500">
               <p className="text-sm text-gray-700 leading-relaxed">
-                <strong>Note:</strong> "Ocean2Joy Digital Video Production" is a registered trade name 
-                under which Individual Entrepreneur Vera Iambaeva conducts business activities. 
-                All contracts, invoices, and legal documents clearly identify both the trade name 
-                and the legal entity.
+                Individual Entrepreneur Vera Iambaeva operates this business under the brand name 
+                "Ocean2Joy Digital Video Production" for service identification and marketing purposes. 
+                All contracts, invoices, receipts, and legal documents are issued in the name of 
+                Individual Entrepreneur Vera Iambaeva.
               </p>
             </div>
           </div>
@@ -82,10 +88,13 @@ function LegalInformation() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Trade Name (DBA)
+                Brand Name
               </label>
               <p className="text-gray-900 bg-sky-50 px-4 py-3 rounded-lg font-semibold">
                 Ocean2Joy Digital Video Production
+              </p>
+              <p className="text-xs text-gray-500 mt-1 px-1">
+                For marketing and service identification
               </p>
             </div>
 
@@ -95,6 +104,9 @@ function LegalInformation() {
               </label>
               <p className="text-gray-900 bg-gray-50 px-4 py-3 rounded-lg">
                 Individual Entrepreneur Vera Iambaeva
+              </p>
+              <p className="text-xs text-gray-500 mt-1 px-1">
+                All legal documents issued in this name
               </p>
             </div>
 
@@ -236,7 +248,7 @@ function LegalInformation() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Trade Name
+                  Brand Name
                 </label>
                 <p className="text-sky-600 font-semibold">
                   Ocean2Joy Digital Video Production
@@ -266,23 +278,24 @@ function LegalInformation() {
         <div className="bg-sky-50 border-l-4 border-sky-500 rounded-lg p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-900 mb-3">Tax & Legal Compliance</h3>
           <p className="text-gray-700 text-sm leading-relaxed mb-4">
-            Individual Entrepreneur Vera Iambaeva (trading as Ocean2Joy Digital Video Production) 
-            operates as a registered Individual Entrepreneur in Georgia. All business activities are 
-            conducted in compliance with Georgian tax laws and regulations.
+            Individual Entrepreneur Vera Iambaeva operates under the brand name "Ocean2Joy Digital 
+            Video Production" as a registered Individual Entrepreneur in Georgia. All business 
+            activities are conducted in compliance with Georgian tax laws and regulations.
           </p>
           <p className="text-gray-700 text-sm leading-relaxed mb-4">
             We maintain full transparency in our financial operations and provide proper documentation 
             for all transactions:
           </p>
           <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm ml-4">
-            <li>Invoices clearly identifying legal entity and trade name</li>
+            <li>Invoices issued in the name of Individual Entrepreneur Vera Iambaeva</li>
             <li>Official payment receipts</li>
             <li>Certificates of delivery for digital services</li>
             <li>Certificates of completion</li>
           </ul>
           <p className="text-gray-700 text-sm leading-relaxed mt-4">
-            All documents include both the trade name "Ocean2Joy Digital Video Production" and 
-            the legal entity "Individual Entrepreneur Vera Iambaeva" with Tax ID 302335809.
+            All legal documents are issued in the name of Individual Entrepreneur Vera Iambaeva 
+            (Tax ID: 302335809). The brand name "Ocean2Joy Digital Video Production" is used 
+            for service identification and marketing purposes.
           </p>
         </div>
 
