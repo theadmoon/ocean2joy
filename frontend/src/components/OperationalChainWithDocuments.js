@@ -385,25 +385,34 @@ Click the Download button to save the file.`;
   
   // Handle Download
   const handleDownload = async (doc) => {
+    console.log('🔽 Download clicked for:', doc);
+    
     try {
-      // Map document IDs to backend doc_types
+      // Map frontend document IDs to backend doc_types
       const docTypeMap = {
+        'quote_request': 'quote_request',
+        'order_confirmation': 'order_confirmation',
         'invoice': 'invoice',
-        'acceptance_act': 'acceptance_act',
-        'payment_proof': 'payment_proof',
-        'payment_instructions': 'payment_instructions',
-        'receipt': 'receipt',
-        'certificate': 'certificate',
+        'signed_invoice': 'invoice', // Signed version downloads from client_confirmations
         'delivery_certificate': 'delivery_certificate',
-        'order_confirmation': 'order_confirmation'
+        'acceptance_act': 'acceptance_act',
+        'acceptance_pending': 'acceptance_act', // Pending version generates template
+        'paypal_instructions': 'payment_instructions',
+        'payment_proof': 'payment_proof',
+        'payment_pending': 'payment_proof',
+        'receipt': 'receipt',
+        'certificate': 'certificate'
       };
       
       const docType = docTypeMap[doc.id];
       
       if (!docType) {
-        alert(`Download not available for this document type.`);
+        console.error('❌ Unknown document type:', doc.id);
+        alert(`Download not available for "${doc.name}".`);
         return;
       }
+      
+      console.log('📄 Document type mapped to:', docType);
       
       // Check if this is an uploaded document (signed/confirmed)
       const isUploaded = project.client_confirmations && project.client_confirmations[docType];
@@ -418,20 +427,27 @@ Click the Download button to save the file.`;
         // Download uploaded/signed version
         downloadUrl = `${API}/projects/${project.id}/documents/${docType}/download`;
         fileExtension = 'pdf';
+        console.log('📥 Downloading uploaded document');
       } else if (pdfDocTypes.includes(docType)) {
         // Generate and download as PDF
         downloadUrl = `${API}/projects/${project.id}/documents/${docType}/pdf`;
         fileExtension = 'pdf';
+        console.log('📥 Generating PDF document');
       } else {
         // Other document types - use old TXT generation endpoint
         downloadUrl = `${API}/projects/${project.id}/documents/${docType}/generate`;
         fileExtension = 'txt';
+        console.log('📥 Generating TXT document');
       }
+      
+      console.log('🌐 Download URL:', downloadUrl);
       
       // Create a temporary link and trigger download
       const response = await axios.get(downloadUrl, {
         responseType: 'blob',
       });
+      
+      console.log('✅ Response received, size:', response.data.size);
       
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
@@ -442,8 +458,10 @@ Click the Download button to save the file.`;
       link.remove();
       window.URL.revokeObjectURL(url);
       
+      console.log('✅ Document downloaded successfully');
     } catch (error) {
-      console.error('Error downloading document:', error);
+      console.error('❌ Download error:', error);
+      console.error('Error details:', error.response?.data);
       alert('Failed to download document. Please try again.');
     }
   };
@@ -966,9 +984,43 @@ Click the Download button to save the file.`;
     );
   };
 
+  // Download Operational Chain PDF
+  const handleDownloadOperationalChainPDF = async () => {
+    try {
+      const response = await axios.get(
+        `${API}/projects/${project.id}/operational-chain/pdf`,
+        { responseType: 'blob' }
+      );
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${project.project_number}_Operational_Chain.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('✅ Operational Chain PDF downloaded successfully');
+    } catch (error) {
+      console.error('PDF download error:', error);
+      alert('Failed to download Operational Chain PDF. Please try again.');
+    }
+  };
+
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Operational Chain & Documents</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Operational Chain & Documents</h2>
+        <button
+          onClick={handleDownloadOperationalChainPDF}
+          className="btn-ocean inline-flex items-center gap-2"
+        >
+          <FaDownload /> Download Operational Chain PDF
+        </button>
+      </div>
       
       <div className="space-y-6">
         {operationalSteps.map((step, index) => {
