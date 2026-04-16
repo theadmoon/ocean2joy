@@ -826,7 +826,7 @@ Click the Download button to save the file.`;
       label: 'Production Started',
       date: project.production_started_at,
       description: (project.completed_at || project.delivered_at) ? 'Completed' : 'Work in progress',
-      color: 'orange',
+      color: (project.completed_at || project.delivered_at) ? 'green' : 'orange',
       completed: !!project.production_started_at
     },
     {
