@@ -138,26 +138,43 @@ Status: ${project.payment_confirmed_by_admin ? '✅ Confirmed by Manager' : '⏳
         break;
         
       case 'production_notes':
-        // Production notes - informational update about work in progress
+        // Production notes - informational update about work in progress or completed
         const productionStartDate = project.production_started_at 
           ? new Date(project.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
           : 'N/A';
+        
+        const deliveredDate = project.delivered_at
+          ? new Date(project.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+          : null;
+        
+        // Determine current status
+        let productionStatus = '🎬 PRODUCTION IN PROGRESS';
+        let statusText = 'Your project is currently in active production.';
+        
+        if (project.completed_at) {
+          productionStatus = '✅ PRODUCTION COMPLETED';
+          statusText = `Production was completed and delivered on ${deliveredDate}.`;
+        } else if (project.delivered_at) {
+          productionStatus = '✅ PRODUCTION COMPLETED';
+          statusText = `Production was completed and delivered on ${deliveredDate}.`;
+        }
         
         content = `PRODUCTION UPDATE
 ═══════════════════════════════════════════════
 
 Ocean2Joy Digital Video Production
-Work in Progress
+${project.completed_at || project.delivered_at ? 'Completed' : 'Work in Progress'}
 
 Project: ${project.project_number}
 Project Title: ${project.project_title || ''}
 Production Started: ${productionStartDate}
+${deliveredDate ? `Production Completed: ${deliveredDate}` : ''}
 
 ═══════════════════════════════════════════════
 
-STATUS: 🎬 PRODUCTION IN PROGRESS
+STATUS: ${productionStatus}
 
-Your project is currently in active production.
+${statusText}
 
 Service Type: ${project.service_type === 'custom_video' ? 'Custom Video Production' : project.service_type}
 
@@ -168,12 +185,13 @@ ${project.detailed_brief || 'No description provided'}
 
 PRODUCTION TIMELINE:
 
-Production Phase: Active
-Estimated Delivery: As per invoice timeline
-Current Status: Work in progress
+Production Phase: ${project.completed_at || project.delivered_at ? 'Completed' : 'Active'}
+${project.completed_at || project.delivered_at ? `Delivered: ${deliveredDate}` : 'Estimated Delivery: As per invoice timeline'}
+Current Status: ${project.completed_at || project.delivered_at ? 'Completed and delivered' : 'Work in progress'}
 
-The production team is working on your project.
-You will be notified when deliverables are ready.
+${project.completed_at || project.delivered_at 
+  ? 'Production has been completed and deliverables are available.'
+  : 'The production team is working on your project.\nYou will be notified when deliverables are ready.'}
 
 ═══════════════════════════════════════════════
 
@@ -544,13 +562,21 @@ Click the Download button to save the file.`;
       case 'production_started':
         // Production notes (text notes - no upload)
         if (project.production_notes) {
+          // Determine status based on project progress
+          let noteStatus = 'in_progress';
+          if (project.completed_at) {
+            noteStatus = 'completed';
+          } else if (project.delivered_at) {
+            noteStatus = 'completed';
+          }
+          
           docs.push({
             id: 'production_notes',
             name: 'Production Notes',
             type: 'notes',
             createdBy: 'Manager',
             createdAt: project.production_started_at,
-            status: 'in_progress',
+            status: noteStatus,
             icon: '📝',
             actions: ['view', 'download', 'upload:disabled:Read-only notes']
           });
