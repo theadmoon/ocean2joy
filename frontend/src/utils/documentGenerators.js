@@ -14,9 +14,14 @@
 export const generateInvoice = (projectData) => {
   if (!projectData) return '';
   
-  const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  // Use invoice_sent_at as the invoice date
+  const invoiceDate = projectData.invoice_sent_at ? new Date(projectData.invoice_sent_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  
   const productionStart = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-  const productionEnd = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  const productionEnd = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Estimated timeline in agreement';
+  
+  // Use the short document number from document_numbers.invoice
+  const invoiceNumber = projectData.document_numbers?.invoice || projectData.project_number;
   
   return `INVOICE
 ═══════════════════════════════════════════════
@@ -24,79 +29,93 @@ export const generateInvoice = (projectData) => {
 Ocean2Joy Digital Video Production
 Custom Digital Video Services
 
-Invoice #: ${projectData.project_number}
-Date Issued: ${deliveredDate}
-Due Date: Upon Receipt
+Invoice: ${invoiceNumber}
+Date Issued: ${invoiceDate}
+Due Date: Upon Delivery of Digital Assets
 
 ═══════════════════════════════════════════════
 
 BILL TO:
-${projectData.client_name || projectData.user_name || 'Client'}
-Email: ${projectData.client_email || projectData.user_email || ''}
-Project: ${projectData.project_number}
-Project Title: ${projectData.project_title}
+${projectData.user_name || 'Client'}
+Email: ${projectData.user_email || ''}
+Project Reference: ${projectData.project_number}
+Project Title: ${projectData.project_title || ''}
 
 ═══════════════════════════════════════════════
 
-PROJECT DETAILS:
+SERVICE DESCRIPTION:
 
 Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : projectData.service_type}
-${projectData.detailed_brief ? 'Brief: ' + projectData.detailed_brief : ''}
-Production Period: ${productionStart} - ${productionEnd}
+
+Project Brief:
+${projectData.detailed_brief || ''}
+
+Estimated Production Period:
+Start: ${productionStart}
+Delivery: ${productionEnd}
 
 ═══════════════════════════════════════════════
 
-PRICING BREAKDOWN:
+PRICING:
 
-Service Description                        Amount
-─────────────────────────────────────────────────
-${projectData.service_type === 'custom_video' ? 'Custom Video Production' : 'Service'}      $${projectData.quote_amount?.toFixed(2)}
-
-${projectData.quote_details || ''}
+Service Fee                           $${projectData.quote_amount?.toFixed(2)} USD
 
 ═══════════════════════════════════════════════
 
-SUBTOTAL:                              $${projectData.quote_amount?.toFixed(2)}
-Tax:                                        $0.00
-                                       ──────────
-TOTAL AMOUNT DUE:                      $${projectData.quote_amount?.toFixed(2)}
+SUBTOTAL:                             $${projectData.quote_amount?.toFixed(2)} USD
+Tax (Digital Services):                          $0.00
+                                      ────────────────
+TOTAL AMOUNT DUE:                     $${projectData.quote_amount?.toFixed(2)} USD
 
 ═══════════════════════════════════════════════
 
-PAYMENT INSTRUCTIONS:
+PAYMENT TERMS:
 
-Payment Method: PayPal
-Please send payment to: 302335809@postbox.ge
-
-Payment is due upon receipt of this invoice.
+✓ 100% post-payment model (pay after delivery)
+✓ Invoice issued before production begins
+✓ Payment due upon delivery of digital files
+✓ Payment confirms acceptance of delivered work
+✓ No refunds after delivery completion
+✓ All deliverables provided electronically
 
 ═══════════════════════════════════════════════
 
-DELIVERABLES (Included):
+PAYMENT METHOD:
 
-All files delivered digitally via secure client portal.
+${projectData.order_activation_payment_method?.toUpperCase() || 'PAYPAL'}
+
+PayPal Account: 302335809@postbox.ge
+
+Important: Include project reference "${projectData.project_number}"
+in payment notes for proper tracking.
+
+═══════════════════════════════════════════════
+
+COMMUNICATION:
+
+All project communication should be conducted through
+the secure client portal chat system.
+
+For technical support or urgent matters only:
+ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 
 NOTES:
 
-This invoice is for digital video production services.
-No physical goods are shipped - all deliverables are
-provided electronically through our secure platform.
-
-Files have been delivered to your client portal and
-are ready for download.
+• This is a digital service - no physical goods shipped
+• All files delivered via secure client portal
+• By signing this invoice, you agree to the terms above
+• Production begins after invoice confirmation
+• Delivery timeline confirmed after production start
 
 ═══════════════════════════════════════════════
 
 Thank you for choosing Ocean2Joy!
+Professional digital video production services.
 
-For questions about this invoice, contact:
-ocean2joy@gmail.com
-
-Ocean2Joy Digital Video Production
-Digital Services - No Physical Shipping
-www.ocean2joy.com
+Ocean2Joy Digital Production
+Digital Services - Electronic Delivery Only
 
 ═══════════════════════════════════════════════`;
 };
@@ -109,131 +128,90 @@ www.ocean2joy.com
 export const generateReceipt = (projectData) => {
   if (!projectData) return '';
   
-  const paymentDate = projectData.completed_at ? new Date(projectData.completed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-  const paymentTime = projectData.completed_at ? new Date(projectData.completed_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }) : '';
+  const paymentDate = projectData.payment_confirmed_at ? new Date(projectData.payment_confirmed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  const paymentDatetime = projectData.payment_confirmed_at ? new Date(projectData.payment_confirmed_at).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZoneName: 'short' }) : '';
   
-  // Use real PayPal data if available, otherwise generate from project_number
-  const transactionId = projectData.paypal_transaction_id || `PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}`;
-  const payerEmail = projectData.paypal_payer_email || projectData.client_email || projectData.user_email || '';
-  const paymentStatus = projectData.paypal_payment_status || 'COMPLETED';
+  const paymentSentDate = projectData.payment_marked_by_client_at ? new Date(projectData.payment_marked_by_client_at).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZoneName: 'short' }) : 'N/A';
+  
+  const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  const filesAccessedDate = projectData.files_accessed_at ? new Date(projectData.files_accessed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Pending';
+  
+  const receiptNumber = projectData.document_numbers?.receipt || projectData.project_number;
+  
+  const deliverablesList = projectData.deliverables && projectData.deliverables.length > 0
+    ? projectData.deliverables.map(d => `- ${d.file_name || 'File'}`).join('\n')
+    : '';
   
   return `PAYMENT RECEIPT
 ═══════════════════════════════════════════════
 
-PayPal Payment Confirmation
+Ocean2Joy Digital Video Production
+Official Payment Receipt
 
-Transaction ID: ${transactionId}
-Payment Date: ${paymentDate}
-Status: ✓ ${paymentStatus}
-
-═══════════════════════════════════════════════
-
-TRANSACTION DETAILS:
-
-From: ${projectData.client_name || projectData.user_name || 'Client'}
-Email: ${payerEmail}
-
-To: Ocean2Joy Digital Video Production
-PayPal Business Account: 302335809@postbox.ge
-(Payment receiving account)
+Receipt: ${receiptNumber}
+Date Issued: ${paymentDate}
 
 ═══════════════════════════════════════════════
 
-PAYMENT INFORMATION:
+PAYMENT RECEIVED FROM:
+Client: ${projectData.user_name || 'Client'}
+Email: ${projectData.user_email || ''}
+Project Reference: ${projectData.project_number}
 
+═══════════════════════════════════════════════
+
+PAYMENT DETAILS:
+
+Amount Received: $${projectData.quote_amount?.toFixed(2)} USD
+Payment Method: ${projectData.order_activation_payment_method?.toUpperCase() || 'PAYPAL'}
+Payment Date: ${paymentSentDate}
+Payment Confirmed: ${paymentDatetime}
+Transaction ID: ${projectData.paypal_transaction_id || 'See payment proof'}
+Payment Status: ${projectData.paypal_payment_status || 'COMPLETED'}
+
+═══════════════════════════════════════════════
+
+SERVICES RENDERED:
+
+Project Title: ${projectData.project_title || ''}
+Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : projectData.service_type}
+
+Deliverables:
+${deliverablesList}
+
+═══════════════════════════════════════════════
+
+PAYMENT STATUS: ✓ PAID IN FULL
+
+Total Amount: $${projectData.quote_amount?.toFixed(2)} USD
 Amount Paid: $${projectData.quote_amount?.toFixed(2)} USD
-Payment Method: PayPal Balance
-Currency: USD
-Transaction Type: Goods & Services Payment
-
-Invoice Reference: ${projectData.project_number}
-Project: ${projectData.project_title}
+Balance Due: $0.00 USD
 
 ═══════════════════════════════════════════════
 
-PAYMENT BREAKDOWN:
+DELIVERY CONFIRMATION:
 
-Subtotal:                              $${projectData.quote_amount?.toFixed(2)}
-PayPal Fee: (paid by merchant)              $0.00
-                                       ──────────
-Total Paid by Customer:                $${projectData.quote_amount?.toFixed(2)}
+Digital files delivered electronically on:
+${deliveredDate}
 
-═══════════════════════════════════════════════
-
-PAYMENT TIMELINE:
-
-Payment Initiated: ${paymentDate} at ${paymentTime}
-Payment Processed: ${paymentDate} at ${paymentTime}
-Payment Completed: ${paymentDate}
-
-Processing Time: Instant
+Delivery Method: Secure client portal
+Files Accessed: ${filesAccessedDate}
 
 ═══════════════════════════════════════════════
 
-MERCHANT INFORMATION:
+This receipt confirms full payment for digital video
+production services. No further payment is required.
 
-Business Name: Ocean2Joy Digital Video Production
-PayPal Business Account: 302335809@postbox.ge
-Contact Email: ocean2joy@gmail.com
-Business Type: Digital Services Provider
-Service Description: Custom video production services
+For questions or support:
+Contact: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 
-PURCHASE DETAILS:
+Ocean2Joy Digital Production
+Professional video services delivered digitally
 
-Item: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : 'Digital Service'}
-Project ID: ${projectData.project_number}
-Service Type: Digital video creation and delivery
-Delivery Method: Digital download (no shipping)
-
-═══════════════════════════════════════════════
-
-BUYER PROTECTION:
-
-This transaction is covered by PayPal's Purchase
-Protection program for eligible digital goods and
-services.
-
-Dispute Resolution: Available through PayPal
-Resolution Center
-
-═══════════════════════════════════════════════
-
-TRANSACTION VERIFICATION:
-
-✓ Payment verified and completed
-✓ Funds transferred to merchant account
-✓ Digital service delivered to customer
-✓ Customer access confirmed
-✓ No disputes or claims filed
-
-═══════════════════════════════════════════════
-
-RECEIPT NOTES:
-
-• This is an official PayPal payment receipt
-• Transaction completed successfully
-• Payment for digital video production services
-• No physical goods shipped
-• All deliverables provided digitally
-• Customer confirmed receipt of files
-
-═══════════════════════════════════════════════
-
-For questions about this transaction:
-• Contact Ocean2Joy: ocean2joy@gmail.com
-• PayPal Support: www.paypal.com/support
-• Transaction ID: ${transactionId}
-
-═══════════════════════════════════════════════
-
-This receipt confirms successful payment processing
-through PayPal for digital services rendered by
-Ocean2Joy Digital Video Production.
-
-Receipt Generated: ${paymentDate}
-Document ID: RCPT-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
+Receipt Date: ${paymentDate}
+Project Reference: ${projectData.project_number}
 
 ═══════════════════════════════════════════════`;
 };
@@ -246,134 +224,99 @@ Document ID: RCPT-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
 export const generateCertificate = (projectData) => {
   if (!projectData) return '';
   
-  const submittedDate = projectData.created_at ? new Date(projectData.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-  const quoteSentDate = projectData.invoice_sent_at || projectData.quote_sent_at ? new Date(projectData.invoice_sent_at || projectData.quote_sent_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-  const quoteAcceptedDate = projectData.invoice_signed_at || projectData.quote_accepted_at ? new Date(projectData.invoice_signed_at || projectData.quote_accepted_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-  const productionStartDate = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-  const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
-  const paymentDate = projectData.completed_at ? new Date(projectData.completed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  const completedDate = projectData.completed_at ? new Date(projectData.completed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
   
-  // Calculate production time
-  let productionDays = '';
-  if (projectData.production_started_at && projectData.delivered_at) {
-    const start = new Date(projectData.production_started_at);
-    const end = new Date(projectData.delivered_at);
-    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    productionDays = `${days} days`;
-  }
+  const orderActivatedDate = projectData.order_activated_at ? new Date(projectData.order_activated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+  const productionStartDate = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+  const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+  const workAcceptedDate = projectData.work_accepted_at ? new Date(projectData.work_accepted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+  const paymentReceivedDate = projectData.payment_confirmed_at ? new Date(projectData.payment_confirmed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
   
-  return `PROJECT COMPLETION CERTIFICATE
+  const certNumber = projectData.document_numbers?.completion_certificate || projectData.project_number;
+  
+  const deliverablesList = projectData.deliverables && projectData.deliverables.length > 0
+    ? projectData.deliverables.map(d => `✓ ${d.file_name || 'File'}`).join('\n')
+    : '';
+  
+  return `CERTIFICATE OF COMPLETION
 ═══════════════════════════════════════════════
 
 Ocean2Joy Digital Video Production
+Project Completion Certificate
+
+Certificate: ${certNumber}
+Project Reference: ${projectData.project_number}
+Completion Date: ${completedDate}
 
 ═══════════════════════════════════════════════
 
-This certificate confirms the successful 
-completion of the following digital service:
+This certifies that Ocean2Joy Digital Production has
+successfully completed and delivered the following
+digital video production service:
 
-PROJECT INFORMATION:
-─────────────────────────────────────────────
-Project Number: ${projectData.project_number}
-Project Title: ${projectData.project_title}
-Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Digital Video Production' : projectData.service_type}
-Client: ${projectData.client_name || projectData.user_name || 'Client'} (${projectData.client_email || projectData.user_email || ''})
+═══════════════════════════════════════════════
+
+CLIENT INFORMATION:
+Name: ${projectData.user_name || 'Client'}
+Email: ${projectData.user_email || ''}
+
+═══════════════════════════════════════════════
+
+PROJECT DETAILS:
+
+Project Title: ${projectData.project_title || ''}
+Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : projectData.service_type}
+
+Brief: ${projectData.detailed_brief || ''}
+
+═══════════════════════════════════════════════
+
+DELIVERABLES TRANSFERRED ELECTRONICALLY:
+
+${deliverablesList}
 
 ═══════════════════════════════════════════════
 
 PROJECT TIMELINE:
-─────────────────────────────────────────────
 
-Request Submitted: ${submittedDate}
-Quote Provided: ${quoteSentDate}
-Quote Accepted: ${quoteAcceptedDate}
+Order Activated: ${orderActivatedDate}
 Production Started: ${productionStartDate}
-Production Completed: ${deliveredDate}
-Deliverables Provided: ${deliveredDate}
-Payment Received: ${paymentDate}
-Project Closed: ${paymentDate}
-
-Total Production Time: ${productionDays}
-
-═══════════════════════════════════════════════
-
-DELIVERABLES PROVIDED:
-─────────────────────────────────────────────
-
-All files delivered digitally via secure 
-client portal on ${deliveredDate}.
-
-═══════════════════════════════════════════════
-
-FINANCIAL SETTLEMENT:
-─────────────────────────────────────────────
-
-Total Project Value: $${projectData.quote_amount?.toFixed(2)} USD
-Payment Method: PayPal
-Payment Status: ✓ PAID IN FULL
-Payment Date: ${paymentDate}
-Transaction Reference: PAYPAL-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
-
-═══════════════════════════════════════════════
-
-CLIENT ACCEPTANCE:
-─────────────────────────────────────────────
-
-✓ Client reviewed all deliverables
-✓ Client approved final work
-✓ Payment completed via PayPal
-✓ No disputes or issues raised
-
-Client satisfaction confirmed through:
-• Successful payment completion
-• Digital delivery acceptance
-• No refund requests
-• Project marked as complete
-
-═══════════════════════════════════════════════
-
-SERVICE VERIFICATION:
-
-This was a DIGITAL-ONLY service transaction.
-
-✓ No physical products were created
-✓ No shipping or logistics involved
-✓ All deliverables provided digitally
-✓ Client accessed files via secure portal
-✓ Full transaction trace available
-✓ Communication history preserved
-
-═══════════════════════════════════════════════
-
-COMPLIANCE NOTES:
-
-This certificate serves as verification for 
-payment processors and dispute resolution:
-
-• Complete project lifecycle documented
-• All communications preserved
-• Payment processed through verified channel
-• Digital delivery confirmed by client access
-• No outstanding issues or disputes
+Delivered: ${deliveredDate}
+Work Accepted: ${workAcceptedDate}
+Payment Received: ${paymentReceivedDate}
+Completed: ${completedDate}
 
 ═══════════════════════════════════════════════
 
 PROJECT STATUS: ✓ SUCCESSFULLY COMPLETED
 
-Issued by: Ocean2Joy Digital Video Production
-Issue Date: ${paymentDate}
-Certificate ID: CERT-${projectData.project_number?.replace(/[^A-Z0-9]/g, '')}
+✓ All deliverables transferred electronically
+✓ Client confirmed receipt of files
+✓ Work accepted by client
+✓ Payment received and confirmed
+✓ Project closed successfully
 
 ═══════════════════════════════════════════════
 
-For verification inquiries, contact:
-ocean2joy@gmail.com
+DELIVERY METHOD:
+Electronic delivery via secure client portal
+No physical shipment (digital service only)
 
-This certificate may be used for:
-• Tax and accounting purposes
-• Project portfolio documentation
-• Payment dispute resolution
-• Service verification requests
+═══════════════════════════════════════════════
+
+This certificate confirms the successful completion
+of digital video production services for project
+${projectData.project_number}.
+
+Issued by: Ocean2Joy Digital Production
+Date: ${completedDate}
+
+Contact: ocean2joy@gmail.com
+
+═══════════════════════════════════════════════
+
+Thank you for choosing Ocean2Joy!
+Professional video production delivered digitally.
 
 ═══════════════════════════════════════════════`;
 };
@@ -386,47 +329,67 @@ This certificate may be used for:
 export const generateAcceptanceAct = (projectData) => {
   if (!projectData) return '';
   
-  const deliverablesList = projectData.deliverables && projectData.deliverables.length > 0 
-    ? projectData.deliverables.filter(d => d.is_final).map((d, idx) => `${idx + 1}. ${d.file_name || 'Video file'}`).join('\n')
-    : 'Final video files';
+  const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
   
-  return `ACCEPTANCE ACT (ТЗ Step 12: Acceptance/Completion)
+  const actNumber = projectData.document_numbers?.acceptance_act || projectData.project_number;
+  
+  const deliverablesList = projectData.deliverables && projectData.deliverables.length > 0
+    ? projectData.deliverables.map(d => `- ${d.file_name || 'File'}`).join('\n')
+    : '';
+  
+  return `ACCEPTANCE ACT
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
-ACT OF WORK ACCEPTANCE (Акт приёмки-сдачи работ)
+Digital Video Production Service
+Acceptance Certificate
 
-Project: ${projectData.project_number}
-Client: ${projectData.user_name}
-Service: ${projectData.service_type}
+Act: ${actNumber}
+Project Reference: ${projectData.project_number}
+Client: ${projectData.user_name || 'Client'}
+Service Provider: Ocean2Joy Digital Production
 
 ═══════════════════════════════════════════════
 
-WORK DESCRIPTION:
+PROJECT DETAILS:
 
-${projectData.detailed_brief || 'Digital video production services'}
+Title: ${projectData.project_title || ''}
+Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : projectData.service_type}
+Brief: ${projectData.detailed_brief || ''}
 
-DELIVERABLES:
+Deliverables:
 ${deliverablesList}
 
-═══════════════════════════════════════════════
-
-CLIENT CONFIRMATION:
-
-"I, ${projectData.user_name}, confirm that:
- 1. I have downloaded and reviewed all deliverable files
- 2. The work meets the requirements specified in the brief
- 3. The quality is satisfactory and acceptable
- 4. I accept the work as completed"
-
-Signed: ${projectData.work_accepted_at ? new Date(projectData.work_accepted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Pending'}
+Delivery Date: ${deliveredDate}
+Delivery Method: Secure Digital Portal
 
 ═══════════════════════════════════════════════
 
-STATUS: ✅ WORK ACCEPTED BY CLIENT
+ACCEPTANCE CONFIRMATION:
 
-This document satisfies the "Acceptance/Completion" requirement 
-for digital service fulfillment and payment processing.`;
+By signing this document, the Client confirms:
+
+✓ Receipt of all deliverable digital files
+✓ Access to files via secure download portal
+✓ Acceptance of delivered materials as complete
+✓ Agreement that work meets specified requirements
+✓ Completion of the service contract
+
+═══════════════════════════════════════════════
+
+CLIENT SIGNATURE:
+
+Name: ${projectData.user_name || ''}
+Email: ${projectData.user_email || ''}
+Date: _________________
+Signature: _________________
+
+═══════════════════════════════════════════════
+
+This document serves as legal confirmation of service delivery
+and client acceptance for project ${projectData.project_number}.
+
+Ocean2Joy Digital Production
+Contact: ocean2joy@gmail.com`;
 };
 
 /**
@@ -707,4 +670,211 @@ Payment Method: PayPal (Goods & Services)
 
 Ocean2Joy Digital Video Production
 www.ocean2joy.com`;
+};
+
+
+/**
+ * Generate Order Confirmation document content
+ * @param {Object} projectData - Project data from backend
+ * @returns {string} Formatted order confirmation content
+ */
+export const generateOrderConfirmation = (projectData) => {
+  if (!projectData) return '';
+  
+  const orderActivatedDate = projectData.order_activated_at ? new Date(projectData.order_activated_at).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+  
+  const orderNumber = projectData.document_numbers?.order_confirmation || projectData.project_number;
+  
+  const materialsList = projectData.reference_materials && projectData.reference_materials.length > 0
+    ? projectData.reference_materials.map(mat => `✓ ${mat}`).join('\n')
+    : '✓ No materials uploaded yet';
+  
+  return `ORDER CONFIRMATION
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Order Activation Confirmation
+
+Order: ${orderNumber}
+Project Reference: ${projectData.project_number}
+Date Activated: ${orderActivatedDate}
+
+═══════════════════════════════════════════════
+
+CLIENT INFORMATION:
+Name: ${projectData.user_name || 'Client'}
+Email: ${projectData.user_email || ''}
+Project Title: ${projectData.project_title || ''}
+
+═══════════════════════════════════════════════
+
+ORDER DETAILS:
+
+Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : projectData.service_type}
+
+Project Brief:
+${projectData.detailed_brief || 'No description provided'}
+
+═══════════════════════════════════════════════
+
+UPLOADED MATERIALS:
+
+${materialsList}
+
+═══════════════════════════════════════════════
+
+PAYMENT METHOD SELECTED:
+${projectData.order_activation_payment_method?.toUpperCase() || 'PAYPAL'}
+
+═══════════════════════════════════════════════
+
+ORDER STATUS: ✓ ACTIVATED
+
+Your order has been activated and sent to our production
+team for review.
+
+═══════════════════════════════════════════════
+
+NEXT STEPS:
+
+1. Manager will review your order and materials
+2. You will receive an Invoice with quote and timeline
+3. After Invoice confirmation, production will begin
+4. You will receive updates during production
+5. Final deliverables will be available in your portal
+
+═══════════════════════════════════════════════
+
+ESTIMATED TIMELINE:
+Review: 1-2 business days
+Quote/Invoice: Will be sent after review
+Production: Timeline specified in Invoice
+Delivery: Via secure electronic portal
+
+═══════════════════════════════════════════════
+
+For questions or updates:
+Contact: ocean2joy@gmail.com
+
+═══════════════════════════════════════════════
+
+Thank you for choosing Ocean2Joy!
+
+Order Reference: ${projectData.project_number}
+Keep this number for all future correspondence.
+
+═══════════════════════════════════════════════`;
+};
+
+/**
+ * Generate Delivery Certificate document content
+ * @param {Object} projectData - Project data from backend
+ * @returns {string} Formatted delivery certificate content
+ */
+export const generateDeliveryCertificate = (projectData) => {
+  if (!projectData) return '';
+  
+  const deliveredDate = projectData.delivered_at ? new Date(projectData.delivered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+  
+  const filesAccessedDate = projectData.files_accessed_at ? new Date(projectData.files_accessed_at).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZoneName: 'short' }) : 'Not accessed yet';
+  
+  const productionStartDate = projectData.production_started_at ? new Date(projectData.production_started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+  
+  const certNumber = projectData.document_numbers?.delivery_certificate || projectData.project_number;
+  
+  const deliverablesList = projectData.deliverables && projectData.deliverables.length > 0
+    ? projectData.deliverables.map((d, i) => `${i + 1}. ${d.file_name || 'File'}`).join('\n')
+    : '1. Final video files';
+  
+  return `CERTIFICATE OF DELIVERY
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Electronic Service Delivery Confirmation
+
+Certificate: ${certNumber}
+Project Reference: ${projectData.project_number}
+Delivery Date: ${deliveredDate}
+
+═══════════════════════════════════════════════
+
+DELIVERED TO:
+Client: ${projectData.user_name || 'Client'}
+Email: ${projectData.user_email || ''}
+Account: Active
+
+═══════════════════════════════════════════════
+
+SERVICE DELIVERED:
+Service Type: ${projectData.service_type === 'custom_video' ? 'Custom Video Production' : projectData.service_type}
+Project Title: ${projectData.project_title || ''}
+Brief: ${projectData.detailed_brief || ''}
+Production Period: ${productionStartDate} - ${deliveredDate}
+
+═══════════════════════════════════════════════
+
+DIGITAL DELIVERABLES TRANSFERRED:
+
+The following files were made available for download
+via secure client portal on ${deliveredDate}:
+
+${deliverablesList}
+
+Delivery Method: Electronic portal download
+Access Provided: ${deliveredDate}
+Files Accessed: ${filesAccessedDate}
+
+═══════════════════════════════════════════════
+
+DELIVERY CONFIRMATION:
+
+By signing this certificate, the Client confirms:
+
+✓ Receipt of download access to all listed files
+✓ Successful download of deliverable files
+✓ Files are accessible and openable
+✓ Electronic delivery completed as agreed
+✓ No physical shipment involved (digital-only service)
+
+This is NOT an acceptance of quality or approval.
+Quality acceptance is documented separately in
+the Acceptance Act.
+
+═══════════════════════════════════════════════
+
+CLIENT CONFIRMATION:
+
+I confirm receipt of the above digital files via
+electronic delivery on the date specified.
+
+Client Name: _________________________________
+Client Email: _________________________________
+Date: _________________________________
+Signature: _________________________________
+
+═══════════════════════════════════════════════
+
+SERVICE PROVIDER CONFIRMATION:
+
+Ocean2Joy Digital Production
+Delivered by: Production Team
+Date: ${deliveredDate}
+
+Contact: ocean2joy@gmail.com
+
+═══════════════════════════════════════════════
+
+IMPORTANT NOTES FOR PAYPAL/PAYMENT PROCESSORS:
+
+✓ This is a DIGITAL SERVICE delivery (no physical goods)
+✓ Delivery method: Secure electronic portal
+✓ Client confirmed file download and accessibility
+✓ Transaction ID: ${projectData.project_number}
+✓ Service category: Custom digital video production
+✓ No shipping/tracking (electronic delivery only)
+
+This certificate serves as proof of service delivery
+for dispute resolution and compliance purposes.
+
+═══════════════════════════════════════════════`;
 };
