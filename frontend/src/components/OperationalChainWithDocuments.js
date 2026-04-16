@@ -443,23 +443,11 @@ Click the Download button to save the file.`;
       
       console.log('🌐 Download URL:', downloadUrl);
       
-      // Method 2: Direct download link (better for browser compatibility)
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `${project.project_number}_${docType}.${fileExtension}`;
-      link.target = '_blank';
-      link.style.display = 'none';
-      document.body.appendChild(link);
+      // Method 3: Open in new tab (works in sandboxed iframe)
+      console.log('✅ Opening document in new tab...');
+      window.open(downloadUrl, '_blank');
       
-      console.log('✅ Triggering download...');
-      link.click();
-      
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(link);
-      }, 100);
-      
-      console.log('✅ Document download initiated');
+      console.log(`✅ ${doc.name} opened in new tab`);
       
     } catch (error) {
       console.error('❌ Download error:', error);
@@ -991,30 +979,17 @@ Click the Download button to save the file.`;
     try {
       console.log('📥 Starting Operational Chain PDF download...');
       
-      // Method 2: Direct link (bypasses blob issues)
+      // Method 3: Open in new tab (works in sandboxed iframe)
       const downloadUrl = `${API}/projects/${project.id}/operational-chain/pdf`;
       
-      // Create temporary link
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `${project.project_number}_Operational_Chain.pdf`;
-      link.target = '_blank'; // Open in new tab if download fails
-      link.style.display = 'none';
-      document.body.appendChild(link);
+      console.log('✅ Opening PDF in new tab...');
+      window.open(downloadUrl, '_blank');
       
-      console.log('✅ Triggering download...');
-      link.click();
-      
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(link);
-      }, 100);
-      
-      console.log('✅ Operational Chain PDF download initiated');
+      console.log('✅ PDF opened in new tab - you can download from there');
       
     } catch (error) {
       console.error('❌ PDF download error:', error);
-      alert(`Failed to download: ${error.message}`);
+      alert(`Failed to open PDF: ${error.message}`);
     }
   };
 
