@@ -2673,6 +2673,7 @@ h1 {{
   border: 2px solid #d1d5db;
   border-radius: 8px;
   background: #f9fafb;
+  page-break-inside: avoid;
 }}
 .signature-line {{
   margin-top: 40px;
@@ -2996,6 +2997,7 @@ h1 {{
   margin: 20px 0;
   border-left: 5px solid #f59e0b;
   border-radius: 4px;
+  page-break-inside: avoid;
 }}
 .confirmation-box h3 {{
   margin: 0 0 15px 0;
@@ -3008,6 +3010,7 @@ h1 {{
   border: 2px solid #d1d5db;
   border-radius: 8px;
   background: #f9fafb;
+  page-break-inside: avoid;
 }}
 .signature-line {{
   margin-top: 40px;
@@ -3475,6 +3478,7 @@ h1 {{
   margin: 20px 0;
   border-left: 5px solid #f59e0b;
   border-radius: 4px;
+  page-break-inside: avoid;
 }}
 .confirmation-box h3 {{
   margin: 0 0 15px 0;
@@ -3487,6 +3491,7 @@ h1 {{
   margin: 20px 0;
   border-left: 5px solid #10b981;
   border-radius: 4px;
+  page-break-inside: avoid;
 }}
 .important-box h3 {{
   margin: 0 0 15px 0;
@@ -3499,6 +3504,7 @@ h1 {{
   border: 2px solid #d1d5db;
   border-radius: 8px;
   background: #f9fafb;
+  page-break-inside: avoid;
 }}
 .contact-info {{
   margin-top: 20px;
