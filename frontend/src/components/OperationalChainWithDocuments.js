@@ -276,7 +276,9 @@ Click the Download button to save the file.`;
         'payment_proof': 'payment_proof',
         'payment_instructions': 'payment_instructions',
         'receipt': 'receipt',
-        'certificate': 'certificate'
+        'certificate': 'certificate',
+        'delivery_certificate': 'delivery_certificate',
+        'order_confirmation': 'order_confirmation'
       };
       
       const docType = docTypeMap[doc.id];
@@ -319,7 +321,7 @@ Click the Download button to save the file.`;
   };
 
   
-  // Handle Upload Document (Invoice, Acceptance Act, or Payment Proof)
+  // Handle Upload Document (Invoice, Acceptance Act, Payment Proof, or Delivery Certificate)
   const handleUploadDocument = async () => {
     if (!uploadFile) {
       alert('Please select a file to upload');
@@ -335,7 +337,8 @@ Click the Download button to save the file.`;
       const docTypeMap = {
         'invoice': 'invoice',
         'acceptance': 'acceptance_act',
-        'payment': 'payment_proof'
+        'payment': 'payment_proof',
+        'delivery': 'delivery_certificate'
       };
       
       const docType = docTypeMap[uploadContext];
@@ -358,6 +361,7 @@ Click the Download button to save the file.`;
       
       const successMessages = {
         'invoice': '✅ Signed invoice uploaded successfully!',
+        'delivery': '✅ Certificate of Delivery uploaded successfully!',
         'acceptance': '✅ Acceptance act uploaded successfully!',
         'payment': '✅ Payment proof uploaded successfully!'
       };
@@ -396,6 +400,20 @@ Click the Download button to save the file.`;
         break;
         
       case 'order_activated':
+        // Order Confirmation - NEW
+        if (project.order_activated_at) {
+          docs.push({
+            id: 'order_confirmation',
+            name: 'Order Confirmation',
+            type: 'order_confirmation',
+            createdBy: 'System',
+            createdAt: project.order_activated_at,
+            status: 'generated',
+            icon: '✅',
+            actions: ['view', 'download', 'upload:disabled:Auto-generated']
+          });
+        }
+        
         // Uploaded materials (each file as separate document)
         if (project.reference_materials && project.reference_materials.length > 0) {
           project.reference_materials.forEach((file, idx) => {
@@ -525,6 +543,35 @@ Click the Download button to save the file.`;
         }
         break;
         
+      case 'delivery_confirmed':
+        // Delivery Confirmed - Client signed Certificate of Delivery (CRITICAL for PayPal)
+        if (project.delivery_confirmed_at) {
+          // Certificate of Delivery uploaded and signed
+          docs.push({
+            id: 'delivery_certificate',
+            name: 'Certificate of Delivery',
+            type: 'delivery_certificate',
+            createdBy: 'Client',
+            createdAt: project.delivery_confirmed_at,
+            status: 'signed',
+            icon: '📜',
+            actions: ['view', 'download', 'upload:disabled:Already signed']
+          });
+        } else if (project.files_accessed_at) {
+          // Files accessed, waiting for delivery certificate signature
+          docs.push({
+            id: 'delivery_certificate',
+            name: 'Certificate of Delivery',
+            type: 'delivery_certificate_pending',
+            createdBy: 'System',
+            createdAt: project.files_accessed_at,
+            status: 'pending_signature',
+            icon: '📜',
+            actions: ['view', 'download', 'upload']
+          });
+        }
+        break;
+        
       case 'work_accepted':
         // Work Accepted - Client signed acceptance act (ТЗ Step 12: Acceptance)
         if (project.work_accepted_at) {
@@ -625,17 +672,17 @@ Click the Download button to save the file.`;
         break;
         
       case 'completed':
-        // Certificate of Delivery
+        // Certificate of Completion - NEW
         if (project.completed_at) {
           docs.push({
             id: 'certificate',
-            name: 'Certificate of Delivery',
-            type: 'certificate',
-            createdBy: 'Manager',
+            name: 'Certificate of Completion',
+            type: 'certificate_completion',
+            createdBy: 'System',
             createdAt: project.completed_at,
             status: 'issued',
-            icon: '📜',
-            actions: ['view', 'download']
+            icon: '🏆',
+            actions: ['view', 'download', 'upload:disabled:Auto-generated']
           });
         }
         break;
@@ -701,6 +748,14 @@ Click the Download button to save the file.`;
       description: 'Client downloaded files',
       color: 'cyan',
       completed: !!project.files_accessed_at
+    },
+    {
+      key: 'delivery_confirmed',
+      label: 'Delivery Confirmed',
+      date: project.delivery_confirmed_at,
+      description: 'Client signed delivery certificate',
+      color: 'indigo',
+      completed: !!project.delivery_confirmed_at
     },
     {
       key: 'work_accepted',
@@ -878,6 +933,7 @@ Click the Download button to save the file.`;
                               
                               // Determine upload context
                               const getUploadContext = () => {
+                                if (doc.id === 'delivery_certificate') return 'delivery';
                                 if (doc.id === 'acceptance_pending' || doc.id === 'acceptance_act') return 'acceptance';
                                 if (doc.id === 'payment_pending' || doc.id === 'payment_proof') return 'payment';
                                 return 'invoice';
@@ -986,7 +1042,8 @@ Click the Download button to save the file.`;
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900">
-                {uploadContext === 'acceptance' ? 'Upload Signed Acceptance Act' : 
+                {uploadContext === 'delivery' ? 'Upload Signed Certificate of Delivery' :
+                 uploadContext === 'acceptance' ? 'Upload Signed Acceptance Act' : 
                  uploadContext === 'payment' ? 'Upload Payment Proof' :
                  'Upload Signed Invoice'}
               </h3>
@@ -1003,7 +1060,9 @@ Click the Download button to save the file.`;
             </div>
             
             <p className="text-sm text-gray-600 mb-4">
-              {uploadContext === 'acceptance'
+              {uploadContext === 'delivery'
+                ? 'Please upload the signed Certificate of Delivery to confirm you received the digital files. This is required for PayPal compliance.'
+                : uploadContext === 'acceptance'
                 ? 'Please upload the signed Acceptance Act (Акт приёмки-сдачи работ) to confirm that the work meets your requirements.'
                 : uploadContext === 'payment'
                 ? 'Please upload proof of payment (screenshot, receipt, or confirmation) to confirm the transaction.'
@@ -1029,6 +1088,7 @@ Click the Download button to save the file.`;
                 className="btn-ocean w-full disabled:opacity-50"
               >
                 {uploadingDocument ? 'Uploading...' : 
+                  uploadContext === 'delivery' ? '✓ Upload Certificate' :
                   uploadContext === 'acceptance' ? '✓ Upload Acceptance Act' :
                   uploadContext === 'payment' ? '✓ Upload Payment Proof' :
                   '✓ Upload Invoice'}
