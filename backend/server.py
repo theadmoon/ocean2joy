@@ -731,14 +731,14 @@ async def get_my_projects(current_user: User = Depends(get_current_user)):
     projects = await db.projects.find({"user_id": current_user.id}, {"_id": 0}).to_list(1000)
     
     # Convert datetime strings back
-    for proj in projects:
-        for field in ['created_at', 'updated_at', 'quote_sent_at', 'quote_accepted_at', 
-                      'production_started_at', 'delivered_at', 'completed_at',
-                      'files_accessed_at', 'work_accepted_at', 'payment_marked_by_client_at',
-                      'payment_confirmed_by_admin_at', 'invoice_sent_at', 'invoice_signed_at',
-                      'order_activated_at', 'quote_request_created_at']:
-            if field in proj and isinstance(proj[field], str):
-                proj[field] = datetime.fromisoformat(proj[field])
+    for field in ['created_at', 'updated_at', 'quote_sent_at', 'quote_accepted_at', 
+                  'production_started_at', 'delivered_at', 'completed_at',
+                  'files_accessed_at', 'work_accepted_at', 'payment_marked_by_client_at',
+                  'payment_confirmed_by_admin_at', 'payment_confirmed_at', 'delivery_confirmed_at',
+                  'invoice_sent_at', 'invoice_signed_at',
+                  'order_activated_at', 'quote_request_created_at']:
+        if field in proj and isinstance(proj[field], str):
+            proj[field] = datetime.fromisoformat(proj[field])
     
     return projects
 
@@ -757,7 +757,8 @@ async def get_project_details(project_id: str, current_user: User = Depends(get_
     for field in ['created_at', 'updated_at', 'quote_sent_at', 'quote_accepted_at', 
                   'production_started_at', 'delivered_at', 'completed_at',
                   'files_accessed_at', 'work_accepted_at', 'payment_marked_by_client_at',
-                  'payment_confirmed_by_admin_at', 'invoice_sent_at', 'invoice_signed_at',
+                  'payment_confirmed_by_admin_at', 'payment_confirmed_at', 'delivery_confirmed_at',
+                  'invoice_sent_at', 'invoice_signed_at',
                   'order_activated_at', 'quote_request_created_at']:
         if field in project and isinstance(project[field], str):
             project[field] = datetime.fromisoformat(project[field])
