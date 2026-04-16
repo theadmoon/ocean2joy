@@ -3665,12 +3665,20 @@ h1 {{
     return html
 
 async def generate_certificate_html(project: dict) -> str:
-    """Generate Completion Certificate HTML for PDF - Professional standalone version"""
+    """Generate Completion Certificate HTML for PDF - matches TXT version exactly"""
     completed_date = project.get('completed_at', datetime.now(timezone.utc))
     if isinstance(completed_date, str):
         completed_date = datetime.fromisoformat(completed_date)
     completed_date = completed_date if completed_date.tzinfo else completed_date.replace(tzinfo=timezone.utc)
     cert_number = await get_or_generate_document_number(project, 'certificate', 'CRT', completed_date)
+    
+    # Build deliverables list
+    deliverables_items = ""
+    if project.get('deliverables'):
+        for d in project.get('deliverables'):
+            deliverables_items += f"<p style='margin: 5px 0;'>✓ {d.get('file_name', 'File')}</p>"
+    else:
+        deliverables_items = "<p style='margin: 5px 0;'>✓ Digital video files</p>"
     
     html = f"""<!DOCTYPE html>
 <html>
@@ -3687,27 +3695,24 @@ body {{
   max-width: 800px;
   margin: 0 auto;
 }}
-.certificate-frame {{
-  border: 6px double #0369a1;
-  padding: 30px;
-  margin: 20px 0;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
-}}
 h1 {{
   text-align: center;
-  font-size: 22pt;
+  font-size: 20pt;
   font-weight: 700;
   margin: 20px 0;
   color: #0369a1;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }}
 .subtitle {{
   text-align: center;
   color: #6b7280;
-  font-size: 11pt;
-  margin: 10px 0 30px 0;
+  font-size: 10pt;
+  margin: 5px 0;
+}}
+.divider {{
+  border-top: 2px solid #e5e7eb;
+  margin: 20px 0;
 }}
 .section-header {{
   font-weight: 700;
@@ -3719,131 +3724,117 @@ h1 {{
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }}
-.info-table {{
-  width: 100%;
-  margin: 12px 0;
-}}
-.info-table td {{
-  padding: 6px 0;
-  vertical-align: top;
-}}
-.info-table td:first-child {{
-  font-weight: 600;
-  color: #4b5563;
-  width: 200px;
-}}
-.completion-badge {{
-  text-align: center;
-  margin: 40px 0;
-  padding: 30px;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border: 4px solid #10b981;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}}
-.completion-badge p:first-child {{
-  font-size: 18pt;
-  color: #047857;
-  margin: 0 0 10px 0;
-  font-weight: 700;
-}}
-.completion-badge p:last-child {{
-  margin: 10px 0 0 0;
-  color: #065f46;
-  font-size: 11pt;
-}}
-.issuer-box {{
-  margin: 40px 0 20px 0;
-  padding: 20px;
-  background: #f9fafb;
-  border-left: 5px solid #0ea5e9;
-  border-radius: 4px;
-}}
 .checkmark {{
   color: #10b981;
   font-weight: 700;
+}}
+.status-badge {{
+  text-align: center;
+  margin: 25px 0;
+  padding: 20px;
+  background: #f0fdf4;
+  border: 3px solid #10b981;
+  border-radius: 8px;
+}}
+.status-badge p {{
+  margin: 5px 0;
   font-size: 12pt;
-}}
-.footer-note {{
-  text-align: center;
-  margin: 30px 0;
-  padding: 15px;
-  color: #6b7280;
-  font-size: 10pt;
-}}
-.contact-info {{
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 2px solid #e5e7eb;
-  font-size: 9.5pt;
-  color: #6b7280;
-  text-align: center;
+  font-weight: 700;
+  color: #047857;
 }}
 </style>
 </head>
 <body>
 
-<div class="certificate-frame">
-  <h1>🏆<br>Certificate of Completion</h1>
-  <p class="subtitle">Official Project Completion Documentation</p>
-  
-  <table class="info-table" style="margin: 30px 0;">
-    <tr><td>Certificate Number:</td><td><strong>{cert_number}</strong></td></tr>
-    <tr><td>Project Number:</td><td>{project['project_number']}</td></tr>
-    <tr><td>Issue Date:</td><td>{format_date_utc(completed_date)}</td></tr>
-  </table>
-</div>
+<h1>CERTIFICATE OF COMPLETION</h1>
+<div class="divider"></div>
 
-<div class="section-header">Project Information:</div>
-<table class="info-table">
-  <tr><td>Project Title:</td><td><strong>{project.get('project_title', '')}</strong></td></tr>
-  <tr><td>Service Type:</td><td>Custom Digital Video Production</td></tr>
-  <tr><td>Client:</td><td>{project.get('user_name', 'Client')} ({project.get('user_email', '')})</td></tr>
-</table>
+<p style="text-align: center; margin: 10px 0;"><strong>Ocean2Joy Digital Video Production</strong></p>
+<p style="text-align: center; margin: 5px 0;">Project Completion Certificate</p>
 
-<div class="section-header">Project Timeline:</div>
-<table class="info-table">
-  <tr><td>Request Submitted:</td><td>{format_date_utc(project.get('created_at'))}</td></tr>
-  <tr><td>Production Started:</td><td>{format_date_utc(project.get('production_started_at'))}</td></tr>
-  <tr><td>Deliverables Provided:</td><td>{format_date_utc(project.get('delivered_at'))}</td></tr>
-  <tr><td>Payment Received:</td><td>{format_date_utc(project.get('completed_at'))}</td></tr>
-  <tr><td>Project Closed:</td><td>{format_date_utc(completed_date)}</td></tr>
-</table>
+<div class="divider"></div>
 
-<div class="section-header">Financial Settlement:</div>
-<table class="info-table">
-  <tr><td>Total Project Value:</td><td><strong>${project.get('quote_amount', 0):.2f} USD</strong></td></tr>
-  <tr><td>Payment Method:</td><td>{project.get('order_activation_payment_method', 'PayPal').upper()}</td></tr>
-  <tr><td>Payment Status:</td><td><span class="checkmark">✓</span> <strong>PAID IN FULL</strong></td></tr>
-  <tr><td>Payment Date:</td><td>{format_date_utc(project.get('completed_at'))}</td></tr>
-</table>
+<p style="margin: 10px 0;"><strong>Certificate:</strong> {cert_number}</p>
+<p style="margin: 10px 0;"><strong>Project Reference:</strong> {project['project_number']}</p>
+<p style="margin: 10px 0;"><strong>Completion Date:</strong> {format_date_utc(completed_date)}</p>
 
-<div class="completion-badge">
-  <p><strong>✓ PROJECT SUCCESSFULLY COMPLETED</strong></p>
-  <p>All services delivered, payment received in full</p>
-</div>
+<div class="divider"></div>
 
-<div class="issuer-box">
-  <div class="section-header" style="margin-top: 0; border: none;">Issued By:</div>
-  <p style="margin: 10px 0;"><strong>Ocean2Joy Digital Video Production</strong></p>
-  <p style="margin: 5px 0;">Individual Entrepreneur Vera Iambaeva</p>
-  <p style="margin: 5px 0;">Tax ID: 302335809</p>
-  <p style="margin: 5px 0;">Issue Date: {format_date_utc(completed_date)}</p>
-  <p style="margin: 5px 0;">Project Reference: {project['project_number']}</p>
-</div>
-
-<p class="footer-note">
-  This certificate confirms successful completion of all contractual obligations<br>
-  for the above-referenced digital video production project.
+<p style="margin: 15px 0;">
+This certifies that Ocean2Joy Digital Production has successfully completed and delivered the following digital video production service:
 </p>
 
-<div class="contact-info">
-  <p style="margin: 5px 0;">Legal Entity: Individual Entrepreneur Vera Iambaeva</p>
-  <p style="margin: 5px 0;">Tax ID: 302335809 | Georgia</p>
-  <p style="margin: 5px 0;">Brand: Ocean2Joy Digital Video Production</p>
-  <p style="margin: 10px 0;">Contact: ocean2joy@gmail.com | +995 555 375 032</p>
-  <p style="margin: 5px 0;">Tbilisi, Georgia</p>
+<div class="divider"></div>
+
+<div class="section-header">Client Information:</div>
+<p style="margin: 10px 0;"><strong>Name:</strong> {project.get('user_name', '')}</p>
+<p style="margin: 10px 0;"><strong>Email:</strong> {project.get('user_email', '')}</p>
+
+<div class="divider"></div>
+
+<div class="section-header">Project Details:</div>
+<p style="margin: 10px 0;"><strong>Project Title:</strong> {project.get('project_title', '')}</p>
+<p style="margin: 10px 0;"><strong>Service Type:</strong> Custom Video Production</p>
+<p style="margin: 10px 0;"><strong>Brief:</strong> {project.get('detailed_brief', '')}</p>
+
+<div class="divider"></div>
+
+<div class="section-header">Deliverables Transferred Electronically:</div>
+{deliverables_items}
+
+<div class="divider"></div>
+
+<div class="section-header">Project Timeline:</div>
+<p style="margin: 8px 0;"><strong>Order Activated:</strong> {format_date_utc(project.get('order_activated_at'))}</p>
+<p style="margin: 8px 0;"><strong>Production Started:</strong> {format_date_utc(project.get('production_started_at'))}</p>
+<p style="margin: 8px 0;"><strong>Delivered:</strong> {format_date_utc(project.get('delivered_at'))}</p>
+<p style="margin: 8px 0;"><strong>Files Accessed:</strong> {format_date_utc(project.get('files_accessed_at'))}</p>
+<p style="margin: 8px 0;"><strong>Delivery Confirmed:</strong> {format_date_utc(project.get('delivered_at'))}</p>
+<p style="margin: 8px 0;"><strong>Work Accepted:</strong> {format_date_utc(project.get('work_accepted_at'))}</p>
+<p style="margin: 8px 0;"><strong>Payment Received:</strong> {format_date_utc(project.get('completed_at'))}</p>
+<p style="margin: 8px 0;"><strong>Completed:</strong> {format_date_utc(completed_date)}</p>
+
+<div class="divider"></div>
+
+<div class="status-badge">
+  <p>PROJECT STATUS: <span class="checkmark">✓</span> SUCCESSFULLY COMPLETED</p>
 </div>
+
+<p style="margin: 8px 0;"><span class="checkmark">✓</span> All deliverables transferred electronically</p>
+<p style="margin: 8px 0;"><span class="checkmark">✓</span> Client accessed and downloaded files</p>
+<p style="margin: 8px 0;"><span class="checkmark">✓</span> Client confirmed delivery receipt</p>
+<p style="margin: 8px 0;"><span class="checkmark">✓</span> Work accepted by client</p>
+<p style="margin: 8px 0;"><span class="checkmark">✓</span> Payment received and confirmed</p>
+<p style="margin: 8px 0;"><span class="checkmark">✓</span> Project closed successfully</p>
+
+<div class="divider"></div>
+
+<div class="section-header">Delivery Method:</div>
+<p style="margin: 10px 0;">Electronic delivery via secure client portal</p>
+<p style="margin: 10px 0;">No physical shipment (digital service only)</p>
+
+<div class="divider"></div>
+
+<p style="margin: 15px 0;">
+This certificate confirms the successful completion of digital video production services for project {project['project_number']}.
+</p>
+
+<p style="margin: 15px 0;"><strong>Issued by:</strong> Ocean2Joy Digital Production</p>
+<p style="margin: 10px 0;"><strong>Date:</strong> {format_date_utc(completed_date)}</p>
+
+<p style="margin: 15px 0;">
+All communication through secure client portal chat.<br>
+For urgent matters only: ocean2joy@gmail.com
+</p>
+
+<div class="divider"></div>
+
+<p style="text-align: center; margin: 20px 0; font-weight: 600;">
+Thank you for choosing Ocean2Joy!<br>
+Professional video production delivered digitally.
+</p>
+
+<div class="divider"></div>
 
 </body>
 </html>"""
