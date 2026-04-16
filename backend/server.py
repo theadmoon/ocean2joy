@@ -2517,7 +2517,7 @@ def generate_base_html_template(title: str, content: str, project: dict) -> str:
 </html>"""
 
 async def generate_invoice_html(project: dict) -> str:
-    """Generate Invoice HTML for PDF"""
+    """Generate Invoice HTML for PDF - Full professional version"""
     invoice_date = project.get('invoice_sent_at') or project.get('order_activated_at') or datetime.now(timezone.utc)
     if isinstance(invoice_date, str):
         invoice_date = datetime.fromisoformat(invoice_date)
@@ -2526,39 +2526,110 @@ async def generate_invoice_html(project: dict) -> str:
     invoice_number = await get_or_generate_document_number(project, 'invoice', 'INV', invoice_date)
     production_start = format_date_utc(project.get('production_started_at')) if project.get('production_started_at') else "To be determined"
     production_end = format_date_utc(project.get('delivered_at')) if project.get('delivered_at') else "Per agreed timeline"
+    amount = project.get('quote_amount', 0)
     
-    content = f"""<div class="section">
-<h2 style="text-align: center; color: #0369a1; margin: 20px 0;">INVOICE-OFFER</h2>
-<table><tr><td>Invoice Number:</td><td><strong>{invoice_number}</strong></td></tr>
-<tr><td>Date Issued:</td><td>{format_date_utc(invoice_date)}</td></tr>
-<tr><td>Due Date:</td><td>Upon Delivery of Digital Assets</td></tr></table></div>
+    content = f"""
+<div class="section-title">INVOICE</div>
+<p style="text-align: center; margin: 10px 0; padding: 10px; background: #f0f9ff; border-left: 4px solid #0ea5e9;">
+<strong>Individual Entrepreneur Vera Iambaeva</strong><br>
+Tax ID: 302335809 | Country of Registration: Georgia<br>
+Custom Digital Video Services
+</p>
+<table style="margin: 20px 0;">
+<tr><td><strong>Invoice:</strong></td><td>{invoice_number}</td></tr>
+<tr><td><strong>Date Issued:</strong></td><td>{format_date_utc(invoice_date)}</td></tr>
+<tr><td><strong>Due Date:</strong></td><td>Upon Delivery of Digital Assets</td></tr>
+</table>
+
 <div class="section-title">BILL TO:</div>
-<table><tr><td>Client Name:</td><td>{project.get('user_name', 'Client')}</td></tr>
-<tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
-<tr><td>Project Reference:</td><td>{project['project_number']}</td></tr>
-<tr><td>Project Title:</td><td>{project.get('project_title', '')}</td></tr></table>
+<p>{project.get('user_name', 'Client')}<br>
+Email: {project.get('user_email', '')}<br>
+Project Reference: {project['project_number']}<br>
+Project Title: {project.get('project_title', '')}</p>
+
 <div class="section-title">SERVICE DESCRIPTION:</div>
 <p><strong>Service Type:</strong> {project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</p>
 <p><strong>Project Brief:</strong><br>{project.get('detailed_brief', 'See project details')}</p>
-<p><strong>Estimated Production Period:</strong><br>Start: {production_start}<br>Delivery: {production_end}</p>
-<div class="highlight-box" style="margin: 30px 0;"><h3 style="margin: 0 0 15px 0; color: #92400e;">PRICING</h3>
-<table><tr><td>Service Fee:</td><td><strong style="font-size: 14pt;">${project.get('quote_amount', 0):.2f} USD</strong></td></tr>
-<tr><td>Tax (Digital Services):</td><td>$0.00</td></tr>
-<tr style="border-top: 2px solid #92400e;"><td><strong>TOTAL AMOUNT DUE:</strong></td><td><strong style="font-size: 16pt; color: #92400e;">${project.get('quote_amount', 0):.2f} USD</strong></td></tr></table></div>
+<p><strong>Estimated Production Period:</strong><br>
+Start: {production_start}<br>
+Delivery: {production_end}</p>
+
+<div class="section-title">PRICING:</div>
+<table style="width: 100%; margin: 10px 0;">
+<tr><td>Service Fee</td><td style="text-align: right;"><strong>${amount:.2f} USD</strong></td></tr>
+</table>
+<table style="width: 100%; margin: 20px 0; border-top: 2px solid #e5e7eb; padding-top: 10px;">
+<tr><td><strong>SUBTOTAL:</strong></td><td style="text-align: right;"><strong>${amount:.2f} USD</strong></td></tr>
+<tr><td>Tax (Digital Services):</td><td style="text-align: right;">$0.00</td></tr>
+<tr style="border-top: 3px double #0369a1;"><td><strong>TOTAL AMOUNT DUE:</strong></td><td style="text-align: right; font-size: 14pt; color: #0369a1;"><strong>${amount:.2f} USD</strong></td></tr>
+</table>
+
 <div class="section-title">PAYMENT TERMS:</div>
-<ul><li>✓ 100% post-payment model (pay after delivery)</li><li>✓ Invoice issued before production begins</li>
-<li>✓ Payment due upon delivery of digital files</li><li>✓ Payment confirms acceptance of delivered work</li>
-<li>✓ No refunds after delivery completion</li><li>✓ All deliverables provided electronically</li></ul>
+<ul>
+<li>✓ 100% post-payment model (pay after delivery)</li>
+<li>✓ Invoice issued before production begins</li>
+<li>✓ Payment due upon delivery of digital files</li>
+<li>✓ Payment confirms acceptance of delivered work</li>
+<li>✓ No refunds after delivery completion</li>
+<li>✓ All deliverables provided electronically</li>
+</ul>
+
 <div class="section-title">PAYMENT METHOD:</div>
 <p><strong>{project.get('order_activation_payment_method', 'PayPal').upper()}</strong></p>
 <p>PayPal Account: <strong>302335809@postbox.ge</strong></p>
-<p style="color: #dc2626;"><em>Important: Include project reference "{project['project_number']}" in payment notes.</em></p>
-<div class="signature-box"><p><strong>CLIENT ACCEPTANCE & SIGNATURE:</strong></p>
+<p style="color: #dc2626;"><em>Important: Include project reference "{project['project_number']}" in payment notes for proper tracking.</em></p>
+
+<div class="section-title">COMMUNICATION:</div>
+<p>All project communication should be conducted through the <strong>secure client portal chat system</strong>.</p>
+<p>For urgent technical matters only: <strong>ocean2joy@gmail.com</strong></p>
+
+<div class="section-title">NOTES:</div>
+<ul>
+<li>• This is a digital service - no physical goods shipped</li>
+<li>• All files delivered via secure client portal</li>
+<li>• By signing this invoice, you agree to the terms above</li>
+<li>• Production begins after invoice confirmation</li>
+<li>• Delivery timeline confirmed after production start</li>
+</ul>
+
+<div class="section-title">LEGAL FRAMEWORK & TERMS:</div>
+<p>This Invoice-Offer is governed by:</p>
+<ul>
+<li>• <strong>Terms of Service:</strong> Available in client portal</li>
+<li>• <strong>Refund Policy:</strong> Available in client portal</li>
+<li>• <strong>Privacy Policy:</strong> Available in client portal</li>
+<li>• <strong>Digital Delivery Policy:</strong> Available in client portal</li>
+</ul>
+<p><strong>By signing below, Client confirms:</strong></p>
+<ul>
+<li>✓ Reading and accepting all policy documents</li>
+<li>✓ Agreement with 100% post-payment terms</li>
+<li>✓ Understanding that no refunds apply after delivery</li>
+<li>✓ Acceptance that this is a digital service (no physical goods)</li>
+</ul>
+
+<div class="signature-box">
+<p><strong>CLIENT ACCEPTANCE & SIGNATURE:</strong></p>
 <p style="margin: 15px 0;">By signing below, the Client confirms:</p>
-<ul><li>Agreement with all terms and pricing stated above</li><li>Understanding of 100% post-payment model</li>
-<li>Acceptance of digital delivery terms</li><li>Reading of all referenced policy documents</li></ul>
-<p style="margin-top: 30px;">Client Name: {project.get('user_name', '_______________________________')}<br>Date: _______________________________</p>
-<div class="signature-line"></div><p style="margin-top: 5px; font-size: 9pt;">Client Signature</p></div>"""
+<ul>
+<li>✓ Agreement with all terms and pricing stated above</li>
+<li>✓ Authorization to begin production</li>
+<li>✓ Understanding of payment terms (due upon delivery)</li>
+</ul>
+<table style="margin-top: 20px;">
+<tr><td>Client Name:</td><td>{project.get('user_name', '')}</td></tr>
+<tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
+<tr><td>Date:</td><td>{format_date_utc(invoice_date)}</td></tr>
+</table>
+<div class="signature-line" style="margin-top: 40px;"></div>
+<p style="margin-top: 5px; font-size: 9pt;">Client Signature</p>
+</div>
+
+<div style="text-align: center; margin: 30px 0; padding: 15px; background: #f0f9ff; border-top: 3px solid #0ea5e9;">
+<p style="margin: 0; font-size: 12pt;"><strong>Thank you for choosing Ocean2Joy!</strong></p>
+<p style="margin: 5px 0; font-size: 10pt;">Professional digital video production services</p>
+</div>
+"""
     
     return generate_base_html_template(f"Invoice {invoice_number}", content, project)
 
