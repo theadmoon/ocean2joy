@@ -500,19 +500,18 @@ Click the Download button to save the file.`;
             actions: ['view', 'download', 'upload:disabled:Already signed']
           });
           
-          // PayPal Payment Instructions - show AFTER work is accepted
-          if (!project.payment_marked_by_client_at) {
-            docs.push({
-              id: 'paypal_instructions',
-              name: '💳 Next Step: Payment Instructions',
-              type: 'payment_instructions',
-              createdBy: 'System',
-              createdAt: project.work_accepted_at,
-              status: 'payment_due',
-              icon: '📋',
-              actions: ['view', 'download:disabled:Instructions only', 'upload:disabled:Use PayPal directly']
-            });
-          }
+          // PayPal Payment Instructions - ALWAYS show after work is accepted
+          // Change status based on payment state, but NEVER hide
+          docs.push({
+            id: 'paypal_instructions',
+            name: '💳 Payment Instructions',
+            type: 'payment_instructions',
+            createdBy: 'System',
+            createdAt: project.work_accepted_at,
+            status: project.payment_marked_by_client_at ? 'payment_completed' : 'payment_due',
+            icon: '📋',
+            actions: ['view', 'download:disabled:Instructions only', 'upload:disabled:Use PayPal directly']
+          });
         } else if (project.files_accessed_at) {
           // Files accessed, waiting for acceptance - can view template and upload signed version
           docs.push({
