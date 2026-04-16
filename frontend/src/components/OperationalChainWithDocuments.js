@@ -443,11 +443,38 @@ Click the Download button to save the file.`;
       
       console.log('🌐 Download URL:', downloadUrl);
       
-      // Method 3: Open in new tab (works in sandboxed iframe)
-      console.log('✅ Opening document in new tab...');
-      window.open(downloadUrl, '_blank');
+      // Download with auth token
+      const response = await axios.get(downloadUrl, {
+        responseType: 'blob',
+      });
       
-      console.log(`✅ ${doc.name} opened in new tab`);
+      console.log('✅ Document received, creating preview...');
+      
+      // Create blob URL  
+      const blob = new Blob([response.data], { 
+        type: fileExtension === 'pdf' ? 'application/pdf' : 'text/plain'
+      });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Try to open in new window
+      const docWindow = window.open(url, '_blank');
+      
+      if (docWindow) {
+        console.log(`✅ ${doc.name} opened in new window`);
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 1000);
+      } else {
+        // Fallback: Direct download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${project.project_number}_${docType}.${fileExtension}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        console.log(`✅ ${doc.name} downloaded`);
+      }
       
     } catch (error) {
       console.error('❌ Download error:', error);
@@ -979,17 +1006,42 @@ Click the Download button to save the file.`;
     try {
       console.log('📥 Starting Operational Chain PDF download...');
       
-      // Method 3: Open in new tab (works in sandboxed iframe)
-      const downloadUrl = `${API}/projects/${project.id}/operational-chain/pdf`;
+      // Download with auth token
+      const response = await axios.get(
+        `${API}/projects/${project.id}/operational-chain/pdf`,
+        { responseType: 'blob' }
+      );
       
-      console.log('✅ Opening PDF in new tab...');
-      window.open(downloadUrl, '_blank');
+      console.log('✅ PDF received, creating preview...');
       
-      console.log('✅ PDF opened in new tab - you can download from there');
+      // Create blob URL
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Open in new window with blob URL (works in sandbox)
+      const pdfWindow = window.open(url, '_blank');
+      
+      if (pdfWindow) {
+        console.log('✅ PDF opened in new window');
+        // Cleanup after window is opened
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 1000);
+      } else {
+        // Fallback: Download directly
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${project.project_number}_Operational_Chain.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        console.log('✅ PDF downloaded');
+      }
       
     } catch (error) {
-      console.error('❌ PDF download error:', error);
-      alert(`Failed to open PDF: ${error.message}`);
+      console.error('❌ PDF error:', error);
+      alert(`Failed to load PDF: ${error.response?.data?.detail || error.message}`);
     }
   };
 
