@@ -3766,25 +3766,25 @@ This certifies that Ocean2Joy Digital Production has successfully completed and 
 
 <div class="divider"></div>
 
-<div class="section-header">Client Information:</div>
+<p style="margin: 15px 0; font-weight: 700; text-transform: uppercase;">CLIENT INFORMATION:</p>
 <p style="margin: 10px 0;"><strong>Name:</strong> {project.get('user_name', '')}</p>
 <p style="margin: 10px 0;"><strong>Email:</strong> {project.get('user_email', '')}</p>
 
 <div class="divider"></div>
 
-<div class="section-header">Project Details:</div>
+<p style="margin: 15px 0; font-weight: 700; text-transform: uppercase;">PROJECT DETAILS:</p>
 <p style="margin: 10px 0;"><strong>Project Title:</strong> {project.get('project_title', '')}</p>
 <p style="margin: 10px 0;"><strong>Service Type:</strong> Custom Video Production</p>
 <p style="margin: 10px 0;"><strong>Brief:</strong> {project.get('detailed_brief', '')}</p>
 
 <div class="divider"></div>
 
-<div class="section-header">Deliverables Transferred Electronically:</div>
+<p style="margin: 15px 0; font-weight: 700; text-transform: uppercase;">DELIVERABLES TRANSFERRED ELECTRONICALLY:</p>
 {deliverables_items}
 
 <div class="divider"></div>
 
-<div class="section-header">Project Timeline:</div>
+<p style="margin: 15px 0; font-weight: 700; text-transform: uppercase;">PROJECT TIMELINE:</p>
 <p style="margin: 8px 0;"><strong>Order Activated:</strong> {format_date_utc(project.get('order_activated_at'))}</p>
 <p style="margin: 8px 0;"><strong>Production Started:</strong> {format_date_utc(project.get('production_started_at'))}</p>
 <p style="margin: 8px 0;"><strong>Delivered:</strong> {format_date_utc(project.get('delivered_at'))}</p>
@@ -3809,7 +3809,7 @@ This certifies that Ocean2Joy Digital Production has successfully completed and 
 
 <div class="divider"></div>
 
-<div class="section-header">Delivery Method:</div>
+<p style="margin: 15px 0; font-weight: 700; text-transform: uppercase;">DELIVERY METHOD:</p>
 <p style="margin: 10px 0;">Electronic delivery via secure client portal</p>
 <p style="margin: 10px 0;">No physical shipment (digital service only)</p>
 
