@@ -96,7 +96,7 @@ COMMUNICATION:
 All project communication should be conducted through
 the secure client portal chat system.
 
-For technical support or urgent matters only:
+For urgent technical matters only:
 ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
@@ -219,8 +219,8 @@ Files Accessed: ${filesAccessedDate}
 This receipt confirms full payment for digital video
 production services. No further payment is required.
 
-For questions or support:
-Contact: ocean2joy@gmail.com
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 
@@ -328,7 +328,8 @@ ${projectData.project_number}.
 Issued by: Ocean2Joy Digital Production
 Date: ${completedDate}
 
-Contact: ocean2joy@gmail.com
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 
@@ -409,7 +410,8 @@ This document serves as legal confirmation of service delivery
 and client acceptance for project ${projectData.project_number}.
 
 Ocean2Joy Digital Production
-Contact: ocean2joy@gmail.com`;
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com`;
 };
 
 /**
@@ -556,8 +558,8 @@ PRODUCTION NOTES:
 NOTE: This is a template showing the expected format.
 Your actual script content should be uploaded as a PDF or DOC file.
 
-For questions about script format, contact:
-ocean2joy@gmail.com`;
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com`;
   }
   
   // Generic client material
@@ -588,8 +590,8 @@ for the project. It may include:
 
 To download this file, use the Download button.
 
-For questions about this material:
-ocean2joy@gmail.com`;
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com`;
 };
 
 /**
@@ -675,9 +677,8 @@ AFTER COMPLETING PAYMENT:
 
 NEED HELP?
 
-For payment support or technical questions:
-📧 Contact: ocean2joy@gmail.com
-(This is our support email - NOT for payments)
+All communication through secure client portal chat.
+For urgent payment issues only: ocean2joy@gmail.com
 
 For PayPal issues:
 Visit: www.paypal.com/support
@@ -773,8 +774,8 @@ Delivery: Via secure electronic portal
 
 ═══════════════════════════════════════════════
 
-For questions or updates:
-Contact: ocean2joy@gmail.com
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 
@@ -883,7 +884,8 @@ Ocean2Joy Digital Production
 Delivered by: Production Team
 Date: ${deliveredDate}
 
-Contact: ocean2joy@gmail.com
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 

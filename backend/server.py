@@ -1651,7 +1651,7 @@ COMMUNICATION:
 All project communication should be conducted through
 the secure client portal chat system.
 
-For technical support or urgent matters only:
+For urgent technical matters only:
 ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
@@ -1768,7 +1768,8 @@ This document serves as legal confirmation of service delivery
 and client acceptance for project {project['project_number']}.
 
 Ocean2Joy Digital Production
-Contact: ocean2joy@gmail.com
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com
 """
     
     elif doc_type == 'payment_instructions':
@@ -1805,8 +1806,8 @@ IMPORTANT NOTES:
 ✓ Upload payment receipt/screenshot to project portal
 ✓ No refunds after delivery completion
 
-For questions:
-Contact: ocean2joy@gmail.com
+All communication through secure client portal chat.
+For urgent payment issues only: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 """
@@ -1910,7 +1911,8 @@ Ocean2Joy Digital Production
 Delivered by: Production Team
 Date: {delivered_date_formatted}
 
-Contact: ocean2joy@gmail.com
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 
@@ -2007,8 +2009,8 @@ Delivery: Via secure electronic portal
 
 ═══════════════════════════════════════════════
 
-For questions or updates:
-Contact: ocean2joy@gmail.com
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 
@@ -2108,8 +2110,8 @@ Files Accessed: {datetime.fromisoformat(project.get('files_accessed_at', payment
 This receipt confirms full payment for digital video
 production services. No further payment is required.
 
-For questions or support:
-Contact: ocean2joy@gmail.com
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 
@@ -2209,7 +2211,8 @@ of digital video production services for project
 Issued by: Ocean2Joy Digital Production
 Date: {completed_date_formatted}
 
-Contact: ocean2joy@gmail.com
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 
