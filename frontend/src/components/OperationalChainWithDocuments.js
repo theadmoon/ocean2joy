@@ -448,33 +448,26 @@ Click the Download button to save the file.`;
         responseType: 'blob',
       });
       
-      console.log('✅ Document received, creating preview...');
+      console.log('✅ Document received, initiating download...');
       
-      // Create blob URL  
-      const blob = new Blob([response.data], { 
-        type: fileExtension === 'pdf' ? 'application/pdf' : 'text/plain'
-      });
-      const url = window.URL.createObjectURL(blob);
+      // Create download link
+      const mimeType = fileExtension === 'pdf' ? 'application/pdf' : 'text/plain';
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }));
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = url;
+      link.download = `${project.project_number}_${docType}.${fileExtension}`;
       
-      // Try to open in new window
-      const docWindow = window.open(url, '_blank');
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
       
-      if (docWindow) {
-        console.log(`✅ ${doc.name} opened in new window`);
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-        }, 1000);
-      } else {
-        // Fallback: Direct download
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${project.project_number}_${docType}.${fileExtension}`;
-        document.body.appendChild(link);
-        link.click();
+      // Cleanup
+      setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-        console.log(`✅ ${doc.name} downloaded`);
-      }
+        console.log(`✅ ${doc.name} download complete`);
+      }, 100);
       
     } catch (error) {
       console.error('❌ Download error:', error);
@@ -1012,36 +1005,29 @@ Click the Download button to save the file.`;
         { responseType: 'blob' }
       );
       
-      console.log('✅ PDF received, creating preview...');
+      console.log('✅ PDF received, initiating download...');
       
-      // Create blob URL
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = url;
+      link.download = `${project.project_number}_Operational_Chain.pdf`;
       
-      // Open in new window with blob URL (works in sandbox)
-      const pdfWindow = window.open(url, '_blank');
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
       
-      if (pdfWindow) {
-        console.log('✅ PDF opened in new window');
-        // Cleanup after window is opened
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-        }, 1000);
-      } else {
-        // Fallback: Download directly
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${project.project_number}_Operational_Chain.pdf`;
-        document.body.appendChild(link);
-        link.click();
+      // Cleanup
+      setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-        console.log('✅ PDF downloaded');
-      }
+        console.log('✅ PDF download complete - check your Downloads folder');
+      }, 100);
       
     } catch (error) {
       console.error('❌ PDF error:', error);
-      alert(`Failed to load PDF: ${error.response?.data?.detail || error.message}`);
+      alert(`Failed to download PDF: ${error.response?.data?.detail || error.message}`);
     }
   };
 
