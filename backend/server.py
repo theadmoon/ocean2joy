@@ -1618,6 +1618,13 @@ async def generate_and_download_document(
 ═══════════════════════════════════════════════
 
 Ocean2Joy Digital Video Production
+(Trade Name)
+
+Legal Entity:
+Individual Entrepreneur Vera Iambaeva
+Tax ID: 302335809
+Country of Registration: Georgia
+
 Custom Digital Video Services
 
 Invoice: {invoice_number}
@@ -1741,8 +1748,14 @@ Signature: ___________________________________________
 Thank you for choosing Ocean2Joy!
 Professional digital video production services.
 
-Ocean2Joy Digital Production
-Digital Services - Electronic Delivery Only
+═══════════════════════════════════════════════
+
+Legal Entity: Individual Entrepreneur Vera Iambaeva
+Tax ID: 302335809 | Registered in Georgia
+Ocean2Joy Digital Video Production is a trade name
+
+Contact: ocean2joy@gmail.com | +995 555 375 032
+Tbilisi, Georgia
 
 ═══════════════════════════════════════════════
 """
