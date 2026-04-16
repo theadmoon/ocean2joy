@@ -169,7 +169,7 @@ ${project.deliverables && project.deliverables.length > 0 ?
 
 IMPORTANT: This confirmation is required for:
 - PayPal/Stripe dispute protection
-- Proof of delivery (ТЗ Step 11: Buyer-Specific Handoff)
+- Proof of delivery and client file access
 - Payment processing authorization
 
 Please download the files and click "Confirm Access" to proceed.`;
@@ -219,7 +219,7 @@ NEXT STEPS:
 IMPORTANT: This acceptance is required BEFORE payment.
 It confirms you accept the work quality and completeness.
 
-This satisfies ТЗ Step 12: Acceptance/Completion requirement 
+This confirms client acceptance of delivered materials 
 for PayPal/Stripe payment processing protection.`;
         break;
         
@@ -527,7 +527,7 @@ Click the Download button to save the file.`;
         break;
         
       case 'files_accessed':
-        // Files Accessed - Client downloaded deliverables (ТЗ Step 11: Buyer-Specific Handoff)
+        // Files Accessed - Client downloaded deliverables
         if (project.files_accessed_at) {
           // Files already accessed
           docs.push({
@@ -587,7 +587,7 @@ Click the Download button to save the file.`;
         break;
         
       case 'work_accepted':
-        // Work Accepted - Client signed acceptance act (ТЗ Step 12: Acceptance)
+        // Work Accepted - Client signed acceptance act
         if (project.work_accepted_at) {
           // Acceptance document uploaded - can view and download signed version
           const accActNumber = project.document_numbers?.acceptance_act || 'Acceptance Act';

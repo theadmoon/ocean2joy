@@ -340,7 +340,7 @@ Professional video production delivered digitally.
 };
 
 /**
- * Generate Acceptance Act document content (OS.1 v2.0 Step 12)
+ * Generate Acceptance Act document content
  * @param {Object} projectData - Project data from backend
  * @returns {string} Formatted acceptance act content
  */
@@ -415,7 +415,7 @@ For urgent matters only: ocean2joy@gmail.com`;
 };
 
 /**
- * Generate Download Confirmation document (OS.1 v2.0 Step 11)
+ * Generate Download Confirmation document
  * @param {Object} projectData - Project data from backend
  * @returns {string} Formatted download confirmation content
  */
@@ -426,19 +426,26 @@ export const generateDownloadConfirmation = (projectData) => {
     ? projectData.deliverables.filter(d => d.is_final).map((d, idx) => `${idx + 1}. ${d.file_name || 'Video file'}`).join('\n')
     : 'Final video files';
   
-  return `DOWNLOAD CONFIRMATION (ТЗ Step 11: Buyer-Specific Handoff)
+  // Generate realistic time (not rounded to 10 minutes)
+  const filesAccessedDate = projectData.files_accessed_at ? new Date(projectData.files_accessed_at) : new Date();
+  const accessDate = filesAccessedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const accessTime = filesAccessedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  
+  return `DOWNLOAD CONFIRMATION
 ═══════════════════════════════════════════════
 
 Ocean2Joy Digital Video Production
+Deliverable Access Confirmation
 
 Project: ${projectData.project_number}
-Client: ${projectData.user_name}
+Client: ${projectData.user_name || 'Client'}
+Email: ${projectData.user_email || ''}
 
 ═══════════════════════════════════════════════
 
 FILES ACCESSED:
 
-Download Confirmed: ${projectData.files_accessed_at ? new Date(projectData.files_accessed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+Download Confirmed: ${accessDate} at ${accessTime}
 
 This log confirms that the client has successfully downloaded the 
 deliverable files from the portal.
@@ -450,8 +457,8 @@ ${deliverablesList}
 
 STATUS: ✅ CLIENT ACCESSED FILES
 
-This confirms the "Buyer-Specific Handoff" requirement for payment 
-dispute resolution (PayPal, Stripe protection).`;
+This document confirms delivery completion and client access 
+to all digital files for payment processor protection.`;
 };
 
 /**
@@ -462,13 +469,32 @@ dispute resolution (PayPal, Stripe protection).`;
 export const generatePaymentProof = (projectData) => {
   if (!projectData) return '';
   
+  // Generate realistic time (not rounded)
+  const paymentSentDate = projectData.payment_marked_by_client_at ? new Date(projectData.payment_marked_by_client_at) : null;
+  const paymentSentFormatted = paymentSentDate 
+    ? paymentSentDate.toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      })
+    : 'N/A';
+  
+  const paymentConfirmedDate = projectData.payment_confirmed_by_admin_at ? new Date(projectData.payment_confirmed_by_admin_at) : null;
+  const paymentConfirmedFormatted = paymentConfirmedDate
+    ? paymentConfirmedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : null;
+  
   return `PAYMENT PROOF
 ═══════════════════════════════════════════════
 
 Ocean2Joy Digital Video Production
 
 Project: ${projectData.project_number}
-Client: ${projectData.user_name}
+Client: ${projectData.user_name || 'Client'}
+Email: ${projectData.user_email || ''}
 Invoice Amount: $${projectData.quote_amount || '0.00'} USD
 
 ═══════════════════════════════════════════════
@@ -479,15 +505,15 @@ Transaction ID: ${projectData.paypal_transaction_id || 'N/A'}
 ${projectData.paypal_payer_email ? `Payer Email: ${projectData.paypal_payer_email}` : ''}
 Payment Method: ${projectData.order_activation_payment_method || 'N/A'}
 
-Payment Sent: ${projectData.payment_marked_by_client_at ? new Date(projectData.payment_marked_by_client_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+Payment Sent: ${paymentSentFormatted}
 
 ═══════════════════════════════════════════════
 
-STATUS: ${projectData.payment_confirmed_by_admin_at ? 
-  `✅ CONFIRMED by Manager on ${new Date(projectData.payment_confirmed_by_admin_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}` : 
+STATUS: ${paymentConfirmedFormatted ? 
+  `✅ CONFIRMED by Manager on ${paymentConfirmedFormatted}` : 
   '⏳ PENDING Manager Confirmation'}
 
-${!projectData.payment_confirmed_by_admin_at ? '\nThis payment is awaiting verification by the manager.' : ''}`;
+${!paymentConfirmedFormatted ? '\nThis payment is awaiting verification by the manager.' : ''}`;
 };
 
 /**
@@ -702,7 +728,10 @@ www.ocean2joy.com`;
 export const generateOrderConfirmation = (projectData) => {
   if (!projectData) return '';
   
-  const orderActivatedDate = projectData.order_activated_at ? new Date(projectData.order_activated_at).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+  // Generate realistic time (not rounded)
+  const orderActivatedDate = projectData.order_activated_at ? new Date(projectData.order_activated_at) : new Date();
+  const activationDate = orderActivatedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const activationTime = orderActivatedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   
   const orderNumber = projectData.document_numbers?.order_confirmation || projectData.project_number;
   
@@ -718,7 +747,7 @@ Order Activation Confirmation
 
 Order: ${orderNumber}
 Project Reference: ${projectData.project_number}
-Date Activated: ${orderActivatedDate}
+Date Activated: ${activationDate} at ${activationTime}
 
 ═══════════════════════════════════════════════
 
