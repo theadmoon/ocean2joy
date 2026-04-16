@@ -2470,6 +2470,227 @@ async def download_uploaded_document(
 
 # ==================== PDF GENERATION ENDPOINTS ====================
 
+
+def generate_base_html_template(title: str, content: str, project: dict) -> str:
+    """Generate base HTML template for all documents"""
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{title}</title>
+    <style>
+        @page {{ size: A4; margin: 2cm; }}
+        body {{ font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #1f2937; }}
+        .header {{ text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #0ea5e9; }}
+        .header h1 {{ margin: 0 0 5px 0; color: #0369a1; font-size: 22pt; }}
+        .header .subtitle {{ color: #6b7280; font-size: 12pt; }}
+        .legal-entity {{ background: #f0fdf4; padding: 15px; margin-bottom: 20px; border-left: 4px solid #10b981; page-break-inside: avoid; }}
+        .legal-entity strong {{ color: #047857; font-size: 12pt; }}
+        .section-title {{ font-size: 13pt; font-weight: 600; color: #0369a1; margin: 15px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #e5e7eb; }}
+        table {{ width: 100%; border-collapse: collapse; margin: 10px 0; }}
+        table td {{ padding: 8px 0; }}
+        table td:first-child {{ width: 180px; font-weight: 600; color: #4b5563; }}
+        .highlight-box {{ background: #fffbeb; padding: 15px; margin: 15px 0; border-left: 4px solid #f59e0b; page-break-inside: avoid; }}
+        .signature-box {{ margin: 30px 0; padding: 20px; border: 2px solid #d1d5db; background: #f9fafb; page-break-inside: avoid; }}
+        .signature-line {{ margin-top: 40px; border-top: 2px solid #000; width: 60%; display: inline-block; }}
+        .footer {{ margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; font-size: 9pt; color: #6b7280; page-break-inside: avoid; }}
+        .checkmark {{ color: #10b981; font-weight: bold; }}
+        .paid-stamp {{ display: inline-block; padding: 10px 20px; background: #d1fae5; border: 3px solid #10b981; color: #047857; font-weight: bold; font-size: 14pt; transform: rotate(-5deg); margin: 10px 0; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Ocean2Joy Digital Video Production</h1>
+        <div class="subtitle">{title}</div>
+    </div>
+    <div class="legal-entity">
+        <strong>Individual Entrepreneur Vera Iambaeva</strong><br>
+        Tax ID: 302335809 | Country of Registration: Georgia
+    </div>
+    {content}
+    <div class="footer">
+        <p style="margin: 0 0 10px 0;">All legal documents, contracts, invoices, and official communications are issued in the name of <strong>Individual Entrepreneur Vera Iambaeva</strong>. "Ocean2Joy Digital Video Production" is a brand name used for service identification and marketing purposes.</p>
+        <p style="margin: 10px 0;"><strong>Contact Information:</strong><br>Email: ocean2joy@gmail.com | Phone: +995 555 375 032 | Location: Tbilisi, Georgia</p>
+        <p style="margin-top: 15px; font-size: 8pt; color: #9ca3af;">Generated: {datetime.now(timezone.utc).strftime('%B %d, %Y at %I:%M %p UTC')}</p>
+    </div>
+</body>
+</html>"""
+
+async def generate_invoice_html(project: dict) -> str:
+    """Generate Invoice HTML for PDF"""
+    invoice_date = project.get('invoice_sent_at') or project.get('order_activated_at') or datetime.now(timezone.utc)
+    if isinstance(invoice_date, str):
+        invoice_date = datetime.fromisoformat(invoice_date)
+    invoice_date = invoice_date if invoice_date.tzinfo else invoice_date.replace(tzinfo=timezone.utc)
+    
+    invoice_number = await get_or_generate_document_number(project, 'invoice', 'INV', invoice_date)
+    production_start = format_date_utc(project.get('production_started_at')) if project.get('production_started_at') else "To be determined"
+    production_end = format_date_utc(project.get('delivered_at')) if project.get('delivered_at') else "Per agreed timeline"
+    
+    content = f"""<div class="section">
+<h2 style="text-align: center; color: #0369a1; margin: 20px 0;">INVOICE-OFFER</h2>
+<table><tr><td>Invoice Number:</td><td><strong>{invoice_number}</strong></td></tr>
+<tr><td>Date Issued:</td><td>{format_date_utc(invoice_date)}</td></tr>
+<tr><td>Due Date:</td><td>Upon Delivery of Digital Assets</td></tr></table></div>
+<div class="section-title">BILL TO:</div>
+<table><tr><td>Client Name:</td><td>{project.get('user_name', 'Client')}</td></tr>
+<tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
+<tr><td>Project Reference:</td><td>{project['project_number']}</td></tr>
+<tr><td>Project Title:</td><td>{project.get('project_title', '')}</td></tr></table>
+<div class="section-title">SERVICE DESCRIPTION:</div>
+<p><strong>Service Type:</strong> {project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</p>
+<p><strong>Project Brief:</strong><br>{project.get('detailed_brief', 'See project details')}</p>
+<p><strong>Estimated Production Period:</strong><br>Start: {production_start}<br>Delivery: {production_end}</p>
+<div class="highlight-box" style="margin: 30px 0;"><h3 style="margin: 0 0 15px 0; color: #92400e;">PRICING</h3>
+<table><tr><td>Service Fee:</td><td><strong style="font-size: 14pt;">${project.get('quote_amount', 0):.2f} USD</strong></td></tr>
+<tr><td>Tax (Digital Services):</td><td>$0.00</td></tr>
+<tr style="border-top: 2px solid #92400e;"><td><strong>TOTAL AMOUNT DUE:</strong></td><td><strong style="font-size: 16pt; color: #92400e;">${project.get('quote_amount', 0):.2f} USD</strong></td></tr></table></div>
+<div class="section-title">PAYMENT TERMS:</div>
+<ul><li>✓ 100% post-payment model (pay after delivery)</li><li>✓ Invoice issued before production begins</li>
+<li>✓ Payment due upon delivery of digital files</li><li>✓ Payment confirms acceptance of delivered work</li>
+<li>✓ No refunds after delivery completion</li><li>✓ All deliverables provided electronically</li></ul>
+<div class="section-title">PAYMENT METHOD:</div>
+<p><strong>{project.get('order_activation_payment_method', 'PayPal').upper()}</strong></p>
+<p>PayPal Account: <strong>302335809@postbox.ge</strong></p>
+<p style="color: #dc2626;"><em>Important: Include project reference "{project['project_number']}" in payment notes.</em></p>
+<div class="signature-box"><p><strong>CLIENT ACCEPTANCE & SIGNATURE:</strong></p>
+<p style="margin: 15px 0;">By signing below, the Client confirms:</p>
+<ul><li>Agreement with all terms and pricing stated above</li><li>Understanding of 100% post-payment model</li>
+<li>Acceptance of digital delivery terms</li><li>Reading of all referenced policy documents</li></ul>
+<p style="margin-top: 30px;">Client Name: {project.get('user_name', '_______________________________')}<br>Date: _______________________________</p>
+<div class="signature-line"></div><p style="margin-top: 5px; font-size: 9pt;">Client Signature</p></div>"""
+    
+    return generate_base_html_template(f"Invoice {invoice_number}", content, project)
+
+async def generate_acceptance_act_html(project: dict) -> str:
+    """Generate Acceptance Act HTML for PDF"""
+    delivered_date = project.get('delivered_at', datetime.now(timezone.utc))
+    if isinstance(delivered_date, str):
+        delivered_date = datetime.fromisoformat(delivered_date)
+    delivered_date = delivered_date if delivered_date.tzinfo else delivered_date.replace(tzinfo=timezone.utc)
+    acceptance_date = project.get('work_accepted_at', delivered_date)
+    if isinstance(acceptance_date, str):
+        acceptance_date = datetime.fromisoformat(acceptance_date)
+    acceptance_date = acceptance_date if acceptance_date.tzinfo else acceptance_date.replace(tzinfo=timezone.utc)
+    act_number = await get_or_generate_document_number(project, 'acceptance_act', 'ACC', acceptance_date)
+    deliverables_html = "<ul>" + "".join([f"<li>{d.get('file_name', 'File')}</li>" for d in project.get('deliverables', [])]) + "</ul>" if project.get('deliverables') else "<p><em>Digital video files delivered via secure portal</em></p>"
+    
+    content = f"""<div class="section"><h2 style="text-align: center; color: #0369a1; margin: 20px 0;">ACCEPTANCE ACT</h2>
+<p style="text-align: center; color: #6b7280;">Digital Video Production Service - Acceptance Certificate</p>
+<table style="margin-top: 20px;"><tr><td>Act Number:</td><td><strong>{act_number}</strong></td></tr>
+<tr><td>Project Reference:</td><td>{project['project_number']}</td></tr>
+<tr><td>Client:</td><td>{project.get('user_name', 'Client')}</td></tr>
+<tr><td>Service Provider:</td><td>Individual Entrepreneur Vera Iambaeva</td></tr></table></div>
+<div class="section-title">PROJECT DETAILS:</div>
+<table><tr><td>Title:</td><td>{project.get('project_title', '')}</td></tr>
+<tr><td>Service Type:</td><td>{project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</td></tr>
+<tr><td>Brief:</td><td>{project.get('detailed_brief', '')}</td></tr></table>
+<div class="section-title">DELIVERABLES:</div>{deliverables_html}
+<table><tr><td>Delivery Date:</td><td>{format_date_utc(delivered_date)}</td></tr>
+<tr><td>Delivery Method:</td><td>Secure Digital Portal</td></tr></table>
+<div class="highlight-box"><h3 style="margin: 0 0 10px 0; color: #92400e;">ACCEPTANCE CONFIRMATION</h3>
+<p>By signing this document, the Client confirms:</p>
+<ul><li><span class="checkmark">✓</span> Receipt of all deliverable digital files</li>
+<li><span class="checkmark">✓</span> Access to files via secure download portal</li>
+<li><span class="checkmark">✓</span> Acceptance of delivered materials as complete</li>
+<li><span class="checkmark">✓</span> Agreement that work meets specified requirements</li>
+<li><span class="checkmark">✓</span> Completion of the service contract</li></ul></div>
+<div class="signature-box"><p><strong>CLIENT SIGNATURE:</strong></p>
+<table style="margin-top: 20px;"><tr><td>Name:</td><td>{project.get('user_name', '')}</td></tr>
+<tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
+<tr><td>Date:</td><td>{format_date_utc(acceptance_date)}</td></tr></table>
+<div class="signature-line" style="margin-top: 40px;"></div>
+<p style="margin-top: 5px; font-size: 9pt;">Client Signature</p></div>
+<p style="margin-top: 30px; text-align: center; color: #6b7280; font-size: 10pt;">This document serves as legal confirmation of service delivery<br>and client acceptance for project {project['project_number']}.</p>"""
+    
+    return generate_base_html_template(f"Acceptance Act {act_number}", content, project)
+
+async def generate_receipt_html(project: dict) -> str:
+    """Generate Payment Receipt HTML for PDF"""
+    payment_date = project.get('completed_at') or project.get('payment_confirmed_at') or datetime.now(timezone.utc)
+    if isinstance(payment_date, str):
+        payment_date = datetime.fromisoformat(payment_date)
+    payment_date = payment_date if payment_date.tzinfo else payment_date.replace(tzinfo=timezone.utc)
+    receipt_number = await get_or_generate_document_number(project, 'receipt', 'RCP', payment_date)
+    payment_sent = format_datetime_utc(project.get('payment_marked_by_client_at')) if project.get('payment_marked_by_client_at') else 'N/A'
+    deliverables_html = "<ul>" + "".join([f"<li>{d.get('file_name', 'File')}</li>" for d in project.get('deliverables', [])]) + "</ul>" if project.get('deliverables') else "<p><em>Digital video files</em></p>"
+    
+    content = f"""<div class="section"><h2 style="text-align: center; color: #0369a1; margin: 20px 0;">PAYMENT RECEIPT</h2>
+<p style="text-align: center; color: #6b7280;">Official Payment Confirmation</p>
+<table style="margin-top: 20px;"><tr><td>Receipt Number:</td><td><strong>{receipt_number}</strong></td></tr>
+<tr><td>Date Issued:</td><td>{format_date_utc(payment_date)}</td></tr></table></div>
+<div class="section-title">PAYMENT RECEIVED FROM:</div>
+<table><tr><td>Client:</td><td>{project.get('user_name', 'Client')}</td></tr>
+<tr><td>Email:</td><td>{project.get('user_email', '')}</td></tr>
+<tr><td>Project Reference:</td><td>{project['project_number']}</td></tr></table>
+<div class="section-title">PAYMENT RECEIVED BY:</div>
+<table><tr><td>Recipient:</td><td><strong>Individual Entrepreneur Vera Iambaeva</strong></td></tr>
+<tr><td>Tax ID:</td><td>302335809</td></tr>
+<tr><td>PayPal Account:</td><td>302335809@postbox.ge</td></tr>
+<tr><td>Country:</td><td>Georgia</td></tr></table>
+<div class="highlight-box"><h3 style="margin: 0 0 10px 0; color: #92400e;">PAYMENT DETAILS</h3>
+<table><tr><td>Amount Received:</td><td><strong style="font-size: 14pt;">${project.get('quote_amount', 0):.2f} USD</strong></td></tr>
+<tr><td>Payment Method:</td><td>{project.get('order_activation_payment_method', 'PayPal').upper()}</td></tr>
+<tr><td>Payment Date:</td><td>{payment_sent}</td></tr>
+<tr><td>Payment Confirmed:</td><td>{format_datetime_utc(payment_date)}</td></tr>
+<tr><td>Transaction ID:</td><td>{project.get('paypal_transaction_id', 'See payment proof')}</td></tr>
+<tr><td>Payment Status:</td><td><strong>{project.get('paypal_payment_status', 'COMPLETED')}</strong></td></tr></table></div>
+<div class="section-title">SERVICES RENDERED:</div>
+<table><tr><td>Project Title:</td><td>{project.get('project_title', '')}</td></tr>
+<tr><td>Service Type:</td><td>{project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</td></tr></table>
+<p><strong>Deliverables:</strong></p>{deliverables_html}
+<div style="text-align: center; margin: 30px 0;"><div class="paid-stamp">✓ PAID IN FULL</div></div>
+<table style="margin: 20px 0;"><tr><td>Total Amount:</td><td>${project.get('quote_amount', 0):.2f} USD</td></tr>
+<tr><td>Amount Paid:</td><td>${project.get('quote_amount', 0):.2f} USD</td></tr>
+<tr style="border-top: 2px solid #10b981;"><td><strong>Balance Due:</strong></td><td><strong>$0.00 USD</strong></td></tr></table>
+<div class="section-title">DELIVERY CONFIRMATION:</div>
+<table><tr><td>Delivered On:</td><td>{format_date_utc(project.get('delivered_at', payment_date))}</td></tr>
+<tr><td>Delivery Method:</td><td>Secure client portal</td></tr>
+<tr><td>Files Accessed:</td><td>{format_date_utc(project.get('files_accessed_at')) if project.get('files_accessed_at') else 'Confirmed'}</td></tr></table>
+<p style="margin-top: 30px; text-align: center; font-size: 10pt; color: #047857;"><strong>This receipt confirms full payment for digital video production services.</strong><br>No further payment is required.</p>"""
+    
+    return generate_base_html_template(f"Receipt {receipt_number}", content, project)
+
+async def generate_certificate_html(project: dict) -> str:
+    """Generate Completion Certificate HTML for PDF"""
+    completed_date = project.get('completed_at', datetime.now(timezone.utc))
+    if isinstance(completed_date, str):
+        completed_date = datetime.fromisoformat(completed_date)
+    completed_date = completed_date if completed_date.tzinfo else completed_date.replace(tzinfo=timezone.utc)
+    cert_number = await get_or_generate_document_number(project, 'certificate', 'CRT', completed_date)
+    
+    content = f"""<div style="border: 5px double #0369a1; padding: 30px; margin: 20px 0;">
+<h2 style="text-align: center; color: #0369a1; margin: 20px 0; font-size: 20pt;">CERTIFICATE OF COMPLETION</h2>
+<p style="text-align: center; color: #6b7280; margin-bottom: 30px;">Official Project Completion Documentation</p>
+<table style="margin: 20px 0;"><tr><td>Certificate Number:</td><td><strong>{cert_number}</strong></td></tr>
+<tr><td>Project Number:</td><td>{project['project_number']}</td></tr>
+<tr><td>Issue Date:</td><td>{format_date_utc(completed_date)}</td></tr></table></div>
+<div class="section-title">PROJECT INFORMATION:</div>
+<table><tr><td>Project Title:</td><td><strong>{project.get('project_title', '')}</strong></td></tr>
+<tr><td>Service Type:</td><td>Custom Digital Video Production</td></tr>
+<tr><td>Client:</td><td>{project.get('user_name', 'Client')} ({project.get('user_email', '')})</td></tr></table>
+<div class="section-title">PROJECT TIMELINE:</div>
+<table><tr><td>Request Submitted:</td><td>{format_date_utc(project.get('created_at'))}</td></tr>
+<tr><td>Production Started:</td><td>{format_date_utc(project.get('production_started_at'))}</td></tr>
+<tr><td>Deliverables Provided:</td><td>{format_date_utc(project.get('delivered_at'))}</td></tr>
+<tr><td>Payment Received:</td><td>{format_date_utc(project.get('completed_at'))}</td></tr>
+<tr><td>Project Closed:</td><td>{format_date_utc(completed_date)}</td></tr></table>
+<div class="section-title">FINANCIAL SETTLEMENT:</div>
+<table><tr><td>Total Project Value:</td><td><strong>${project.get('quote_amount', 0):.2f} USD</strong></td></tr>
+<tr><td>Payment Method:</td><td>{project.get('order_activation_payment_method', 'PayPal').upper()}</td></tr>
+<tr><td>Payment Status:</td><td><span class="checkmark">✓</span> <strong>PAID IN FULL</strong></td></tr>
+<tr><td>Payment Date:</td><td>{format_date_utc(project.get('completed_at'))}</td></tr></table>
+<div style="text-align: center; margin: 40px 0; padding: 30px; background: #f0fdf4; border: 3px solid #10b981;">
+<p style="font-size: 16pt; color: #047857; margin: 0;"><strong>✓ PROJECT SUCCESSFULLY COMPLETED</strong></p>
+<p style="margin: 10px 0; color: #065f46;">All services delivered, payment received in full</p></div>
+<div class="section-title" style="margin-top: 40px;">ISSUED BY:</div>
+<p><strong>Ocean2Joy Digital Video Production</strong><br>Individual Entrepreneur Vera Iambaeva<br>
+Tax ID: 302335809<br>Issue Date: {format_date_utc(completed_date)}<br>Project Reference: {project['project_number']}</p>
+<p style="margin-top: 40px; text-align: center; color: #6b7280; font-size: 10pt;">This certificate confirms successful completion of all contractual obligations<br>for the above-referenced digital video production project.</p>"""
+    
+    return generate_base_html_template(f"Certificate {cert_number}", content, project)
+
+
 def generate_operational_chain_html(project: dict) -> str:
     """Generate HTML for operational chain PDF with professional styling"""
     
@@ -2774,6 +2995,57 @@ async def get_demo_videos():
     return videos
 
 @api_router.get("/admin/demo-videos", response_model=List[DemoVideo])
+
+
+@api_router.get("/projects/{project_id}/documents/{doc_type}/pdf")
+async def download_document_pdf(
+    project_id: str,
+    doc_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate and download specific document as PDF (Invoice, Acceptance Act, Receipt, Certificate)"""
+    project = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify access
+    if project['user_id'] != current_user.id and current_user.role not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Validate document type and generate HTML
+    html_content = ""
+    doc_display_name = doc_type.replace('_', ' ').title()
+    
+    if doc_type == 'invoice':
+        html_content = await generate_invoice_html(project)
+        doc_display_name = "Invoice"
+    elif doc_type == 'acceptance_act':
+        html_content = await generate_acceptance_act_html(project)
+        doc_display_name = "Acceptance_Act"
+    elif doc_type == 'receipt':
+        html_content = await generate_receipt_html(project)
+        doc_display_name = "Receipt"
+    elif doc_type == 'certificate':
+        html_content = await generate_certificate_html(project)
+        doc_display_name = "Certificate"
+    else:
+        raise HTTPException(status_code=400, detail=f"PDF generation not available for {doc_type}")
+    
+    # Convert HTML to PDF
+    pdf_bytes = HTML(string=html_content).write_pdf()
+    
+    # Prepare filename
+    filename = f"{project['project_number']}_{doc_display_name}.pdf"
+    
+    # Return as streaming response
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+    )
+
 async def admin_get_all_demo_videos(current_user: User = Depends(get_current_user)):
     """Get all demo videos for admin (including inactive)"""
     if current_user.role not in ["admin", "manager"]:

@@ -408,13 +408,24 @@ Click the Download button to save the file.`;
       // Check if this is an uploaded document (signed/confirmed)
       const isUploaded = project.client_confirmations && project.client_confirmations[docType];
       
+      // PDF-enabled document types
+      const pdfDocTypes = ['invoice', 'acceptance_act', 'receipt', 'certificate'];
+      
       let downloadUrl;
+      let fileExtension = 'txt';
+      
       if (isUploaded) {
         // Download uploaded/signed version
         downloadUrl = `${API}/projects/${project.id}/documents/${docType}/download`;
+        fileExtension = 'pdf';
+      } else if (pdfDocTypes.includes(docType)) {
+        // Generate and download as PDF
+        downloadUrl = `${API}/projects/${project.id}/documents/${docType}/pdf`;
+        fileExtension = 'pdf';
       } else {
-        // Generate and download document
+        // Other document types - use old TXT generation endpoint
         downloadUrl = `${API}/projects/${project.id}/documents/${docType}/generate`;
+        fileExtension = 'txt';
       }
       
       // Create a temporary link and trigger download
@@ -425,7 +436,7 @@ Click the Download button to save the file.`;
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${project.project_number}_${docType}.txt`);
+      link.setAttribute('download', `${project.project_number}_${docType}.${fileExtension}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -1155,7 +1166,7 @@ Click the Download button to save the file.`;
                   onClick={() => handleDownload(selectedDocument)}
                   className="btn-ocean-sm inline-flex items-center gap-2"
                 >
-                  <FaDownload /> Download
+                  <FaDownload /> Download as {['invoice', 'acceptance_act', 'receipt', 'certificate'].includes(selectedDocument?.id) ? 'PDF' : 'TXT'}
                 </button>
               )}
               <button 
