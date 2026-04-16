@@ -877,7 +877,7 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
             )}
 
 
-            {/* Order Activation Section - Always visible, different modes based on activation status */}
+            {/* Order Activation Section - Unified form (same fields in both states) */}
             <div className="card-ocean p-6 mt-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-gray-900 text-left flex items-center gap-2">
@@ -888,19 +888,37 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                     ? 'bg-green-100 text-green-800' 
                     : 'bg-yellow-100 text-yellow-800'
                 }`}>
-                  {project.order_activated_at ? '✅ Activated' : '⏳ Awaiting Activation'}
+                  {project.order_activated_at ? '✅ Completed' : '⏳ Pending'}
                 </span>
               </div>
               
-              {!project.order_activated_at ? (
-                // MODE 1: Not activated - show form
-                <>
-                  <p className="text-sm text-gray-600 mb-6 text-left">
+              {/* Unified Form - Same fields always visible */}
+              <div className="space-y-6">
+                {/* Status Info */}
+                {!project.order_activated_at ? (
+                  <p className="text-sm text-gray-600 text-left">
                     Complete all fields below to activate your order. Manager will review and prepare your invoice.
                   </p>
+                ) : (
+                  <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                    <p className="text-sm text-green-800 font-semibold">
+                      ✓ Activated on {new Date(project.order_activated_at).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                    <p className="text-xs text-green-700 mt-1">
+                      This is the form you submitted. All fields are locked for audit purposes.
+                    </p>
+                  </div>
+                )}
 
-                  {/* Current Status */}
-                  <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 mb-6">
+                {/* Progress indicator (only when not activated) */}
+                {!project.order_activated_at && (
+                  <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
                     <p className="text-sm font-semibold text-sky-900 mb-2">
                       📋 Current Status:
                     </p>
@@ -916,51 +934,71 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                       )}
                     </p>
                   </div>
+                )}
 
-                  {/* Brief Field */}
-                  <div className="mb-6">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      📝 Project Brief
-                    </label>
-                    <textarea
-                      value={orderBrief}
-                      onChange={(e) => setOrderBrief(e.target.value)}
-                      placeholder="Describe your project in detail: objectives, style, target audience, specific requirements..."
-                      className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-                      rows={6}
-                    />
+                {/* 1. Project Brief Field */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    📝 Project Brief {project.order_activated_at && <span className="text-xs text-gray-500">(submitted)</span>}
+                  </label>
+                  <textarea
+                    value={project.order_activated_at ? (project.detailed_brief || '') : orderBrief}
+                    onChange={(e) => !project.order_activated_at && setOrderBrief(e.target.value)}
+                    placeholder={project.order_activated_at ? '' : "Describe your project in detail: objectives, style, target audience, specific requirements..."}
+                    disabled={project.order_activated_at}
+                    className={`w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                      project.order_activated_at 
+                        ? 'bg-gray-50 border-gray-300 text-gray-700 cursor-not-allowed' 
+                        : 'border-gray-300'
+                    }`}
+                    rows={6}
+                  />
+                  {!project.order_activated_at && (
                     <p className="text-xs text-gray-500 mt-2">
                       Provide detailed information about your project to help us prepare an accurate quote.
                     </p>
-                  </div>
+                  )}
+                </div>
 
-                  {/* File Upload */}
-                  <div className="mb-6">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      📎 Script & Materials
-                    </label>
-                    <input
-                      type="file"
-                      multiple
-                      onChange={handleFileUpload}
-                      disabled={uploadingFiles}
-                      className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2"
-                    />
-                    <p className="text-xs text-gray-500 mt-2">
-                      Upload your script, character references, location photos, or any other materials (PDF, DOCX, ZIP, Images)
-                    </p>
-                  </div>
+                {/* 2. Script & Materials */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    📎 Script & Materials {project.order_activated_at && <span className="text-xs text-gray-500">(submitted)</span>}
+                  </label>
+                  
+                  {!project.order_activated_at && (
+                    <>
+                      <input
+                        type="file"
+                        multiple
+                        onChange={handleFileUpload}
+                        disabled={uploadingFiles}
+                        className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2"
+                      />
+                      <p className="text-xs text-gray-500 mt-2">
+                        Upload your script, character references, location photos, or any other materials (PDF, DOCX, ZIP, Images)
+                      </p>
+                    </>
+                  )}
 
-                  {/* Uploaded Files List */}
+                  {/* Uploaded Files List (shown in both states) */}
                   {project.reference_materials && project.reference_materials.length > 0 && (
-                    <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
-                      <p className="text-sm font-semibold text-green-900 mb-2">
-                        ✅ Uploaded Materials:
+                    <div className={`mt-3 border rounded-lg p-4 ${
+                      project.order_activated_at 
+                        ? 'bg-gray-50 border-gray-300' 
+                        : 'bg-green-50 border-green-200'
+                    }`}>
+                      <p className={`text-sm font-semibold mb-2 ${
+                        project.order_activated_at ? 'text-gray-700' : 'text-green-900'
+                      }`}>
+                        {project.order_activated_at ? '📎 Uploaded Materials:' : '✅ Uploaded Materials:'}
                       </p>
                       <ul className="space-y-1">
                         {project.reference_materials.map((file, idx) => (
-                          <li key={idx} className="text-sm text-green-700 flex items-center gap-2">
-                            <span>📄</span>
+                          <li key={idx} className={`text-sm flex items-center gap-2 ${
+                            project.order_activated_at ? 'text-gray-700' : 'text-green-700'
+                          }`}>
+                            <span>{project.order_activated_at ? '📄' : '✓'}</span>
                             <span>{file}</span>
                           </li>
                         ))}
@@ -968,157 +1006,146 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                     </div>
                   )}
 
-                  {/* Payment Method Selection */}
-                  <div className="mb-6">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      💳 Select Payment Method
-                    </label>
-                    <div className="space-y-3">
-                      <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-sky-50 transition-colors"
-                        style={{ borderColor: orderPaymentMethod === 'paypal' ? '#0ea5e9' : '#d1d5db' }}>
-                        <input
-                          type="radio"
-                          name="payment_method"
-                          value="paypal"
-                          checked={orderPaymentMethod === 'paypal'}
-                          onChange={(e) => setOrderPaymentMethod(e.target.value)}
-                          className="mr-3"
-                        />
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">💳 PayPal</p>
-                          <p className="text-xs text-gray-600">Quick and secure online payment</p>
-                        </div>
-                      </label>
-                      
-                      <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-sky-50 transition-colors"
-                        style={{ borderColor: orderPaymentMethod === 'swift' ? '#0ea5e9' : '#d1d5db' }}>
-                        <input
-                          type="radio"
-                          name="payment_method"
-                          value="swift"
-                          checked={orderPaymentMethod === 'swift'}
-                          onChange={(e) => setOrderPaymentMethod(e.target.value)}
-                          className="mr-3"
-                        />
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">🏦 SWIFT Transfer</p>
-                          <p className="text-xs text-gray-600">International bank transfer (USD)</p>
-                        </div>
-                      </label>
-                      
-                      <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-sky-50 transition-colors"
-                        style={{ borderColor: orderPaymentMethod === 'qr_code' ? '#0ea5e9' : '#d1d5db' }}>
-                        <input
-                          type="radio"
-                          name="payment_method"
-                          value="qr_code"
-                          checked={orderPaymentMethod === 'qr_code'}
-                          onChange={(e) => setOrderPaymentMethod(e.target.value)}
-                          className="mr-3"
-                        />
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">📱 QR Code</p>
-                          <p className="text-xs text-gray-600">Instant local payment (GEL)</p>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Manager Comments - show if exists */}
-                  {project.quote_request_manager_comments && (
-                    <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
-                      <p className="text-xs font-semibold text-blue-900 mb-2">💬 MANAGER'S NOTES</p>
-                      <p className="text-sm text-blue-900 whitespace-pre-wrap">{project.quote_request_manager_comments}</p>
-                    </div>
-                  )}
-
-                  {/* Activate Order Button */}
-                  {project.reference_materials && project.reference_materials.length > 0 && (
-                    <button
-                      onClick={activateOrder}
-                      disabled={!orderBrief.trim() || !orderPaymentMethod}
-                      className="btn-ocean w-full py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      🚀 Activate Order & Submit for Review
-                    </button>
-                  )}
-
                   {uploadingFiles && (
-                    <div className="text-center text-sm text-gray-600 mt-4">
+                    <div className="text-center text-sm text-gray-600 mt-2">
                       <span className="inline-block animate-spin mr-2">⏳</span>
                       Uploading files...
                     </div>
                   )}
-                </>
-              ) : (
-                // MODE 2: Activated - show what client submitted (read-only)
-                <>
-                  <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded mb-6">
-                    <p className="text-sm text-green-800 font-semibold">
-                      ✓ Order Activated on {new Date(project.order_activated_at).toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
+                </div>
+
+                {/* 3. Payment Method Selection */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    💳 Payment Method {project.order_activated_at && <span className="text-xs text-gray-500">(selected)</span>}
+                  </label>
+                  <div className="space-y-3">
+                    <label className={`flex items-center p-4 border-2 rounded-lg ${
+                      project.order_activated_at 
+                        ? 'cursor-not-allowed bg-gray-50' 
+                        : 'cursor-pointer hover:bg-sky-50 transition-colors'
+                    }`}
+                      style={{ 
+                        borderColor: (project.order_activated_at ? project.order_activation_payment_method === 'paypal' : orderPaymentMethod === 'paypal') 
+                          ? '#0ea5e9' 
+                          : '#d1d5db' 
+                      }}>
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="paypal"
+                        checked={project.order_activated_at ? project.order_activation_payment_method === 'paypal' : orderPaymentMethod === 'paypal'}
+                        onChange={(e) => !project.order_activated_at && setOrderPaymentMethod(e.target.value)}
+                        disabled={project.order_activated_at}
+                        className="mr-3"
+                      />
+                      <div className="flex-1">
+                        <p className={`font-semibold ${project.order_activated_at ? 'text-gray-700' : 'text-gray-900'}`}>
+                          💳 PayPal
+                        </p>
+                        <p className="text-xs text-gray-600">Quick and secure online payment</p>
+                      </div>
+                    </label>
+                    
+                    <label className={`flex items-center p-4 border-2 rounded-lg ${
+                      project.order_activated_at 
+                        ? 'cursor-not-allowed bg-gray-50' 
+                        : 'cursor-pointer hover:bg-sky-50 transition-colors'
+                    }`}
+                      style={{ 
+                        borderColor: (project.order_activated_at ? project.order_activation_payment_method === 'swift' : orderPaymentMethod === 'swift') 
+                          ? '#0ea5e9' 
+                          : '#d1d5db' 
+                      }}>
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="swift"
+                        checked={project.order_activated_at ? project.order_activation_payment_method === 'swift' : orderPaymentMethod === 'swift'}
+                        onChange={(e) => !project.order_activated_at && setOrderPaymentMethod(e.target.value)}
+                        disabled={project.order_activated_at}
+                        className="mr-3"
+                      />
+                      <div className="flex-1">
+                        <p className={`font-semibold ${project.order_activated_at ? 'text-gray-700' : 'text-gray-900'}`}>
+                          🏦 SWIFT Transfer
+                        </p>
+                        <p className="text-xs text-gray-600">International bank transfer (USD)</p>
+                      </div>
+                    </label>
+                    
+                    <label className={`flex items-center p-4 border-2 rounded-lg ${
+                      project.order_activated_at 
+                        ? 'cursor-not-allowed bg-gray-50' 
+                        : 'cursor-pointer hover:bg-sky-50 transition-colors'
+                    }`}
+                      style={{ 
+                        borderColor: (project.order_activated_at ? project.order_activation_payment_method === 'qr_code' : orderPaymentMethod === 'qr_code') 
+                          ? '#0ea5e9' 
+                          : '#d1d5db' 
+                      }}>
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="qr_code"
+                        checked={project.order_activated_at ? project.order_activation_payment_method === 'qr_code' : orderPaymentMethod === 'qr_code'}
+                        onChange={(e) => !project.order_activated_at && setOrderPaymentMethod(e.target.value)}
+                        disabled={project.order_activated_at}
+                        className="mr-3"
+                      />
+                      <div className="flex-1">
+                        <p className={`font-semibold ${project.order_activated_at ? 'text-gray-700' : 'text-gray-900'}`}>
+                          📱 QR Code
+                        </p>
+                        <p className="text-xs text-gray-600">Instant local payment (GEL)</p>
+                      </div>
+                    </label>
                   </div>
+                </div>
 
-                  <p className="text-sm text-gray-600 mb-6 text-left">
-                    Here's what you submitted when activating this order:
-                  </p>
-
-                  {/* Show Brief */}
-                  <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4">
-                    <p className="text-xs font-semibold text-gray-500 mb-2">📝 YOUR BRIEF</p>
-                    <p className="text-sm text-gray-900 whitespace-pre-wrap">{project.detailed_brief || 'No brief provided'}</p>
-                  </div>
-
-                  {/* Show Payment Method */}
-                  {project.order_activation_payment_method && (
-                    <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4">
-                      <p className="text-xs font-semibold text-gray-500 mb-2">💳 PAYMENT METHOD</p>
-                      <p className="text-sm text-gray-900 font-medium">
-                        {project.order_activation_payment_method === 'paypal' && '💳 PayPal - Quick and secure online payment'}
-                        {project.order_activation_payment_method === 'swift' && '🏦 SWIFT Transfer - International bank transfer (USD)'}
-                        {project.order_activation_payment_method === 'qr_code' && '📱 QR Code - Instant local payment (GEL)'}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Show Uploaded Materials */}
-                  {project.reference_materials && project.reference_materials.length > 0 && (
-                    <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4">
-                      <p className="text-xs font-semibold text-gray-500 mb-2">📎 UPLOADED MATERIALS ({project.reference_materials.length})</p>
-                      <ul className="space-y-1">
-                        {project.reference_materials.map((file, idx) => (
-                          <li key={idx} className="text-sm text-gray-700 flex items-center gap-2">
-                            <span className="text-green-600 text-xs">✓</span>
-                            <span>{file}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Show Manager Comments */}
-                  {project.quote_request_manager_comments && (
-                    <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <p className="text-xs font-semibold text-blue-900 mb-2">💬 MANAGER'S NOTES</p>
+                {/* 4. Manager Comments Field */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    💬 Manager's Comments {project.order_activated_at && project.quote_request_manager_comments && <span className="text-xs text-gray-500">(from manager)</span>}
+                  </label>
+                  
+                  {project.quote_request_manager_comments ? (
+                    <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
                       <p className="text-sm text-blue-900 whitespace-pre-wrap">{project.quote_request_manager_comments}</p>
                     </div>
-                  )}
-
-                  {!project.quote_request_manager_comments && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                      <p className="text-xs text-yellow-800">
-                        ⏳ Waiting for manager to review and add comments...
+                  ) : (
+                    <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                      <p className="text-xs text-gray-500 italic">
+                        {project.order_activated_at 
+                          ? 'No comments from manager yet.' 
+                          : 'Manager will add comments after reviewing your submission.'}
                       </p>
                     </div>
                   )}
-                </>
-              )}
+                </div>
+
+                {/* Action Button */}
+                <div>
+                  {!project.order_activated_at ? (
+                    project.reference_materials && project.reference_materials.length > 0 && (
+                      <button
+                        onClick={activateOrder}
+                        disabled={!orderBrief.trim() || !orderPaymentMethod}
+                        className="btn-ocean w-full py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        🚀 Activate Order & Submit for Review
+                      </button>
+                    )
+                  ) : (
+                    <button
+                      disabled
+                      className="w-full py-3 text-lg font-semibold bg-green-100 text-green-800 border-2 border-green-300 rounded-lg cursor-not-allowed"
+                    >
+                      ✓ Order Activation Completed
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
 
