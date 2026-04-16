@@ -1453,14 +1453,30 @@ async def generate_and_download_document(
     filename = f"{project['project_number']}_{doc_type}.txt"
     
     if doc_type == 'invoice':
-        delivered_date = project.get('delivered_at', datetime.now(timezone.utc).isoformat())
-        delivered_date_formatted = datetime.fromisoformat(delivered_date).strftime('%B %d, %Y')
+        # Invoice is sent BEFORE production starts, so use invoice_sent_at or order_activated_at
+        invoice_date = project.get('invoice_sent_at') or project.get('order_activated_at') or datetime.now(timezone.utc).isoformat()
+        if isinstance(invoice_date, datetime):
+            invoice_date_formatted = invoice_date.strftime('%B %d, %Y')
+        else:
+            invoice_date_formatted = datetime.fromisoformat(invoice_date).strftime('%B %d, %Y')
         
+        # Production period is estimated at invoice time (not actual dates)
         production_start = project.get('production_started_at', '')
         production_end = project.get('delivered_at', '')
         
-        production_start_formatted = datetime.fromisoformat(production_start).strftime('%B %d, %Y') if production_start else ''
-        production_end_formatted = datetime.fromisoformat(production_end).strftime('%B %d, %Y') if production_end else ''
+        # If production hasn't started yet, show estimated dates
+        if production_start:
+            production_start_formatted = datetime.fromisoformat(production_start).strftime('%B %d, %Y') if isinstance(production_start, str) else production_start.strftime('%B %d, %Y')
+        else:
+            production_start_formatted = "To be determined after invoice confirmation"
+        
+        if production_end:
+            production_end_formatted = datetime.fromisoformat(production_end).strftime('%B %d, %Y') if isinstance(production_end, str) else production_end.strftime('%B %d, %Y')
+        else:
+            production_end_formatted = "Estimated timeline in agreement"
+        
+        # Shortened invoice number for readability
+        invoice_number = project['project_number'].replace('Custom1050USD-', '').replace('-', '/')
         
         doc_content = f"""INVOICE
 ═══════════════════════════════════════════════
@@ -1468,60 +1484,95 @@ async def generate_and_download_document(
 Ocean2Joy Digital Video Production
 Custom Digital Video Services
 
-Invoice #: {project['project_number']}
-Date Issued: {delivered_date_formatted}
-Due Date: Upon Receipt
+Invoice: {invoice_number}
+Date Issued: {invoice_date_formatted}
+Due Date: Upon Delivery of Digital Assets
 
 ═══════════════════════════════════════════════
 
 BILL TO:
 {project.get('user_name', 'Client')}
 Email: {project.get('user_email', '')}
-Project: {project['project_number']}
+Project Reference: {project['project_number']}
 Project Title: {project.get('project_title', '')}
 
 ═══════════════════════════════════════════════
 
-PROJECT DETAILS:
+SERVICE DESCRIPTION:
 
 Service Type: {project.get('service_type', 'Custom Video Production')}
-Brief: {project.get('detailed_brief', '')}
-Production Period: {production_start_formatted} - {production_end_formatted}
+
+Project Brief:
+{project.get('detailed_brief', '')}
+
+Estimated Production Period:
+Start: {production_start_formatted}
+Delivery: {production_end_formatted}
 
 ═══════════════════════════════════════════════
 
-PRICING BREAKDOWN:
+PRICING:
 
-Base Production Fee                    ${project.get('quote_amount', 0):.2f} USD
+Service Fee                           ${project.get('quote_amount', 0):.2f} USD
 
 ═══════════════════════════════════════════════
 
-TOTAL AMOUNT DUE:                      ${project.get('quote_amount', 0):.2f} USD
+SUBTOTAL:                             ${project.get('quote_amount', 0):.2f} USD
+Tax (Digital Services):                          $0.00
+                                      ────────────────
+TOTAL AMOUNT DUE:                     ${project.get('quote_amount', 0):.2f} USD
 
 ═══════════════════════════════════════════════
 
 PAYMENT TERMS:
-✓ 100% payment due upon delivery of digital assets
-✓ Payment confirms acceptance of delivered materials
-✓ No refunds after delivery completion
-✓ Digital service delivered electronically via secure portal
 
-PAYMENT METHODS:
+✓ 100% post-payment model (pay after delivery)
+✓ Invoice issued before production begins
+✓ Payment due upon delivery of digital files
+✓ Payment confirms acceptance of delivered work
+✓ No refunds after delivery completion
+✓ All deliverables provided electronically
+
+═══════════════════════════════════════════════
+
+PAYMENT METHOD:
+
 {project.get('order_activation_payment_method', 'PayPal').upper()}
 
-For PayPal payments:
-Account: 302335809@postbox.ge
+PayPal Account: 302335809@postbox.ge
 
-For general inquiries:
-Contact: ocean2joy@gmail.com
+Important: Include project reference "{project['project_number']}"
+in payment notes for proper tracking.
+
+═══════════════════════════════════════════════
+
+COMMUNICATION:
+
+All project communication should be conducted through
+the secure client portal chat system.
+
+For technical support or urgent matters only:
+ocean2joy@gmail.com
+
+═══════════════════════════════════════════════
+
+NOTES:
+
+• This is a digital service - no physical goods shipped
+• All files delivered via secure client portal
+• By signing this invoice, you agree to the terms above
+• Production begins after invoice confirmation
+• Delivery timeline confirmed after production start
 
 ═══════════════════════════════════════════════
 
 Thank you for choosing Ocean2Joy!
-Professional video production delivered digitally.
+Professional digital video production services.
 
-This is a legal invoice for digital video production services.
-Payment of this invoice constitutes acceptance of delivered materials.
+Ocean2Joy Digital Production
+Digital Services - Electronic Delivery Only
+
+═══════════════════════════════════════════════
 """
     
     elif doc_type == 'acceptance_act':
