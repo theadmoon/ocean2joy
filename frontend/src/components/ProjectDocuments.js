@@ -291,9 +291,12 @@ Date: ${project.payment_marked_by_client_at ? new Date(project.payment_marked_by
 PAYMENT DETAILS:
 
 Amount Paid: $${project.quote_amount || 0}
-Payment Method: ${project.payment_method || 'N/A'}
-${project.paypal_transaction_id ? `Transaction ID: ${project.paypal_transaction_id}` : ''}
-${project.paypal_payer_email ? `Payer Email: ${project.paypal_payer_email}` : ''}
+Payment Method: ${project.payment_method || 'paypal'}
+
+Transaction ID: ${project.paypal_transaction_id || 'N/A'}
+
+From (Payer): ${project.paypal_payer_email || project.user_email || 'N/A'}
+To (Recipient): 302335809@postbox.ge
 
 Status: ${project.payment_confirmed_by_admin ? 'CONFIRMED' : 'Pending Confirmation'}
 
