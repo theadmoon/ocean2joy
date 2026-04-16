@@ -3565,7 +3565,7 @@ h1 {{
 
 <div class="section-header">Service Delivered:</div>
 <table class="info-table">
-  <tr><td>Service Type:</td><td>{project.get('service_type', 'Custom Video Production').replace('_', ' ').title()}</td></tr>
+  <tr><td>Service Type:</td><td>Custom Video Production</td></tr>
   <tr><td>Project Title:</td><td>{project.get('project_title', '')}</td></tr>
   <tr><td>Brief:</td><td>{project.get('detailed_brief', '')}</td></tr>
   <tr><td>Production Period:</td><td>{production_start} - {format_date_utc(delivered_date)}</td></tr>
