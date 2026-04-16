@@ -974,27 +974,28 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
               
               {/* Full Form - shown when expanded OR not activated */}
               {(!project.order_activated_at || isOrderFormExpanded) && (
-                {/* Status Info */}
-                {!project.order_activated_at ? (
-                  <p className="text-sm text-gray-600 text-left">
-                    Complete all fields below to activate your order. Manager will review and prepare your invoice.
-                  </p>
-                ) : (
-                  <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                    <p className="text-sm text-green-800 font-semibold">
-                      ✓ Activated on {new Date(project.order_activated_at).toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                <>
+                  {/* Status Info */}
+                  {!project.order_activated_at ? (
+                    <p className="text-sm text-gray-600 text-left">
+                      Complete all fields below to activate your order. Manager will review and prepare your invoice.
                     </p>
-                    <p className="text-xs text-green-700 mt-1">
-                      This is the form you submitted. All fields are locked for audit purposes.
-                    </p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                      <p className="text-sm text-green-800 font-semibold">
+                        ✓ Activated on {new Date(project.order_activated_at).toLocaleString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                      <p className="text-xs text-green-700 mt-1">
+                        This is the form you submitted. All fields are locked for audit purposes.
+                      </p>
+                    </div>
+                  )}
 
                 {/* Progress indicator (only when not activated) */}
                 {!project.order_activated_at && (
@@ -1225,7 +1226,8 @@ By completing payment via PayPal, the Client confirms successful receipt of the 
                     </button>
                   )}
                 </div>
-              </div>
+                </>
+              )}
             </div>
 
 
