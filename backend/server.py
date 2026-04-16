@@ -1617,10 +1617,6 @@ async def generate_and_download_document(
         doc_content = f"""INVOICE
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
-(Trade Name)
-
-Legal Entity:
 Individual Entrepreneur Vera Iambaeva
 Tax ID: 302335809
 Country of Registration: Georgia
@@ -2119,8 +2115,11 @@ Keep this number for all future correspondence.
         doc_content = f"""PAYMENT RECEIPT
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
+Individual Entrepreneur Vera Iambaeva
 Official Payment Receipt
+
+Tax ID: 302335809
+Country of Registration: Georgia
 
 Receipt: {receipt_number}
 Date Issued: {payment_date_formatted}
@@ -2135,8 +2134,11 @@ Project Reference: {project['project_number']}
 ═══════════════════════════════════════════════
 
 PAYMENT RECEIVED BY:
-Ocean2Joy Digital Production
+
+Individual Entrepreneur Vera Iambaeva
+Tax ID: 302335809
 PayPal Account: 302335809@postbox.ge
+Country of Registration: Georgia
 
 ═══════════════════════════════════════════════
 

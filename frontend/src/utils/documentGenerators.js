@@ -70,10 +70,6 @@ export const generateInvoice = (projectData) => {
   return `INVOICE
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
-(Trade Name)
-
-Legal Entity:
 Individual Entrepreneur Vera Iambaeva
 Tax ID: 302335809
 Country of Registration: Georgia
@@ -238,12 +234,9 @@ export const generateReceipt = (projectData) => {
   return `PAYMENT RECEIPT
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
-(Trade Name)
+Individual Entrepreneur Vera Iambaeva
 Official Payment Receipt
 
-Legal Entity:
-Individual Entrepreneur Vera Iambaeva
 Tax ID: 302335809
 Country of Registration: Georgia
 
@@ -261,11 +254,10 @@ Project Reference: ${projectData.project_number}
 
 PAYMENT RECEIVED BY:
 
-Trade Name: Ocean2Joy Digital Video Production
-Legal Entity: Individual Entrepreneur Vera Iambaeva
+Individual Entrepreneur Vera Iambaeva
 Tax ID: 302335809
 PayPal Account: 302335809@postbox.ge
-Registered in: Georgia
+Country of Registration: Georgia
 
 ═══════════════════════════════════════════════
 
@@ -356,12 +348,9 @@ export const generateCertificate = (projectData) => {
   return `CERTIFICATE OF COMPLETION
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
-(Trade Name)
+Individual Entrepreneur Vera Iambaeva
 Project Completion Certificate
 
-Legal Entity:
-Individual Entrepreneur Vera Iambaeva
 Tax ID: 302335809
 Country of Registration: Georgia
 
@@ -371,8 +360,7 @@ Completion Date: ${completedDate}
 
 ═══════════════════════════════════════════════
 
-This certifies that Individual Entrepreneur Vera Iambaeva
-(trading as Ocean2Joy Digital Video Production) has
+This certifies that Individual Entrepreneur Vera Iambaeva has
 successfully completed and delivered the following
 digital video production service:
 
@@ -481,10 +469,9 @@ Project Reference: ${projectData.project_number}
 Client: ${projectData.user_name || 'Client'}
 
 Service Provider:
-Trade Name: Ocean2Joy Digital Video Production
-Legal Entity: Individual Entrepreneur Vera Iambaeva
+Individual Entrepreneur Vera Iambaeva
 Tax ID: 302335809
-Country: Georgia
+Country of Registration: Georgia
 
 ═══════════════════════════════════════════════
 
@@ -967,12 +954,9 @@ export const generateDeliveryCertificate = (projectData) => {
   return `CERTIFICATE OF DELIVERY
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
-(Trade Name)
+Individual Entrepreneur Vera Iambaeva
 Electronic Service Delivery Confirmation
 
-Legal Entity:
-Individual Entrepreneur Vera Iambaeva
 Tax ID: 302335809
 Country of Registration: Georgia
 
@@ -1043,9 +1027,9 @@ Signature: ___________________________________________
 
 SERVICE PROVIDER CONFIRMATION:
 
-Trade Name: Ocean2Joy Digital Video Production
-Legal Entity: Individual Entrepreneur Vera Iambaeva
+Service Provider: Individual Entrepreneur Vera Iambaeva
 Tax ID: 302335809
+Country of Registration: Georgia
 Delivered by: Production Team
 Date: ${deliveredDate}
 
