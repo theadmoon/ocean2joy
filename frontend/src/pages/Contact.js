@@ -161,8 +161,8 @@ function Contact() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                    <a href="mailto:contact@ocean2joy.com" className="text-sky-600 hover:text-sky-700">
-                      contact@ocean2joy.com
+                    <a href="mailto:ocean2joy@gmail.com" className="text-sky-600 hover:text-sky-700">
+                      ocean2joy@gmail.com
                     </a>
                     <p className="text-sm text-gray-600 mt-1">Response within 24 hours</p>
                   </div>
@@ -174,8 +174,8 @@ function Contact() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Phone</h3>
-                    <p className="text-gray-700">+1 (555) 123-4567</p>
-                    <p className="text-sm text-gray-600 mt-1">Mon-Fri, 9AM-6PM EST</p>
+                    <p className="text-gray-700">+995 555 375 032</p>
+                    <p className="text-sm text-gray-600 mt-1">Mon-Fri, 9AM-6PM (Georgia Time)</p>
                   </div>
                 </div>
 
@@ -236,6 +236,13 @@ function Contact() {
                 <p className="text-sm text-gray-600 mt-4">
                   * Support available via email 24/7. We respond within 24 hours.
                 </p>
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">
+                    <strong>Legal Entity:</strong> Individual Entrepreneur Vera Iambaeva<br/>
+                    Tax ID: 302335809 | Registered in Georgia<br/>
+                    Brand: Ocean2Joy Digital Video Production
+                  </p>
+                </div>
               </div>
             </div>
           </div>

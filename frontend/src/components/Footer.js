@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FaEnvelope, FaFacebook, FaTwitter, FaInstagram, FaYoutube } from 'react-icons/fa';
+import { FaEnvelope, FaPhone, FaFacebook, FaTwitter, FaInstagram, FaYoutube } from 'react-icons/fa';
 import Logo from './Logo';
 
 function Footer() {
@@ -114,10 +114,18 @@ function Footer() {
         </div>
 
         <div className="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; 2025 Ocean2joy.com - All rights reserved. Digital video production services delivered electronically.</p>
-          <p className="mt-2">
-            <FaEnvelope className="inline mr-2" />
-            contact@ocean2joy.com
+          <p className="mb-3">&copy; 2025-2026 Ocean2Joy Digital Video Production</p>
+          <p className="text-xs mb-2">
+            Individual Entrepreneur Vera Iambaeva | Tax ID: 302335809 | Georgia
+          </p>
+          <p className="text-xs mb-3">
+            <FaEnvelope className="inline mr-1" />
+            ocean2joy@gmail.com | 
+            <FaPhone className="inline mx-2" />
+            +995 555 375 032
+          </p>
+          <p className="text-xs text-gray-500">
+            Digital video production services delivered electronically. No physical products shipped.
           </p>
         </div>
       </div>
