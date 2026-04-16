@@ -137,6 +137,58 @@ Status: ${project.payment_confirmed_by_admin ? '✅ Confirmed by Manager' : '⏳
         content = generatePayPalPaymentReference(project);
         break;
         
+      case 'production_notes':
+        // Production notes - informational update about work in progress
+        const productionStartDate = project.production_started_at 
+          ? new Date(project.production_started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+          : 'N/A';
+        
+        content = `PRODUCTION UPDATE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Work in Progress
+
+Project: ${project.project_number}
+Project Title: ${project.project_title || ''}
+Production Started: ${productionStartDate}
+
+═══════════════════════════════════════════════
+
+STATUS: 🎬 PRODUCTION IN PROGRESS
+
+Your project is currently in active production.
+
+Service Type: ${project.service_type === 'custom_video' ? 'Custom Video Production' : project.service_type}
+
+Brief:
+${project.detailed_brief || 'No description provided'}
+
+═══════════════════════════════════════════════
+
+PRODUCTION TIMELINE:
+
+Production Phase: Active
+Estimated Delivery: As per invoice timeline
+Current Status: Work in progress
+
+The production team is working on your project.
+You will be notified when deliverables are ready.
+
+═══════════════════════════════════════════════
+
+UPDATES:
+
+${project.production_notes || 'Production is proceeding according to plan. No additional updates at this time.'}
+
+═══════════════════════════════════════════════
+
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com
+
+═══════════════════════════════════════════════`;
+        break;
+        
       case 'download_confirmation':
         content = generateDownloadConfirmation(project);
         break;
