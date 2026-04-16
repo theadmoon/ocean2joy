@@ -182,11 +182,12 @@ class Project(BaseModel):
     
     # OS.1 v2.0 Operational Chain fields
     files_accessed_at: Optional[datetime] = None  # Client confirmed download
+    delivery_confirmed_at: Optional[datetime] = None  # Client signed Certificate of Delivery
     work_accepted_at: Optional[datetime] = None  # Client signed acceptance act
     payment_confirmed_by_admin_at: Optional[datetime] = None  # Admin confirmed payment receipt
     
     # Client confirmations (uploaded document filenames)
-    client_confirmations: Optional[Dict[str, str]] = None  # {invoice: 'file.pdf', acceptance: 'act.pdf', payment: 'proof.pdf'}
+    client_confirmations: Optional[Dict[str, str]] = None  # {invoice: 'file.pdf', acceptance: 'act.pdf', payment: 'proof.pdf', delivery_cert: 'cert.pdf'}
     
     # Completion
     completed_at: Optional[datetime] = None
@@ -1442,7 +1443,7 @@ async def generate_and_download_document(
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Validate document type
-    valid_doc_types = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'payment_instructions']
+    valid_doc_types = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'payment_instructions', 'delivery_certificate', 'order_confirmation']
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail="Invalid document type")
     
@@ -1620,6 +1621,348 @@ Contact: ocean2joy@gmail.com
 ═══════════════════════════════════════════════
 """
     
+    elif doc_type == 'delivery_certificate':
+        delivered_date = project.get('delivered_at', datetime.now(timezone.utc).isoformat())
+        delivered_date_formatted = datetime.fromisoformat(delivered_date).strftime('%B %d, %Y')
+        files_accessed_date = project.get('files_accessed_at', delivered_date)
+        files_accessed_formatted = datetime.fromisoformat(files_accessed_date).strftime('%B %d, %Y at %I:%M %p UTC') if files_accessed_date else 'Not accessed yet'
+        
+        doc_content = f"""CERTIFICATE OF DELIVERY
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Electronic Service Delivery Confirmation
+
+Certificate #: {project['project_number']}-DEL
+Project Reference: {project['project_number']}
+Delivery Date: {delivered_date_formatted}
+
+═══════════════════════════════════════════════
+
+DELIVERED TO:
+Client: {project.get('user_name', 'Client')}
+Email: {project.get('user_email', '')}
+Account: Active
+
+═══════════════════════════════════════════════
+
+SERVICE DELIVERED:
+Service Type: {project.get('service_type', 'Custom Video Production')}
+Project Title: {project.get('project_title', '')}
+Brief: {project.get('detailed_brief', '')}
+Production Period: {datetime.fromisoformat(project.get('production_started_at', delivered_date)).strftime('%b %d, %Y') if project.get('production_started_at') else 'N/A'} - {delivered_date_formatted}
+
+═══════════════════════════════════════════════
+
+DIGITAL DELIVERABLES TRANSFERRED:
+
+The following files were made available for download
+via secure client portal on {delivered_date_formatted}:
+
+{chr(10).join([f"{i+1}. {d.get('file_name', 'File')}" for i, d in enumerate(project.get('deliverables', [{'file_name': 'Final video files'}]))])}
+
+Delivery Method: Electronic portal download
+Access Provided: {delivered_date_formatted}
+Files Accessed: {files_accessed_formatted}
+
+═══════════════════════════════════════════════
+
+DELIVERY CONFIRMATION:
+
+By signing this certificate, the Client confirms:
+
+✓ Receipt of download access to all listed files
+✓ Successful download of deliverable files
+✓ Files are accessible and openable
+✓ Electronic delivery completed as agreed
+✓ No physical shipment involved (digital-only service)
+
+This is NOT an acceptance of quality or approval.
+Quality acceptance is documented separately in
+the Acceptance Act.
+
+═══════════════════════════════════════════════
+
+CLIENT CONFIRMATION:
+
+I confirm receipt of the above digital files via
+electronic delivery on the date specified.
+
+Client Name: _________________________________
+Client Email: _________________________________
+Date: _________________________________
+Signature: _________________________________
+
+═══════════════════════════════════════════════
+
+SERVICE PROVIDER CONFIRMATION:
+
+Ocean2Joy Digital Production
+Delivered by: Production Team
+Date: {delivered_date_formatted}
+
+Contact: ocean2joy@gmail.com
+
+═══════════════════════════════════════════════
+
+IMPORTANT NOTES FOR PAYPAL/PAYMENT PROCESSORS:
+
+✓ This is a DIGITAL SERVICE delivery (no physical goods)
+✓ Delivery method: Secure electronic portal
+✓ Client confirmed file download and accessibility
+✓ Transaction ID: {project['project_number']}
+✓ Service category: Custom digital video production
+✓ No shipping/tracking (electronic delivery only)
+
+This certificate serves as proof of service delivery
+for dispute resolution and compliance purposes.
+
+═══════════════════════════════════════════════
+"""
+    
+    elif doc_type == 'order_confirmation':
+        order_activated_date = project.get('order_activated_at', datetime.now(timezone.utc).isoformat())
+        order_activated_formatted = datetime.fromisoformat(order_activated_date).strftime('%B %d, %Y at %I:%M %p')
+        
+        doc_content = f"""ORDER CONFIRMATION
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Order Activation Confirmation
+
+Order #: {project['project_number']}
+Date Activated: {order_activated_formatted}
+
+═══════════════════════════════════════════════
+
+CLIENT INFORMATION:
+Name: {project.get('user_name', 'Client')}
+Email: {project.get('user_email', '')}
+Project Title: {project.get('project_title', '')}
+
+═══════════════════════════════════════════════
+
+ORDER DETAILS:
+
+Service Type: {project.get('service_type', 'Custom Video Production')}
+
+Project Brief:
+{project.get('detailed_brief', 'No description provided')}
+
+═══════════════════════════════════════════════
+
+UPLOADED MATERIALS:
+
+{chr(10).join([f"✓ {mat}" for mat in project.get('reference_materials', ['No materials uploaded yet'])])}
+
+═══════════════════════════════════════════════
+
+PAYMENT METHOD SELECTED:
+{project.get('order_activation_payment_method', 'PayPal').upper()}
+
+═══════════════════════════════════════════════
+
+ORDER STATUS: ✓ ACTIVATED
+
+Your order has been activated and sent to our production
+team for review.
+
+═══════════════════════════════════════════════
+
+NEXT STEPS:
+
+1. Manager will review your order and materials
+2. You will receive an Invoice with quote and timeline
+3. After Invoice confirmation, production will begin
+4. You will receive updates during production
+5. Final deliverables will be available in your portal
+
+═══════════════════════════════════════════════
+
+ESTIMATED TIMELINE:
+Review: 1-2 business days
+Quote/Invoice: Will be sent after review
+Production: Timeline specified in Invoice
+Delivery: Via secure electronic portal
+
+═══════════════════════════════════════════════
+
+For questions or updates:
+Contact: ocean2joy@gmail.com
+
+═══════════════════════════════════════════════
+
+Thank you for choosing Ocean2Joy!
+
+Order Reference: {project['project_number']}
+Keep this number for all future correspondence.
+
+═══════════════════════════════════════════════
+"""
+    
+    elif doc_type == 'receipt':
+        payment_date = project.get('payment_confirmed_at', datetime.now(timezone.utc).isoformat())
+        payment_date_formatted = datetime.fromisoformat(payment_date).strftime('%B %d, %Y')
+        
+        doc_content = f"""PAYMENT RECEIPT
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Official Payment Receipt
+
+Receipt #: {project['project_number']}-RCP
+Date Issued: {payment_date_formatted}
+
+═══════════════════════════════════════════════
+
+PAYMENT RECEIVED FROM:
+Client: {project.get('user_name', 'Client')}
+Email: {project.get('user_email', '')}
+Project: {project['project_number']}
+
+═══════════════════════════════════════════════
+
+PAYMENT DETAILS:
+
+Amount Received: ${project.get('quote_amount', 0):.2f} USD
+Payment Method: {project.get('order_activation_payment_method', 'PayPal').upper()}
+Payment Date: {payment_date_formatted}
+Transaction Reference: {project.get('paypal_transaction_id', 'See payment proof')}
+
+═══════════════════════════════════════════════
+
+SERVICES RENDERED:
+
+Project Title: {project.get('project_title', '')}
+Service Type: {project.get('service_type', 'Custom Video Production')}
+
+Deliverables:
+{chr(10).join([f"- {d.get('file_name', 'File')}" for d in project.get('deliverables', [])])}
+
+═══════════════════════════════════════════════
+
+PAYMENT STATUS: ✓ PAID IN FULL
+
+Total Amount: ${project.get('quote_amount', 0):.2f} USD
+Amount Paid: ${project.get('quote_amount', 0):.2f} USD
+Balance Due: $0.00 USD
+
+═══════════════════════════════════════════════
+
+DELIVERY CONFIRMATION:
+
+Digital files delivered electronically on:
+{datetime.fromisoformat(project.get('delivered_at', payment_date)).strftime('%B %d, %Y')}
+
+Delivery Method: Secure client portal
+Files Accessed: {datetime.fromisoformat(project.get('files_accessed_at', payment_date)).strftime('%B %d, %Y') if project.get('files_accessed_at') else 'Pending'}
+
+═══════════════════════════════════════════════
+
+This receipt confirms full payment for digital video
+production services. No further payment is required.
+
+For questions or support:
+Contact: ocean2joy@gmail.com
+
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Production
+Professional video services delivered digitally
+
+Receipt Date: {payment_date_formatted}
+Project Reference: {project['project_number']}
+
+═══════════════════════════════════════════════
+"""
+    
+    elif doc_type == 'certificate':
+        completed_date = project.get('completed_at', datetime.now(timezone.utc).isoformat())
+        completed_date_formatted = datetime.fromisoformat(completed_date).strftime('%B %d, %Y')
+        
+        doc_content = f"""CERTIFICATE OF COMPLETION
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+Project Completion Certificate
+
+Certificate #: {project['project_number']}-CRT
+Project Reference: {project['project_number']}
+Completion Date: {completed_date_formatted}
+
+═══════════════════════════════════════════════
+
+This certifies that Ocean2Joy Digital Production has
+successfully completed and delivered the following
+digital video production service:
+
+═══════════════════════════════════════════════
+
+CLIENT INFORMATION:
+Name: {project.get('user_name', 'Client')}
+Email: {project.get('user_email', '')}
+
+═══════════════════════════════════════════════
+
+PROJECT DETAILS:
+
+Project Title: {project.get('project_title', '')}
+Service Type: {project.get('service_type', 'Custom Video Production')}
+
+Brief: {project.get('detailed_brief', '')}
+
+═══════════════════════════════════════════════
+
+DELIVERABLES TRANSFERRED ELECTRONICALLY:
+
+{chr(10).join([f"✓ {d.get('file_name', 'File')}" for d in project.get('deliverables', [])])}
+
+═══════════════════════════════════════════════
+
+PROJECT TIMELINE:
+
+Order Activated: {datetime.fromisoformat(project.get('order_activated_at', completed_date)).strftime('%b %d, %Y') if project.get('order_activated_at') else 'N/A'}
+Production Started: {datetime.fromisoformat(project.get('production_started_at', completed_date)).strftime('%b %d, %Y') if project.get('production_started_at') else 'N/A'}
+Delivered: {datetime.fromisoformat(project.get('delivered_at', completed_date)).strftime('%b %d, %Y') if project.get('delivered_at') else 'N/A'}
+Work Accepted: {datetime.fromisoformat(project.get('work_accepted_at', completed_date)).strftime('%b %d, %Y') if project.get('work_accepted_at') else 'N/A'}
+Payment Received: {datetime.fromisoformat(project.get('payment_confirmed_at', completed_date)).strftime('%b %d, %Y') if project.get('payment_confirmed_at') else 'N/A'}
+Completed: {completed_date_formatted}
+
+═══════════════════════════════════════════════
+
+PROJECT STATUS: ✓ SUCCESSFULLY COMPLETED
+
+✓ All deliverables transferred electronically
+✓ Client confirmed receipt of files
+✓ Work accepted by client
+✓ Payment received and confirmed
+✓ Project closed successfully
+
+═══════════════════════════════════════════════
+
+DELIVERY METHOD:
+Electronic delivery via secure client portal
+No physical shipment (digital service only)
+
+═══════════════════════════════════════════════
+
+This certificate confirms the successful completion
+of digital video production services for project
+{project['project_number']}.
+
+Issued by: Ocean2Joy Digital Production
+Date: {completed_date_formatted}
+
+Contact: ocean2joy@gmail.com
+
+═══════════════════════════════════════════════
+
+Thank you for choosing Ocean2Joy!
+Professional video production delivered digitally.
+
+═══════════════════════════════════════════════
+"""
+    
     else:
         doc_content = f"Document type {doc_type} not yet implemented."
     
@@ -1663,7 +2006,7 @@ async def upload_document(
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Validate document type
-    valid_doc_types = ['invoice', 'acceptance_act', 'payment_proof']
+    valid_doc_types = ['invoice', 'acceptance_act', 'payment_proof', 'delivery_certificate']
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail="Invalid document type")
     
@@ -1671,7 +2014,8 @@ async def upload_document(
     upload_dir_map = {
         'invoice': 'invoices',
         'acceptance_act': 'acceptance_acts',
-        'payment_proof': 'payment_proofs'
+        'payment_proof': 'payment_proofs',
+        'delivery_certificate': 'delivery_certificates'
     }
     
     upload_dir = Path(f"/app/backend/uploads/{upload_dir_map[doc_type]}")
@@ -1707,6 +2051,9 @@ async def upload_document(
         update_data['invoice_signed_at'] = datetime.now(timezone.utc).isoformat()
         update_data['invoice_signed_filename'] = safe_filename
         update_data['status'] = ProjectStatus.INVOICE_SIGNED
+    
+    elif doc_type == 'delivery_certificate':
+        update_data['delivery_confirmed_at'] = datetime.now(timezone.utc).isoformat()
     
     elif doc_type == 'acceptance_act':
         update_data['work_accepted_at'] = datetime.now(timezone.utc).isoformat()
@@ -1754,7 +2101,8 @@ async def download_uploaded_document(
     upload_dir_map = {
         'invoice': 'invoices',
         'acceptance_act': 'acceptance_acts',
-        'payment_proof': 'payment_proofs'
+        'payment_proof': 'payment_proofs',
+        'delivery_certificate': 'delivery_certificates'
     }
     
     dir_name = upload_dir_map.get(doc_type)
@@ -2077,7 +2425,7 @@ async def serve_uploaded_file(file_type: str, filename: str):
     allowed_types = [
         "demo-videos", "thumbnails", "payment-assets", "payment-receipts",
         "invoices", "acceptance_acts", "payment_proofs", "client_materials", 
-        "generated_documents", "confirmations"
+        "generated_documents", "confirmations", "delivery_certificates"
     ]
     if file_type not in allowed_types:
         raise HTTPException(status_code=404, detail="Not found")
