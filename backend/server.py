@@ -5383,7 +5383,6 @@ You can request:
             "user_name": test_client["name"],
             "user_email": test_client["email"],
             "created_at": datetime(2026, 2, 17, 8, 15, 33, tzinfo=timezone.utc).isoformat(),
-            "order_activated_at": datetime(2026, 2, 17, 12, 17, 0, tzinfo=timezone.utc).isoformat(),
             "quote_sent_at": datetime(2026, 2, 17, 14, 22, 17, tzinfo=timezone.utc).isoformat(),
             "quote_accepted_at": datetime(2026, 2, 18, 9, 45, 8, tzinfo=timezone.utc).isoformat(),
             "production_started_at": datetime(2026, 2, 19, 10, 0, 0, tzinfo=timezone.utc).isoformat(),
@@ -5446,7 +5445,7 @@ You can request:
             "sender_name": "Marcos Knight",
             "sender_role": "client",
             "message": "Perfect! I've activated the order and uploaded my script, character references, and location photos. Ready to go!",
-            "created_at": datetime(2026, 2, 17, 12, 28, tzinfo=timezone.utc).isoformat(),
+            "created_at": datetime(2026, 2, 17, 10, 3, tzinfo=timezone.utc).isoformat(),
             "attachments": []
         },
         # Message 4: Invoice ready
