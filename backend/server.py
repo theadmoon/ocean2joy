@@ -5455,7 +5455,7 @@ You can request:
             "sender_name": "Ocean2joy Team",
             "sender_role": "admin",
             "message": "Hello Marcos,\n\nThank you for your inquiry!\n\nFor a 30-minute comedy video with actors and special effects, the price range is typically $750-1050 USD (calculated at $25-35 per minute depending on complexity).\n\nTo proceed, please activate your order through our website and upload your script. Once we review everything, we'll prepare an exact quote and invoice for you.\n\nLooking forward to working with you!",
-            "created_at": datetime(2026, 2, 16, 2, 0, tzinfo=timezone.utc).isoformat(),
+            "created_at": datetime(2026, 2, 16, 11, 15, tzinfo=timezone.utc).isoformat(),
             "attachments": []
         },
         # Message 3: Order activated
