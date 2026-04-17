@@ -2349,7 +2349,7 @@ Delivered: {format_date_utc(project.get('delivered_at'), '%b %d, %Y') if project
 Files Accessed: {format_date_utc(project.get('files_accessed_at'), '%b %d, %Y') if project.get('files_accessed_at') else 'N/A'}
 Delivery Confirmed: {format_date_utc(project.get('delivery_confirmed_at'), '%b %d, %Y') if project.get('delivery_confirmed_at') else 'N/A'}
 Work Accepted: {format_date_utc(project.get('work_accepted_at'), '%b %d, %Y') if project.get('work_accepted_at') else 'N/A'}
-Payment Received: {format_date_utc(project.get('payment_confirmed_at'), '%b %d, %Y') if project.get('payment_confirmed_at') else 'N/A'}
+Payment Received: {format_date_utc(project.get('payment_confirmed_by_manager_at'), '%b %d, %Y') if project.get('payment_confirmed_by_manager_at') else 'N/A'}
 Completed: {completed_date_formatted}
 
 ═══════════════════════════════════════════════
