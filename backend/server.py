@@ -2108,21 +2108,25 @@ Keep this number for all future correspondence.
         
         # Format dates
         started_date = format_date_utc(production_started) if production_started else "Not started"
-        completed_date = format_date_utc(production_completed) if production_completed else "In progress"
         
         # Determine status
         if production_completed:
-            status = "Completed"
             status_line = "STATUS: ✅ PRODUCTION COMPLETED"
         elif production_started:
-            status = "In Progress"
             status_line = "STATUS: 🔄 PRODUCTION IN PROGRESS"
         else:
-            status = "Scheduled"
             status_line = "STATUS: 📅 PRODUCTION SCHEDULED"
         
         # Initial plan from production_notes field
         initial_plan = project.get('production_notes', 'Production plan will be added after order confirmation.')
+        
+        # Estimated timeline
+        if production_started and production_completed:
+            start_short = format_date_utc(production_started, '%b %d')
+            end_short = format_date_utc(production_completed, '%b %d, %Y')
+            estimated_timeline = f"{start_short} - {end_short}"
+        else:
+            estimated_timeline = "To be determined"
         
         # Build updates section
         updates = []
@@ -2139,17 +2143,14 @@ Keep this number for all future correspondence.
         doc_content = f"""PRODUCTION UPDATE
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
-{status}
-
 Project: {project['project_number']}
 Project Title: {project.get('project_title', '')}
-Production Started: {started_date}
-Production Completed: {completed_date}
 
 ═══════════════════════════════════════════════
 
 INITIAL PLAN:
+Production Start Date: {started_date}
+Estimated Timeline: {estimated_timeline}
 
 {initial_plan}
 
@@ -2160,18 +2161,6 @@ PRODUCTION UPDATES:
 {updates_text}
 
 {status_line}
-
-═══════════════════════════════════════════════
-
-Service Type: Custom Video Production
-
-Brief:
-{project.get('detailed_brief', '')}
-
-═══════════════════════════════════════════════
-
-All communication through secure client portal chat.
-For urgent matters only: ocean2joy@gmail.com
 
 ═══════════════════════════════════════════════
 """
@@ -4092,24 +4081,28 @@ async def generate_production_notes_html(project: dict) -> str:
     
     # Format dates
     started_date = format_date_utc(production_started) if production_started else "Not started"
-    completed_date = format_date_utc(production_completed) if production_completed else "In progress"
     
     # Determine status
     if production_completed:
-        status = "Completed"
         status_line = "STATUS: <span class='checkmark'>✅</span> PRODUCTION COMPLETED"
         status_color = "#10b981"
     elif production_started:
-        status = "In Progress"
         status_line = "STATUS: 🔄 PRODUCTION IN PROGRESS"
         status_color = "#f59e0b"
     else:
-        status = "Scheduled"
         status_line = "STATUS: 📅 PRODUCTION SCHEDULED"
         status_color = "#6b7280"
     
     # Initial plan from production_notes field
     initial_plan = project.get('production_notes', 'Production plan will be added after order confirmation.')
+    
+    # Estimated timeline
+    if production_started and production_completed:
+        start_short = format_date_utc(production_started, '%b %d')
+        end_short = format_date_utc(production_completed, '%b %d, %Y')
+        estimated_timeline = f"{start_short} - {end_short}"
+    else:
+        estimated_timeline = "To be determined"
     
     # Build updates section
     updates = []
@@ -4140,19 +4133,16 @@ async def generate_production_notes_html(project: dict) -> str:
 <h1>PRODUCTION UPDATE</h1>
 <div class="divider"></div>
 
-<p class="subtitle"><strong>Ocean2Joy Digital Video Production</strong></p>
-<p class="subtitle">{status}</p>
-
 <p style="margin: 10px 0;"><strong>Project:</strong> {project['project_number']}</p>
 <p style="margin: 10px 0;"><strong>Project Title:</strong> {project.get('project_title', '')}</p>
-<p style="margin: 10px 0;"><strong>Production Started:</strong> {started_date}</p>
-<p style="margin: 10px 0;"><strong>Production Completed:</strong> {completed_date}</p>
 
 <div class="divider"></div>
 
 <p class="section-header">INITIAL PLAN:</p>
 <div class="initial-plan-box">
-  <p style="margin: 5px 0;">{initial_plan}</p>
+  <p style="margin: 5px 0;"><strong>Production Start Date:</strong> {started_date}</p>
+  <p style="margin: 5px 0;"><strong>Estimated Timeline:</strong> {estimated_timeline}</p>
+  <p style="margin: 15px 0 5px 0;">{initial_plan}</p>
 </div>
 
 <div class="divider"></div>
@@ -4165,20 +4155,6 @@ async def generate_production_notes_html(project: dict) -> str:
 <div class="status-box">
   <p style="margin: 0;">{status_line}</p>
 </div>
-
-<div class="divider"></div>
-
-<p style="margin: 10px 0;"><strong>Service Type:</strong> Custom Video Production</p>
-
-<p style="margin: 10px 0;"><strong>Brief:</strong></p>
-<p style="margin: 5px 0;">{project.get('detailed_brief', '')}</p>
-
-<div class="divider"></div>
-
-<p style="margin: 10px 0; text-align: center; font-size: 9.5pt; color: #6b7280;">
-All communication through secure client portal chat.<br>
-For urgent matters only: ocean2joy@gmail.com
-</p>
 
 <div class="divider"></div>
 

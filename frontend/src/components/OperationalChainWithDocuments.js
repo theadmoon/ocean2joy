@@ -179,47 +179,49 @@ Status: ${project.payment_confirmed_by_admin ? '✅ Confirmed by Manager' : '⏳
         
       case 'production_notes':
         // Production notes - informational update about work in progress or completed
-        const productionStartDate = formatDateUTC(project.production_started_at) || 'Not started';
-        const productionEndDate = formatDateUTC(project.delivered_at) || 'In progress';
+        const prodStartDate = formatDateUTC(project.production_started_at) || 'Not started';
+        const prodEndDate = formatDateUTC(project.delivered_at) || 'In progress';
         
         // Determine current status
-        let productionStatusText = 'Scheduled';
-        let productionStatusLine = 'STATUS: 📅 PRODUCTION SCHEDULED';
+        let prodStatusLine = 'STATUS: 📅 PRODUCTION SCHEDULED';
         
         if (project.delivered_at) {
-          productionStatusText = 'Completed';
-          productionStatusLine = 'STATUS: ✅ PRODUCTION COMPLETED';
+          prodStatusLine = 'STATUS: ✅ PRODUCTION COMPLETED';
         } else if (project.production_started_at) {
-          productionStatusText = 'In Progress';
-          productionStatusLine = 'STATUS: 🔄 PRODUCTION IN PROGRESS';
+          prodStatusLine = 'STATUS: 🔄 PRODUCTION IN PROGRESS';
         }
         
         // Build updates section
-        let updatesText = '';
+        let prodUpdatesText = '';
         if (project.production_started_at) {
-          updatesText += `✅ ${formatDateUTC(project.production_started_at)} - Production started\n`;
+          prodUpdatesText += `✅ ${formatDateUTC(project.production_started_at)} - Production started\n`;
         }
         if (project.delivered_at) {
-          updatesText += `✅ ${formatDateUTC(project.delivered_at)} - Production completed and delivered\n`;
+          prodUpdatesText += `✅ ${formatDateUTC(project.delivered_at)} - Production completed and delivered\n`;
         }
-        if (!updatesText) {
-          updatesText = 'No updates yet. Production will begin after invoice confirmation.';
+        if (!prodUpdatesText) {
+          prodUpdatesText = 'No updates yet. Production will begin after invoice confirmation.';
+        }
+        
+        // Estimated timeline
+        let estimatedTimeline = 'To be determined';
+        if (project.production_started_at && project.delivered_at) {
+          const startShort = formatDateUTC(project.production_started_at, '%b %d');
+          const endShort = formatDateUTC(project.delivered_at, '%b %d, %Y');
+          estimatedTimeline = `${startShort} - ${endShort}`;
         }
         
         content = `PRODUCTION UPDATE
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
-${productionStatusText}
-
 Project: ${project.project_number}
 Project Title: ${project.project_title || ''}
-Production Started: ${productionStartDate}
-Production Completed: ${productionEndDate}
 
 ═══════════════════════════════════════════════
 
 INITIAL PLAN:
+Production Start Date: ${prodStartDate}
+Estimated Timeline: ${estimatedTimeline}
 
 ${project.production_notes || 'Production plan will be added after order confirmation.'}
 
@@ -227,20 +229,8 @@ ${project.production_notes || 'Production plan will be added after order confirm
 
 PRODUCTION UPDATES:
 
-${updatesText}
-${productionStatusLine}
-
-═══════════════════════════════════════════════
-
-Service Type: Custom Video Production
-
-Brief:
-${project.detailed_brief || 'No description provided'}
-
-═══════════════════════════════════════════════
-
-All communication through secure client portal chat.
-For urgent matters only: ocean2joy@gmail.com
+${prodUpdatesText}
+${prodStatusLine}
 
 ═══════════════════════════════════════════════`;
         break;
