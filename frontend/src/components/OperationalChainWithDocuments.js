@@ -962,10 +962,10 @@ Click the Download button to save the file.`;
     {
       key: 'payment_received',
       label: 'Payment Received',
-      date: project.payment_confirmed_by_admin_at,
+      date: project.payment_confirmed_by_manager_at,
       description: 'Payment confirmed by manager',
       color: 'green',
-      completed: !!project.payment_confirmed_by_admin_at
+      completed: !!project.payment_confirmed_by_manager_at
     },
     {
       key: 'completed',
