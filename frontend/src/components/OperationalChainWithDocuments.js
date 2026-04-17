@@ -891,10 +891,10 @@ Click the Download button to save the file.`;
     {
       key: 'invoice_signed',
       label: 'Invoice Signed',
-      date: project.invoice_signed_at || project.quote_accepted_at,
+      date: project.invoice_signed_at,
       description: 'Client confirmed payment terms',
       color: 'green',
-      completed: !!(project.invoice_signed_at || project.quote_accepted_at)
+      completed: !!project.invoice_signed_at
     },
     {
       key: 'production_started',
