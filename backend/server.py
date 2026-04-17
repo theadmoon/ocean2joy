@@ -3282,16 +3282,22 @@ h1 {{
 
 async def generate_receipt_html(project: dict) -> str:
     """Generate Payment Receipt HTML for PDF - Professional standalone version"""
-    payment_date = project.get('completed_at') or project.get('payment_confirmed_at') or datetime.now(timezone.utc)
+    # Use completed_at для receipt date (дата завершения проекта)
+    payment_date = project.get('completed_at') or datetime.now(timezone.utc)
     if isinstance(payment_date, str):
         payment_date = datetime.fromisoformat(payment_date)
     payment_date = payment_date if payment_date.tzinfo else payment_date.replace(tzinfo=timezone.utc)
     receipt_number = await get_or_generate_document_number(project, 'receipt', 'RCP', payment_date)
+    
+    # Payment Date: точное время когда деньги пришли в PayPal
     payment_sent = format_datetime_utc(project.get('payment_marked_by_client_at')) if project.get('payment_marked_by_client_at') else 'N/A'
     
-    # Manager confirmation date (только дата, без времени)
-    manager_confirmed_date = project.get('payment_confirmed_by_manager_at') or payment_date
-    payment_confirmed_date_only = format_date_utc(manager_confirmed_date)
+    # Payment Confirmed: только дата подтверждения менеджером
+    manager_confirmed_date = project.get('payment_confirmed_by_manager_at')
+    if manager_confirmed_date:
+        payment_confirmed_date_only = format_date_utc(manager_confirmed_date)
+    else:
+        payment_confirmed_date_only = 'Not confirmed'
     
     amount = project.get('quote_amount', 0)
     
