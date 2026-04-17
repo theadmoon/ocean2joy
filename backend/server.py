@@ -5387,7 +5387,8 @@ You can request:
             logger.info(f"Added PayPal Receipt message to project {project_id}")
     
     else:
-        project_id = str(uuid.uuid4())
+        # Use fixed UUID for test project to maintain consistency
+        project_id = "ead900d9-33ab-4b22-9e72-20fbc1820bcc"
         
         test_project = {
             "id": project_id,
@@ -5410,6 +5411,11 @@ You can request:
             "production_started_at": datetime(2026, 2, 19, 10, 0, 0, tzinfo=timezone.utc).isoformat(),
             "delivered_at": datetime(2026, 3, 11, 16, 30, 45, tzinfo=timezone.utc).isoformat(),
             "completed_at": datetime(2026, 3, 13, 11, 23, 12, tzinfo=timezone.utc).isoformat(),
+            # Operational Chain dates (from GitHub backup)
+            "order_activated_at": datetime(2026, 2, 17, 12, 0, 0, tzinfo=timezone.utc).isoformat(),
+            "files_accessed_at": datetime(2026, 3, 11, 17, 0, 0, tzinfo=timezone.utc).isoformat(),
+            "delivery_confirmed_at": datetime(2026, 3, 11, 18, 0, 0, tzinfo=timezone.utc).isoformat(),
+            "work_accepted_at": datetime(2026, 3, 12, 10, 0, 0, tzinfo=timezone.utc).isoformat(),
             "acceptance_status": "approved",
             # Auto-fill PayPal data from client (REAL transaction from PayPal screenshot)
             "paypal_payer_email": test_client["email"],
