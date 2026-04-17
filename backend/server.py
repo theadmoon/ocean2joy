@@ -1579,7 +1579,7 @@ async def generate_and_download_document(
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Validate document type
-    valid_doc_types = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'payment_instructions', 'delivery_certificate', 'order_confirmation']
+    valid_doc_types = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'payment_instructions', 'delivery_certificate', 'order_confirmation', 'production_notes']
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail="Invalid document type")
     
@@ -2101,6 +2101,81 @@ Keep this number for all future correspondence.
 ═══════════════════════════════════════════════
 """
     
+
+    elif doc_type == 'production_notes':
+        production_started = project.get('production_started_at')
+        production_completed = project.get('delivered_at')
+        
+        # Format dates
+        started_date = format_date_utc(production_started) if production_started else "Not started"
+        completed_date = format_date_utc(production_completed) if production_completed else "In progress"
+        
+        # Determine status
+        if production_completed:
+            status = "Completed"
+            status_line = "STATUS: ✅ PRODUCTION COMPLETED"
+        elif production_started:
+            status = "In Progress"
+            status_line = "STATUS: 🔄 PRODUCTION IN PROGRESS"
+        else:
+            status = "Scheduled"
+            status_line = "STATUS: 📅 PRODUCTION SCHEDULED"
+        
+        # Initial plan from production_notes field
+        initial_plan = project.get('production_notes', 'Production plan will be added after order confirmation.')
+        
+        # Build updates section
+        updates = []
+        if production_started:
+            updates.append(f"✅ {format_date_utc(production_started)} - Production started")
+        if production_completed:
+            updates.append(f"✅ {format_date_utc(production_completed)} - Production completed and delivered")
+        
+        if not updates:
+            updates.append("No updates yet. Production will begin after invoice confirmation.")
+        
+        updates_text = "\n".join(updates)
+        
+        doc_content = f"""PRODUCTION UPDATE
+═══════════════════════════════════════════════
+
+Ocean2Joy Digital Video Production
+{status}
+
+Project: {project['project_number']}
+Project Title: {project.get('project_title', '')}
+Production Started: {started_date}
+Production Completed: {completed_date}
+
+═══════════════════════════════════════════════
+
+INITIAL PLAN:
+
+{initial_plan}
+
+═══════════════════════════════════════════════
+
+PRODUCTION UPDATES:
+
+{updates_text}
+
+{status_line}
+
+═══════════════════════════════════════════════
+
+Service Type: Custom Video Production
+
+Brief:
+{project.get('detailed_brief', '')}
+
+═══════════════════════════════════════════════
+
+All communication through secure client portal chat.
+For urgent matters only: ocean2joy@gmail.com
+
+═══════════════════════════════════════════════
+"""
+
     elif doc_type == 'receipt':
         payment_date = project.get('payment_confirmed_at')
         if payment_date is None:
@@ -3879,6 +3954,125 @@ h1 {{
   text-align: center;
   font-size: 20pt;
   font-weight: 700;
+
+
+PRODUCTION_NOTES_CSS_TEMPLATE = '''
+@page {{ size: A4; margin: 2cm; }}
+body {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10.5pt; line-height: 1.6; color: #1f2937; max-width: 800px; margin: 0 auto; }}
+h1 {{ text-align: center; font-size: 20pt; font-weight: 700; margin: 20px 0; color: #0369a1; letter-spacing: 1px; text-transform: uppercase; }}
+.subtitle {{ text-align: center; color: #6b7280; font-size: 11pt; margin: 5px 0; }}
+.divider {{ border-top: 2px solid #e5e7eb; margin: 20px 0; }}
+.section-header {{ font-weight: 700; font-size: 11pt; color: #0369a1; margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; }}
+.initial-plan-box {{ background: #f0f9ff; padding: 15px 20px; margin: 15px 0; border-left: 5px solid #0ea5e9; border-radius: 4px; }}
+.updates-box {{ background: #f0fdf4; padding: 15px 20px; margin: 15px 0; border-left: 5px solid #10b981; border-radius: 4px; }}
+.status-box {{ background: #f9fafb; padding: 15px 20px; margin: 15px 0; border-left: 5px solid {status_color}; border-radius: 4px; font-weight: 600; }}
+.checkmark {{ color: #10b981; font-weight: 700; font-size: 12pt; }}
+'''
+
+
+async def generate_production_notes_html(project: dict) -> str:
+    """Generate Production Notes HTML for PDF - matches text version"""
+    production_started = project.get('production_started_at')
+    production_completed = project.get('delivered_at')
+    
+    # Format dates
+    started_date = format_date_utc(production_started) if production_started else "Not started"
+    completed_date = format_date_utc(production_completed) if production_completed else "In progress"
+    
+    # Determine status
+    if production_completed:
+        status = "Completed"
+        status_line = "STATUS: <span class='checkmark'>✅</span> PRODUCTION COMPLETED"
+        status_color = "#10b981"
+    elif production_started:
+        status = "In Progress"
+        status_line = "STATUS: 🔄 PRODUCTION IN PROGRESS"
+        status_color = "#f59e0b"
+    else:
+        status = "Scheduled"
+        status_line = "STATUS: 📅 PRODUCTION SCHEDULED"
+        status_color = "#6b7280"
+    
+    # Initial plan from production_notes field
+    initial_plan = project.get('production_notes', 'Production plan will be added after order confirmation.')
+    
+    # Build updates section
+    updates = []
+    if production_started:
+        updates.append(f"<p style='margin: 5px 0;'><span class='checkmark'>✅</span> {format_date_utc(production_started)} - Production started</p>")
+    if production_completed:
+        updates.append(f"<p style='margin: 5px 0;'><span class='checkmark'>✅</span> {format_date_utc(production_completed)} - Production completed and delivered</p>")
+    
+    if not updates:
+        updates.append("<p style='margin: 5px 0;'>No updates yet. Production will begin after invoice confirmation.</p>")
+    
+    updates_html = "\n".join(updates)
+    
+    # Format CSS with status color
+    css = PRODUCTION_NOTES_CSS_TEMPLATE.format(status_color=status_color)
+    
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Production Update</title>
+<style>
+{css}
+</style>
+</head>
+<body>
+
+<h1>PRODUCTION UPDATE</h1>
+<div class="divider"></div>
+
+<p class="subtitle"><strong>Ocean2Joy Digital Video Production</strong></p>
+<p class="subtitle">{status}</p>
+
+<p style="margin: 10px 0;"><strong>Project:</strong> {project['project_number']}</p>
+<p style="margin: 10px 0;"><strong>Project Title:</strong> {project.get('project_title', '')}</p>
+<p style="margin: 10px 0;"><strong>Production Started:</strong> {started_date}</p>
+<p style="margin: 10px 0;"><strong>Production Completed:</strong> {completed_date}</p>
+
+<div class="divider"></div>
+
+<p class="section-header">INITIAL PLAN:</p>
+<div class="initial-plan-box">
+  <p style="margin: 5px 0;">{initial_plan}</p>
+</div>
+
+<div class="divider"></div>
+
+<p class="section-header">PRODUCTION UPDATES:</p>
+<div class="updates-box">
+  {updates_html}
+</div>
+
+<div class="status-box">
+  <p style="margin: 0;">{status_line}</p>
+</div>
+
+<div class="divider"></div>
+
+<p style="margin: 10px 0;"><strong>Service Type:</strong> Custom Video Production</p>
+
+<p style="margin: 10px 0;"><strong>Brief:</strong></p>
+<p style="margin: 5px 0;">{project.get('detailed_brief', '')}</p>
+
+<div class="divider"></div>
+
+<p style="margin: 10px 0; text-align: center; font-size: 9.5pt; color: #6b7280;">
+All communication through secure client portal chat.<br>
+For urgent matters only: ocean2joy@gmail.com
+</p>
+
+<div class="divider"></div>
+
+</body>
+</html>"""
+    
+    return html
+
+
   margin: 20px 0;
   color: #0369a1;
   letter-spacing: 1px;
@@ -4297,6 +4491,9 @@ async def download_document_pdf(
     elif doc_type == 'payment_proof':
         html_content = await generate_payment_proof_html(project)
         doc_display_name = "Payment_Proof"
+    elif doc_type == 'production_notes':
+        html_content = await generate_production_notes_html(project)
+        doc_display_name = "Production_Notes"
     else:
         raise HTTPException(status_code=400, detail=f"PDF generation not available for {doc_type}")
     
