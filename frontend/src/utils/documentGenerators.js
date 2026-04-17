@@ -222,8 +222,8 @@ export const generateReceipt = (projectData) => {
   // Payment Date: точное время из PayPal
   const paymentSentDate = formatDateTimeUTC(projectData.payment_marked_by_client_at) || 'N/A';
   
-  // Payment Confirmed: только дата (без времени)
-  const paymentConfirmedDate = formatDateUTC(projectData.payment_confirmed_by_manager_at) || 'Not confirmed';
+  // Payment Confirmed: только дата (используем payment_confirmed_by_admin_at)
+  const paymentConfirmedDate = formatDateUTC(projectData.payment_confirmed_by_admin_at || projectData.completed_at);
   
   const deliveredDate = formatDateUTC(projectData.delivered_at);
   const filesAccessedDate = formatDateUTC(projectData.files_accessed_at) || 'Pending';
