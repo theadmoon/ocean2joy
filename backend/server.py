@@ -3848,6 +3848,112 @@ Professional video production delivered digitally.
     return html
 
 
+async def generate_payment_proof_html(project: dict) -> str:
+    """Generate Payment Proof HTML for PDF - matches text version exactly"""
+    payment_date = project.get('payment_marked_by_client_at') or project.get('completed_at') or datetime.now(timezone.utc)
+    if isinstance(payment_date, str):
+        payment_date = datetime.fromisoformat(payment_date)
+    payment_date = payment_date if payment_date.tzinfo else payment_date.replace(tzinfo=timezone.utc)
+    
+    confirmed_date = project.get('payment_confirmed_by_manager_at') or payment_date
+    if isinstance(confirmed_date, str):
+        confirmed_date = datetime.fromisoformat(confirmed_date)
+    confirmed_date = confirmed_date if confirmed_date.tzinfo else confirmed_date.replace(tzinfo=timezone.utc)
+    
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Payment Proof</title>
+<style>
+@page {{ size: A4; margin: 2cm; }}
+body {{ 
+  font-family: 'DejaVu Sans', Arial, sans-serif;
+  font-size: 10.5pt; 
+  line-height: 1.6; 
+  color: #1f2937;
+  max-width: 800px;
+  margin: 0 auto;
+}}
+h1 {{
+  text-align: center;
+  font-size: 20pt;
+  font-weight: 700;
+  margin: 20px 0;
+  color: #0369a1;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}}
+.divider {{
+  border-top: 2px solid #e5e7eb;
+  margin: 20px 0;
+}}
+.entity-box {{
+  background: #f0f9ff;
+  padding: 15px 20px;
+  margin: 20px 0;
+  border-left: 5px solid #0ea5e9;
+  border-radius: 4px;
+}}
+.status-confirmed {{
+  background: #f0fdf4;
+  padding: 15px 20px;
+  margin: 20px 0;
+  border-left: 5px solid #10b981;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #047857;
+}}
+.checkmark {{
+  color: #10b981;
+  font-weight: 700;
+  font-size: 12pt;
+}}
+</style>
+</head>
+<body>
+
+<h1>PAYMENT PROOF</h1>
+<div class="divider"></div>
+
+<div class="entity-box">
+  <p style="margin: 3px 0;"><strong>Individual Entrepreneur Vera Iambaeva</strong></p>
+</div>
+
+<p style="margin: 10px 0;"><strong>Project:</strong> {project['project_number']}</p>
+<p style="margin: 10px 0;"><strong>Client:</strong> {project.get('user_name', '')}</p>
+<p style="margin: 10px 0;"><strong>Email:</strong> {project.get('user_email', '')}</p>
+<p style="margin: 10px 0;"><strong>Invoice Amount:</strong> ${project.get('quote_amount', 0):.0f} USD</p>
+
+<div class="divider"></div>
+
+<p style="margin: 15px 0; font-weight: 700; text-transform: uppercase;">PAYMENT DETAILS:</p>
+
+<p style="margin: 10px 0;"><strong>Transaction ID:</strong> {project.get('paypal_transaction_id', 'N/A')}</p>
+
+<p style="margin: 15px 0 5px 0;"><strong>From (Payer):</strong> {project.get('user_email', '')}</p>
+<p style="margin: 5px 0;"><strong>To (Recipient):</strong> Individual Entrepreneur Vera Iambaeva</p>
+<p style="margin: 5px 0 5px 30px;">PayPal Account: 302335809@postbox.ge</p>
+<p style="margin: 5px 0 5px 30px;">(Ocean2Joy Digital Video Production)</p>
+
+<p style="margin: 15px 0 5px 0;"><strong>Payment Method:</strong> {project.get('order_activation_payment_method', 'paypal')}</p>
+<p style="margin: 5px 0;"><strong>Payment Sent:</strong> {format_datetime_utc(payment_date)}</p>
+
+<div class="divider"></div>
+
+<div class="status-confirmed">
+  <p style="margin: 0;">STATUS: <span class="checkmark">✅</span> CONFIRMED by Manager on {format_date_utc(confirmed_date)}</p>
+</div>
+
+<div class="divider"></div>
+
+</body>
+</html>"""
+    
+    return html
+
+
+
 def generate_operational_chain_html(project: dict) -> str:
     """Generate HTML for operational chain PDF with professional styling"""
     
@@ -4188,6 +4294,9 @@ async def download_document_pdf(
     elif doc_type == 'certificate':
         html_content = await generate_certificate_html(project)
         doc_display_name = "Certificate"
+    elif doc_type == 'payment_proof':
+        html_content = await generate_payment_proof_html(project)
+        doc_display_name = "Payment_Proof"
     else:
         raise HTTPException(status_code=400, detail=f"PDF generation not available for {doc_type}")
     
