@@ -2302,8 +2302,11 @@ Project Reference: {project['project_number']}
         doc_content = f"""CERTIFICATE OF COMPLETION
 ═══════════════════════════════════════════════
 
-Ocean2Joy Digital Video Production
+Individual Entrepreneur Vera Iambaeva
 Project Completion Certificate
+
+Tax ID: 302335809
+Country of Registration: Georgia
 
 Certificate: {cert_number}
 Project Reference: {project['project_number']}
@@ -2311,9 +2314,9 @@ Completion Date: {completed_date_formatted}
 
 ═══════════════════════════════════════════════
 
-This certifies that Ocean2Joy Digital Production has
-successfully completed and delivered the following
-digital video production service:
+This certifies that Individual Entrepreneur Vera Iambaeva
+(operating as Ocean2Joy brand) has successfully completed
+and delivered the following digital video production service:
 
 ═══════════════════════════════════════════════
 
@@ -2372,11 +2375,17 @@ This certificate confirms the successful completion
 of digital video production services for project
 {project['project_number']}.
 
-Issued by: Ocean2Joy Digital Production
+═══════════════════════════════════════════════
+
+Legal Entity: Individual Entrepreneur Vera Iambaeva
+Tax ID: 302335809 | Georgia
+Brand: Ocean2Joy Digital Video Production
+
+Issued by: Vera Iambaeva (Individual Entrepreneur)
 Date: {completed_date_formatted}
 
-All communication through secure client portal chat.
-For urgent matters only: ocean2joy@gmail.com
+Contact: ocean2joy@gmail.com | +995 555 375 032
+Tbilisi, Georgia
 
 ═══════════════════════════════════════════════
 
@@ -3922,8 +3931,9 @@ h1 {{
 <h1>CERTIFICATE OF COMPLETION</h1>
 <div class="divider"></div>
 
-<p style="text-align: center; margin: 10px 0;"><strong>Ocean2Joy Digital Video Production</strong></p>
+<p style="text-align: center; margin: 10px 0;"><strong>Individual Entrepreneur Vera Iambaeva</strong></p>
 <p style="text-align: center; margin: 5px 0;">Project Completion Certificate</p>
+<p style="text-align: center; margin: 5px 0; font-size: 10pt;">Tax ID: 302335809 | Country of Registration: Georgia</p>
 
 <div class="divider"></div>
 
@@ -3934,7 +3944,7 @@ h1 {{
 <div class="divider"></div>
 
 <p style="margin: 15px 0;">
-This certifies that Ocean2Joy Digital Production has successfully completed and delivered the following digital video production service:
+This certifies that Individual Entrepreneur Vera Iambaeva (operating as Ocean2Joy brand) has successfully completed and delivered the following digital video production service:
 </p>
 
 <div class="divider"></div>
@@ -3992,12 +4002,18 @@ This certifies that Ocean2Joy Digital Production has successfully completed and 
 This certificate confirms the successful completion of digital video production services for project {project['project_number']}.
 </p>
 
-<p style="margin: 15px 0;"><strong>Issued by:</strong> Ocean2Joy Digital Production</p>
+<div class="divider"></div>
+
+<p style="margin: 10px 0; font-weight: 600; text-align: center;">Legal Entity: Individual Entrepreneur Vera Iambaeva</p>
+<p style="margin: 5px 0; text-align: center;">Tax ID: 302335809 | Georgia</p>
+<p style="margin: 5px 0; text-align: center;">Brand: Ocean2Joy Digital Video Production</p>
+
+<p style="margin: 15px 0;"><strong>Issued by:</strong> Vera Iambaeva (Individual Entrepreneur)</p>
 <p style="margin: 10px 0;"><strong>Date:</strong> {format_date_utc(completed_date)}</p>
 
 <p style="margin: 15px 0;">
-All communication through secure client portal chat.<br>
-For urgent matters only: ocean2joy@gmail.com
+Contact: ocean2joy@gmail.com | +995 555 375 032<br>
+Tbilisi, Georgia
 </p>
 
 <div class="divider"></div>
