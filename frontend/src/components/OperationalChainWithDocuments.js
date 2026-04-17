@@ -818,8 +818,8 @@ Click the Download button to save the file.`;
           id: 'payment_confirmation',
           name: 'Payment Confirmation',
           type: 'payment',
-          createdBy: 'Client',
-          createdAt: project.payment_marked_by_client_at,
+          createdBy: 'Manager',
+          createdAt: project.payment_confirmed_by_admin_at || project.payment_marked_by_client_at,
           status: project.payment_confirmed_by_admin ? 'confirmed' : 'pending_confirmation',
           icon: '💳',
           actions: ['view']
