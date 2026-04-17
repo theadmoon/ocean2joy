@@ -1164,9 +1164,12 @@ async def mark_payment_by_client(
     
     update_data = {
         "payment_method": payment_method,
-        "payment_marked_by_client_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
+    
+    # Set payment_marked_by_client_at ONLY if not already set (КОНСТАНТА!)
+    if not project.get('payment_marked_by_client_at'):
+        update_data["payment_marked_by_client_at"] = datetime.now(timezone.utc).isoformat()
     
     # Handle optional receipt upload
     if receipt:
@@ -2558,7 +2561,9 @@ async def upload_document(
             update_data['work_accepted_at'] = datetime.now(timezone.utc).isoformat()
     
     elif doc_type == 'payment_proof':
-        update_data['payment_marked_by_client_at'] = datetime.now(timezone.utc).isoformat()
+        # Set payment_marked_by_client_at ONLY if not already set (КОНСТАНТА!)
+        if not project.get('payment_marked_by_client_at'):
+            update_data['payment_marked_by_client_at'] = datetime.now(timezone.utc).isoformat()
         update_data['payment_receipt_filename'] = safe_filename
     
     await db.projects.update_one(
@@ -5389,7 +5394,7 @@ You can request:
             "paypal_transaction_id": "11S61184XV546242W",
             "paypal_payment_status": "COMPLETED",
             "payment_marked_by_client_at": datetime(2026, 3, 13, 11, 30, 29, tzinfo=timezone.utc).isoformat(),
-            "payment_confirmed_by_manager_at": datetime(2026, 3, 13, 12, 0, 0, tzinfo=timezone.utc).isoformat(),
+            "payment_confirmed_by_manager_at": datetime(2026, 3, 13, 11, 30, 29, tzinfo=timezone.utc).isoformat(),
             "reference_materials": [
                 "Comedy_Script_v1.pdf (uploaded by client)",
                 "Character_References.zip (uploaded by client)",
