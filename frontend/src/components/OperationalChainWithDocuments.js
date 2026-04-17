@@ -134,6 +134,11 @@ ${project.quote_request_manager_comments || 'No notes available'}`;
         
       case 'payment_confirmation':
         // Payment confirmation - manager verified payment in PayPal
+        // Payment Received: точное время из PayPal (payment_marked_by_client_at)
+        // Confirmed by Manager: только дата (payment_confirmed_by_manager_at)
+        const paymentReceivedTime = formatDateTimeUTC(project.payment_marked_by_client_at);
+        const managerConfirmedDate = formatDateUTC(project.payment_confirmed_by_manager_at || project.completed_at);
+        
         content = `PAYMENT CONFIRMATION
 ═══════════════════════════════════════════════
 
@@ -156,11 +161,11 @@ To (Recipient): Individual Entrepreneur Vera Iambaeva
                 PayPal Account: 302335809@postbox.ge
                 (Ocean2Joy Digital Video Production)
 
-Payment Received: ${formatDateTimeUTC(project.payment_confirmed_by_manager_at || project.completed_at)}
+Payment Received: ${paymentReceivedTime}
 
 ═══════════════════════════════════════════════
 
-STATUS: ✅ CONFIRMED by Manager on ${formatDateUTC(project.payment_confirmed_by_manager_at || project.completed_at)}
+STATUS: ✅ CONFIRMED by Manager on ${managerConfirmedDate}
 
 Payment has been verified and confirmed in PayPal account.
 All transaction details match the invoice requirements.

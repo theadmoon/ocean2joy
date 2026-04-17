@@ -2420,10 +2420,14 @@ STATUS: ✅ PAYMENT SENT by Client on {format_date_utc(payment_date)}
 """
     
     elif doc_type == 'payment_confirmation':
-        payment_confirmed_at = project.get('payment_confirmed_by_manager_at') or project.get('completed_at')
+        payment_received_at = project.get('payment_marked_by_client_at')
+        manager_confirmed_at = project.get('payment_confirmed_by_manager_at') or project.get('completed_at')
         
-        payment_received_time = format_datetime_utc(payment_confirmed_at) if payment_confirmed_at else 'Pending verification'
-        confirmation_date = format_date_utc(payment_confirmed_at) if payment_confirmed_at else 'Not confirmed yet'
+        # Payment Received: точное время из PayPal
+        payment_received_time = format_datetime_utc(payment_received_at) if payment_received_at else 'Pending verification'
+        
+        # Confirmed by Manager: только дата (без времени)
+        confirmation_date = format_date_utc(manager_confirmed_at) if manager_confirmed_at else 'Not confirmed yet'
         
         doc_content = f"""PAYMENT CONFIRMATION
 ═══════════════════════════════════════════════
@@ -4131,11 +4135,14 @@ async def generate_production_notes_html(project: dict) -> str:
 
 async def generate_payment_confirmation_html(project: dict) -> str:
     """Generate Payment Confirmation HTML for PDF - manager verified payment"""
-    payment_confirmed_at = project.get('payment_confirmed_by_manager_at') or project.get('completed_at')
+    payment_received_at = project.get('payment_marked_by_client_at')
+    manager_confirmed_at = project.get('payment_confirmed_by_manager_at') or project.get('completed_at')
     
-    # Format dates
-    payment_received_time = format_datetime_utc(payment_confirmed_at) if payment_confirmed_at else 'Pending verification'
-    confirmation_date = format_date_utc(payment_confirmed_at) if payment_confirmed_at else 'Not confirmed yet'
+    # Payment Received: точное время из PayPal
+    payment_received_time = format_datetime_utc(payment_received_at) if payment_received_at else 'Pending verification'
+    
+    # Confirmed by Manager: только дата (без времени)
+    confirmation_date = format_date_utc(manager_confirmed_at) if manager_confirmed_at else 'Not confirmed yet'
     
     html = f"""<!DOCTYPE html>
 <html>
@@ -5394,7 +5401,8 @@ You can request:
             "paypal_transaction_id": "11S61184XV546242W",
             "paypal_payment_status": "COMPLETED",
             "payment_marked_by_client_at": datetime(2026, 3, 13, 11, 30, 29, tzinfo=timezone.utc).isoformat(),
-            "payment_confirmed_by_manager_at": datetime(2026, 3, 13, 11, 30, 29, tzinfo=timezone.utc).isoformat(),
+            # Manager confirmed later (date only, no exact time)
+            "payment_confirmed_by_manager_at": datetime(2026, 3, 13, 0, 0, 0, tzinfo=timezone.utc).isoformat(),
             "reference_materials": [
                 "Comedy_Script_v1.pdf (uploaded by client)",
                 "Character_References.zip (uploaded by client)",
