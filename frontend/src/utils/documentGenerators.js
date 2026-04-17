@@ -340,9 +340,9 @@ export const generateCertificate = (projectData) => {
   const filesAccessedDate = formatDateShortUTC(projectData.files_accessed_at) || 'N/A';
   const deliveryConfirmedDate = formatDateShortUTC(projectData.delivery_confirmed_at) || 'N/A';
   const workAcceptedDate = formatDateShortUTC(projectData.work_accepted_at) || 'N/A';
-  const paymentReceivedDate = formatDateShortUTC(projectData.payment_confirmed_at) || 'N/A';
+  const paymentReceivedDate = formatDateShortUTC(projectData.payment_confirmed_by_manager_at) || 'N/A';
   
-  const certNumber = projectData.document_numbers?.completion_certificate || projectData.project_number;
+  const certNumber = projectData.document_numbers?.certificate || projectData.project_number;
   
   const deliverablesList = projectData.deliverables && projectData.deliverables.length > 0
     ? projectData.deliverables.map(d => `✓ ${d.file_name || 'File'}`).join('\n')
