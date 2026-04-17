@@ -5354,37 +5354,14 @@ You can request:
     # Create test project for Marcos Knight if not exists
     test_project_exists = await db.projects.find_one({"project_number": "VAPP-6-Custom1050USD-13Mar2026"})
     
+    # Determine project_id and client info
     if test_project_exists:
         project_id = test_project_exists["id"]
         logger.info(f"Test project already exists: {project_id}")
         
-        # Check if we need to add PayPal Receipt message
-        receipt_message_exists = await db.messages.find_one({
-            "project_id": project_id,
-            "attachments": "PayPal_Receipt_VAPP6_1050USD.pdf"
-        })
-        
-        if not receipt_message_exists:
-            # Find last message to determine correct timestamp
-            _ = await db.messages.find_one(
-                {"project_id": project_id},
-                sort=[("created_at", -1)]
-            )
-            
-            # Add PayPal receipt message
-            receipt_message = {
-                "id": str(uuid.uuid4()),
-                "project_id": project_id,
-                "sender_id": test_client["id"],
-                "sender_name": "Marcos Knight",
-                "sender_role": "client",
-                "message": "Payment completed via PayPal. Receipt attached for your records.",
-                "created_at": datetime(2026, 3, 13, 10, 25, tzinfo=timezone.utc).isoformat(),
-                "attachments": ["PayPal_Receipt_VAPP6_1050USD.pdf"]
-            }
-            
-            await db.messages.insert_one(receipt_message)
-            logger.info(f"Added PayPal Receipt message to project {project_id}")
+        # Delete old messages and recreate with updated chat
+        await db.messages.delete_many({"project_id": project_id})
+        logger.info(f"Deleted old messages for project {project_id}")
     
     else:
         project_id = str(uuid.uuid4())
@@ -5434,63 +5411,167 @@ You can request:
         
         await db.projects.insert_one(test_project)
         logger.info(f"Test project created: {project_id}")
-        
-        # Create test messages for the project
-        messages_data = [
-            {
-                "id": str(uuid.uuid4()),
-                "project_id": project_id,
-                "sender_id": test_client["id"],
-                "sender_name": "Marcos Knight",
-                "sender_role": "client",
-                "message": "Here is my request: I need a 30-minute comedy video produced according to my custom script. I'll need 2 professional actors and 2 special effects sequences. The script will be provided once we agree on terms. Can you give me a quote?",
-                "created_at": datetime(2026, 2, 15, 2, 0, tzinfo=timezone.utc).isoformat(),
-                "attachments": []
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "project_id": project_id,
-                "sender_id": "admin",
-                "sender_name": "Ocean2joy Team",
-                "sender_role": "admin",
-                "message": "Hello Marcos,\n\nI am sorry for a late reply. A 30 minute video like this will cost 1050USD.\n\nIf you are ready to proceed, please press Create Order button on our website and I will make your invoices",
-                "created_at": datetime(2026, 2, 16, 2, 0, tzinfo=timezone.utc).isoformat(),
-                "attachments": []
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "project_id": project_id,
-                "sender_id": test_client["id"],
-                "sender_name": "Marcos Knight",
-                "sender_role": "client",
-                "message": "Perfect! I've submitted the official order through your website. Ready to move forward with the $1,050 quote for the 30-minute comedy video. Script and reference materials attached.",
-                "created_at": datetime(2026, 2, 17, 10, 15, tzinfo=timezone.utc).isoformat(),
-                "attachments": ["Comedy_Script_v1.pdf", "Character_References.zip", "Location_Photos.pdf"]
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "project_id": project_id,
-                "sender_id": "admin",
-                "sender_name": "Ocean2joy Team",
-                "sender_role": "admin",
-                "message": "Thank you! Production completed successfully. All deliverables are now available for download in your project portal. Invoice attached for your records.",
-                "created_at": datetime(2026, 3, 11, 14, 30, tzinfo=timezone.utc).isoformat(),
-                "attachments": ["invoice_VAPP6_1050USD.pdf"]
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "project_id": project_id,
-                "sender_id": test_client["id"],
-                "sender_name": "Marcos Knight",
-                "sender_role": "client",
-                "message": "Payment completed via PayPal. Receipt attached for verification. Thank you for the excellent work!",
-                "created_at": datetime(2026, 3, 13, 10, 23, tzinfo=timezone.utc).isoformat(),
-                "attachments": ["PayPal_Receipt_VAPP6_1050USD.pdf", "completion_certificate.pdf"]
-            }
-        ]
-        
-        await db.messages.insert_many(messages_data)
-        logger.info(f"Test messages created for project {project_id}")
+    
+    # Create/recreate test messages for the project (runs for both new and existing projects)
+    messages_data = [
+        # Message 1: Initial inquiry
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": test_client["id"],
+            "sender_name": "Marcos Knight",
+            "sender_role": "client",
+            "message": "Hi! I need a 30-minute comedy video based on my custom script. Looking for 2 actors and a couple of special effects scenes. I'll send the script once we agree on the price. Can you give me a quote?",
+            "created_at": datetime(2026, 2, 15, 2, 0, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 2: Price range response
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": "admin",
+            "sender_name": "Ocean2joy Team",
+            "sender_role": "admin",
+            "message": "Hello Marcos,\n\nThank you for your inquiry!\n\nFor a 30-minute comedy video with actors and special effects, the price range is typically $750-1050 USD (calculated at $25-35 per minute depending on complexity).\n\nTo proceed, please activate your order through our website and upload your script. Once we review everything, we'll prepare an exact quote and invoice for you.\n\nLooking forward to working with you!",
+            "created_at": datetime(2026, 2, 16, 2, 0, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 3: Order activated
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": test_client["id"],
+            "sender_name": "Marcos Knight",
+            "sender_role": "client",
+            "message": "Perfect! I've activated the order and uploaded my script, character references, and location photos. Ready to go!",
+            "created_at": datetime(2026, 2, 17, 10, 3, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 4: Invoice ready
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": "admin",
+            "sender_name": "Ocean2joy Team",
+            "sender_role": "admin",
+            "message": "Great! We've reviewed your materials and prepared the invoice.\n\nYour project total is $1,050 USD. Full details are available in the Operational Chain section of your project page.\n\nPlease review everything and let us know if you have any questions or need anything adjusted before we proceed.",
+            "created_at": datetime(2026, 2, 17, 15, 12, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 5: Client accepts quote
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": test_client["id"],
+            "sender_name": "Marcos Knight",
+            "sender_role": "client",
+            "message": "Everything looks perfect! Ready to move forward with the $1,050 quote.",
+            "created_at": datetime(2026, 2, 18, 8, 27, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 6: Request to sign invoice
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": "admin",
+            "sender_name": "Ocean2joy Team",
+            "sender_role": "admin",
+            "message": "Excellent! Please sign the invoice in the Operational Chain and we'll begin production immediately. You can find the invoice document in your project portal.",
+            "created_at": datetime(2026, 2, 18, 9, 5, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 7: Invoice signed, timeline question
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": test_client["id"],
+            "sender_name": "Marcos Knight",
+            "sender_role": "client",
+            "message": "Done! Invoice signed and uploaded. How long will production take?",
+            "created_at": datetime(2026, 2, 18, 10, 14, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 8: Timeline in Operational Chain
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": "admin",
+            "sender_name": "Ocean2joy Team",
+            "sender_role": "admin",
+            "message": "Thank you! All timeline details and production milestones are available in the Operational Chain section. You can track progress there throughout the project.",
+            "created_at": datetime(2026, 2, 18, 11, 8, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 9: Delivery complete
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": "admin",
+            "sender_name": "Ocean2joy Team",
+            "sender_role": "admin",
+            "message": "Production completed successfully! All deliverables are now available in the Operational Chain section. You can download everything and proceed with payment when ready.",
+            "created_at": datetime(2026, 3, 11, 18, 15, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 10: Request to sign delivery documents
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": "admin",
+            "sender_name": "Ocean2joy Team",
+            "sender_role": "admin",
+            "message": "Please review the deliverables and sign the Digital Delivery Confirmation and Acceptance Certificate in the Operational Chain section. These confirm that materials were received and accepted according to your specifications.",
+            "created_at": datetime(2026, 3, 12, 10, 18, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 11: Documents signed
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": test_client["id"],
+            "sender_name": "Marcos Knight",
+            "sender_role": "client",
+            "message": "Everything looks great! Documents signed and uploaded.",
+            "created_at": datetime(2026, 3, 12, 15, 30, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 12: PayPal message instruction
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": "admin",
+            "sender_name": "Ocean2joy Team",
+            "sender_role": "admin",
+            "message": "Perfect! When you're ready to make payment, please use the pre-formatted message available in the Operational Chain section. Copy it into PayPal comments to link the payment with your project.",
+            "created_at": datetime(2026, 3, 12, 16, 3, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 13: Payment completed
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": test_client["id"],
+            "sender_name": "Marcos Knight",
+            "sender_role": "client",
+            "message": "Payment completed via PayPal (Transaction ID: 11S61184XV546242W). Thank you for the excellent work!",
+            "created_at": datetime(2026, 3, 13, 11, 47, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        },
+        # Message 14: Payment confirmed, project complete
+        {
+            "id": str(uuid.uuid4()),
+            "project_id": project_id,
+            "sender_id": "admin",
+            "sender_name": "Ocean2joy Team",
+            "sender_role": "admin",
+            "message": "Payment received successfully, thank you!\n\nYour PayPal receipt and Project Completion Certificate have been uploaded to the Operational Chain section. Please download them for your records.\n\nIt was a pleasure working with you, Marcos. We look forward to collaborating on future projects!",
+            "created_at": datetime(2026, 3, 13, 16, 4, tzinfo=timezone.utc).isoformat(),
+            "attachments": []
+        }
+    ]
+    
+    await db.messages.insert_many(messages_data)
+    logger.info(f"Test messages created for project {project_id}")
     
     # Create payment settings if not exists
     payment_settings_exists = await db.payment_settings.find_one({"id": "payment_settings_001"})
