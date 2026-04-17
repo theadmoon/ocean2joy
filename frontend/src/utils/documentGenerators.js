@@ -596,14 +596,10 @@ to all digital files for payment processor protection.`;
 export const generatePaymentProof = (projectData) => {
   if (!projectData) return '';
   
-  // Generate realistic time with UTC timezone
-  const paymentSentFormatted = formatDateTimeUTC(projectData.payment_marked_by_client_at) || 'N/A';
   const paymentSentDate = formatDateUTC(projectData.payment_marked_by_client_at) || 'N/A';
   
   return `PAYMENT PROOF
 ═══════════════════════════════════════════════
-
-Individual Entrepreneur Vera Iambaeva
 
 Project: ${projectData.project_number}
 Client: ${projectData.user_name || 'Client'}
@@ -612,17 +608,15 @@ Invoice Amount: $${projectData.quote_amount || '0.00'} USD
 
 ═══════════════════════════════════════════════
 
-PAYMENT DETAILS:
+PAYMENT NOTIFICATION:
 
 Transaction ID: ${projectData.paypal_transaction_id || 'N/A'}
+Payment Method: ${projectData.order_activation_payment_method || 'paypal'}
 
 From (Payer): ${projectData.paypal_payer_email || projectData.user_email || 'N/A'}
 To (Recipient): Individual Entrepreneur Vera Iambaeva
                 PayPal Account: 302335809@postbox.ge
                 (Ocean2Joy Digital Video Production)
-
-Payment Method: ${projectData.order_activation_payment_method || 'paypal'}
-Payment Sent: ${paymentSentFormatted}
 
 ═══════════════════════════════════════════════
 

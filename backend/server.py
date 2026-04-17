@@ -2392,8 +2392,6 @@ Professional video production delivered digitally.
         doc_content = f"""PAYMENT PROOF
 ═══════════════════════════════════════════════
 
-Individual Entrepreneur Vera Iambaeva
-
 Project: {project['project_number']}
 Client: {project.get('user_name', '')}
 Email: {project.get('user_email', '')}
@@ -2401,17 +2399,15 @@ Invoice Amount: ${project.get('quote_amount', 0):.0f} USD
 
 ═══════════════════════════════════════════════
 
-PAYMENT DETAILS:
+PAYMENT NOTIFICATION:
 
 Transaction ID: {project.get('paypal_transaction_id', 'N/A')}
+Payment Method: {project.get('order_activation_payment_method', 'paypal')}
 
 From (Payer): {project.get('user_email', '')}
 To (Recipient): Individual Entrepreneur Vera Iambaeva
     PayPal Account: 302335809@postbox.ge
     (Ocean2Joy Digital Video Production)
-
-Payment Method: {project.get('order_activation_payment_method', 'paypal')}
-Payment Sent: {format_datetime_utc(payment_date)}
 
 ═══════════════════════════════════════════════
 
@@ -4037,10 +4033,6 @@ h1 {{
 <h1>PAYMENT PROOF</h1>
 <div class="divider"></div>
 
-<div class="entity-box">
-  <p style="margin: 3px 0;"><strong>Individual Entrepreneur Vera Iambaeva</strong></p>
-</div>
-
 <p style="margin: 10px 0;"><strong>Project:</strong> {project['project_number']}</p>
 <p style="margin: 10px 0;"><strong>Client:</strong> {project.get('user_name', '')}</p>
 <p style="margin: 10px 0;"><strong>Email:</strong> {project.get('user_email', '')}</p>
@@ -4048,17 +4040,15 @@ h1 {{
 
 <div class="divider"></div>
 
-<p style="margin: 15px 0; font-weight: 700; text-transform: uppercase;">PAYMENT DETAILS:</p>
+<p style="margin: 15px 0; font-weight: 700; text-transform: uppercase;">PAYMENT NOTIFICATION:</p>
 
 <p style="margin: 10px 0;"><strong>Transaction ID:</strong> {project.get('paypal_transaction_id', 'N/A')}</p>
+<p style="margin: 10px 0;"><strong>Payment Method:</strong> {project.get('order_activation_payment_method', 'paypal')}</p>
 
 <p style="margin: 15px 0 5px 0;"><strong>From (Payer):</strong> {project.get('user_email', '')}</p>
 <p style="margin: 5px 0;"><strong>To (Recipient):</strong> Individual Entrepreneur Vera Iambaeva</p>
 <p style="margin: 5px 0 5px 30px;">PayPal Account: 302335809@postbox.ge</p>
 <p style="margin: 5px 0 5px 30px;">(Ocean2Joy Digital Video Production)</p>
-
-<p style="margin: 15px 0 5px 0;"><strong>Payment Method:</strong> {project.get('order_activation_payment_method', 'paypal')}</p>
-<p style="margin: 5px 0;"><strong>Payment Sent:</strong> {format_datetime_utc(payment_date)}</p>
 
 <div class="divider"></div>
 

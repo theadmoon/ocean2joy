@@ -136,17 +136,33 @@ ${project.quote_request_manager_comments || 'No notes available'}`;
         content = `PAYMENT CONFIRMATION
 ═══════════════════════════════════════════════
 
+Individual Entrepreneur Vera Iambaeva
+
 Project: ${project.project_number}
-Amount: $${project.quote_amount || '0.00'} USD
-Payment Method: ${project.order_activation_payment_method || 'paypal'}
+Client: ${project.user_name || 'Client'}
+Email: ${project.user_email || ''}
+Invoice Amount: $${project.quote_amount || '0.00'} USD
+
+═══════════════════════════════════════════════
+
+PAYMENT DETAILS VERIFIED IN PAYPAL:
 
 Transaction ID: ${project.paypal_transaction_id || 'N/A'}
+Payment Method: ${project.order_activation_payment_method || 'paypal'}
 
 From (Payer): ${project.paypal_payer_email || project.user_email || 'N/A'}
 To (Recipient): Individual Entrepreneur Vera Iambaeva
                 PayPal Account: 302335809@postbox.ge
+                (Ocean2Joy Digital Video Production)
 
-Status: ${project.payment_confirmed_by_admin ? '✅ Confirmed by Manager' : '⏳ Pending Manager Confirmation'}
+Payment Received: ${formatDateTimeUTC(project.payment_confirmed_by_manager_at || project.completed_at)}
+
+═══════════════════════════════════════════════
+
+STATUS: ✅ CONFIRMED by Manager on ${formatDateUTC(project.payment_confirmed_by_manager_at || project.completed_at)}
+
+Payment has been verified and confirmed in PayPal account.
+All transaction details match the invoice requirements.
 
 ═══════════════════════════════════════════════`;
         break;
