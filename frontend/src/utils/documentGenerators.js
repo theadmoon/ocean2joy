@@ -217,10 +217,13 @@ Tbilisi, Georgia
 export const generateReceipt = (projectData) => {
   if (!projectData) return '';
   
-  const paymentDate = formatDateUTC(projectData.payment_confirmed_at);
-  const paymentDatetime = formatDateTimeUTC(projectData.payment_confirmed_at);
+  const paymentDate = formatDateUTC(projectData.completed_at);
   
+  // Payment Date: точное время из PayPal
   const paymentSentDate = formatDateTimeUTC(projectData.payment_marked_by_client_at) || 'N/A';
+  
+  // Payment Confirmed: только дата (без времени)
+  const paymentConfirmedDate = formatDateUTC(projectData.payment_confirmed_by_manager_at) || 'Not confirmed';
   
   const deliveredDate = formatDateUTC(projectData.delivered_at);
   const filesAccessedDate = formatDateUTC(projectData.files_accessed_at) || 'Pending';
@@ -266,7 +269,7 @@ PAYMENT DETAILS:
 Amount Received: $${projectData.quote_amount?.toFixed(2)} USD
 Payment Method: ${projectData.order_activation_payment_method?.toUpperCase() || 'PAYPAL'}
 Payment Date: ${paymentSentDate}
-Payment Confirmed: ${paymentDatetime}
+Payment Confirmed: ${paymentConfirmedDate}
 Transaction ID: ${projectData.paypal_transaction_id || 'See payment proof'}
 Payment Status: ${projectData.paypal_payment_status || 'COMPLETED'}
 
