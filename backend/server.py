@@ -5364,7 +5364,8 @@ You can request:
         logger.info(f"Deleted old messages for project {project_id}")
     
     else:
-        project_id = str(uuid.uuid4())
+        # Use fixed UUID for test project to maintain consistency across recreations
+        project_id = "ead900d9-33ab-4b22-9e72-20fbc1820bcc"
         
         test_project = {
             "id": project_id,
