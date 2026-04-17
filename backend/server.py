@@ -2296,7 +2296,7 @@ Project Reference: {project['project_number']}
         
         # Generate completion certificate number with sequence (or use existing)
         cert_number = await get_or_generate_document_number(
-            project, 'completion_certificate', 'CRT', completed_date
+            project, 'certificate', 'CRT', completed_date
         )
         
         doc_content = f"""CERTIFICATE OF COMPLETION
