@@ -415,6 +415,7 @@ Click the Download button to save the file.`;
         'paypal_instructions': 'payment_instructions',
         'payment_proof': 'payment_proof',
         'payment_pending': 'payment_proof',
+        'payment_confirmation': 'payment_confirmation',
         'receipt': 'receipt',
         'certificate': 'certificate'
       };
@@ -433,7 +434,7 @@ Click the Download button to save the file.`;
       const isUploaded = project.client_confirmations && project.client_confirmations[docType];
       
       // PDF-enabled document types
-      const pdfDocTypes = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'delivery_certificate', 'payment_proof', 'production_notes'];
+      const pdfDocTypes = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'delivery_certificate', 'payment_proof', 'payment_confirmation', 'production_notes'];
       
       let downloadUrl;
       let fileExtension = 'txt';
