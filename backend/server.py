@@ -315,6 +315,7 @@ class Project(BaseModel):
     delivery_confirmed_at: Optional[datetime] = None  # Client signed Certificate of Delivery
     work_accepted_at: Optional[datetime] = None  # Client signed acceptance act
     payment_confirmed_by_admin_at: Optional[datetime] = None  # Admin confirmed payment receipt
+    payment_confirmed_by_manager_at: Optional[datetime] = None  # Manager confirmed payment (date only)
     
     # Client confirmations (uploaded document filenames)
     client_confirmations: Optional[Dict[str, str]] = None  # {invoice: 'file.pdf', acceptance: 'act.pdf', payment: 'proof.pdf', delivery_cert: 'cert.pdf'}
