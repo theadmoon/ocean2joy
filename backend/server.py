@@ -5466,7 +5466,7 @@ You can request:
             "sender_name": "Marcos Knight",
             "sender_role": "client",
             "message": "Perfect! I've activated the order and uploaded my script, character references, and location photos. Ready to go!",
-            "created_at": datetime(2026, 2, 17, 10, 3, tzinfo=timezone.utc).isoformat(),
+            "created_at": datetime(2026, 2, 17, 12, 28, tzinfo=timezone.utc).isoformat(),
             "attachments": []
         },
         # Message 4: Invoice ready
