@@ -5414,7 +5414,7 @@ You can request:
             "completed_at": datetime(2026, 3, 13, 11, 23, 12, tzinfo=timezone.utc).isoformat(),
             # Operational Chain dates (from GitHub backup)
             "order_activated_at": datetime(2026, 2, 17, 12, 0, 0, tzinfo=timezone.utc).isoformat(),
-            "files_accessed_at": datetime(2026, 3, 11, 17, 0, 0, tzinfo=timezone.utc).isoformat(),
+            "files_accessed_at": datetime(2026, 3, 11, 13, 42, 0, tzinfo=timezone.utc).isoformat(),
             "delivery_confirmed_at": datetime(2026, 3, 11, 18, 0, 0, tzinfo=timezone.utc).isoformat(),
             "work_accepted_at": datetime(2026, 3, 12, 10, 0, 0, tzinfo=timezone.utc).isoformat(),
             "acceptance_status": "approved",
