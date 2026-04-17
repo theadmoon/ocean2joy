@@ -2399,15 +2399,21 @@ async def upload_document(
     
     # Special handling based on document type
     if doc_type == 'invoice':
-        update_data['invoice_signed_at'] = datetime.now(timezone.utc).isoformat()
+        # КОСТЫЛЬ: Сохраняем оригинальную дату подписания (не перезаписываем при повторной загрузке)
+        if not project.get('invoice_signed_at'):
+            update_data['invoice_signed_at'] = datetime.now(timezone.utc).isoformat()
         update_data['invoice_signed_filename'] = safe_filename
         update_data['status'] = ProjectStatus.INVOICE_SIGNED
     
     elif doc_type == 'delivery_certificate':
-        update_data['delivery_confirmed_at'] = datetime.now(timezone.utc).isoformat()
+        # КОСТЫЛЬ: Сохраняем оригинальную дату
+        if not project.get('delivery_confirmed_at'):
+            update_data['delivery_confirmed_at'] = datetime.now(timezone.utc).isoformat()
     
     elif doc_type == 'acceptance_act':
-        update_data['work_accepted_at'] = datetime.now(timezone.utc).isoformat()
+        # КОСТЫЛЬ: Сохраняем оригинальную дату
+        if not project.get('work_accepted_at'):
+            update_data['work_accepted_at'] = datetime.now(timezone.utc).isoformat()
     
     elif doc_type == 'payment_proof':
         update_data['payment_marked_by_client_at'] = datetime.now(timezone.utc).isoformat()
