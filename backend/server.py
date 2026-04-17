@@ -2189,6 +2189,10 @@ PRODUCTION UPDATES:
         else:
             payment_sent_formatted = 'N/A'
         
+        # Manager confirmation date (только дата, без времени)
+        manager_confirmed_date = project.get('payment_confirmed_by_manager_at') or payment_date
+        payment_confirmed_formatted = format_date_utc(manager_confirmed_date)
+        
         # Generate receipt number with sequence (or use existing)
         receipt_number = await get_or_generate_document_number(
             project, 'receipt', 'RCP', payment_date
@@ -2229,7 +2233,7 @@ PAYMENT DETAILS:
 Amount Received: ${project.get('quote_amount', 0):.2f} USD
 Payment Method: {project.get('order_activation_payment_method', 'PayPal').upper()}
 Payment Date: {payment_sent_formatted}
-Payment Confirmed: {payment_datetime_formatted}
+Payment Confirmed: {payment_confirmed_formatted}
 Transaction ID: {project.get('paypal_transaction_id', 'See payment proof')}
 Payment Status: {project.get('paypal_payment_status', 'COMPLETED')}
 
@@ -3284,6 +3288,11 @@ async def generate_receipt_html(project: dict) -> str:
     payment_date = payment_date if payment_date.tzinfo else payment_date.replace(tzinfo=timezone.utc)
     receipt_number = await get_or_generate_document_number(project, 'receipt', 'RCP', payment_date)
     payment_sent = format_datetime_utc(project.get('payment_marked_by_client_at')) if project.get('payment_marked_by_client_at') else 'N/A'
+    
+    # Manager confirmation date (только дата, без времени)
+    manager_confirmed_date = project.get('payment_confirmed_by_manager_at') or payment_date
+    payment_confirmed_date_only = format_date_utc(manager_confirmed_date)
+    
     amount = project.get('quote_amount', 0)
     
     # Build deliverables list
@@ -3464,7 +3473,7 @@ h1 {{
     <tr><td>Amount Received:</td><td><strong style="font-size: 14pt; color: #047857;">${amount:.2f} USD</strong></td></tr>
     <tr><td>Payment Method:</td><td>{project.get('order_activation_payment_method', 'PayPal').upper()}</td></tr>
     <tr><td>Payment Date:</td><td>{payment_sent}</td></tr>
-    <tr><td>Payment Confirmed:</td><td>{format_datetime_utc(payment_date)}</td></tr>
+    <tr><td>Payment Confirmed:</td><td>{payment_confirmed_date_only}</td></tr>
     <tr><td>Transaction ID:</td><td>{project.get('paypal_transaction_id', 'See payment proof')}</td></tr>
     <tr><td>Payment Status:</td><td><strong>{project.get('paypal_payment_status', 'COMPLETED')}</strong></td></tr>
   </table>
