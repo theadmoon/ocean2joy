@@ -1579,7 +1579,7 @@ async def generate_and_download_document(
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Validate document type
-    valid_doc_types = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'payment_instructions', 'delivery_certificate', 'order_confirmation', 'production_notes', 'payment_proof']
+    valid_doc_types = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'payment_instructions', 'delivery_certificate', 'order_confirmation', 'production_notes', 'payment_proof', 'payment_confirmation']
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail="Invalid document type")
     
@@ -2412,6 +2412,46 @@ To (Recipient): Individual Entrepreneur Vera Iambaeva
 ═══════════════════════════════════════════════
 
 STATUS: ✅ PAYMENT SENT by Client on {format_date_utc(payment_date)}
+
+═══════════════════════════════════════════════
+"""
+    
+    elif doc_type == 'payment_confirmation':
+        payment_confirmed_at = project.get('payment_confirmed_by_manager_at') or project.get('completed_at')
+        
+        payment_received_time = format_datetime_utc(payment_confirmed_at) if payment_confirmed_at else 'Pending verification'
+        confirmation_date = format_date_utc(payment_confirmed_at) if payment_confirmed_at else 'Not confirmed yet'
+        
+        doc_content = f"""PAYMENT CONFIRMATION
+═══════════════════════════════════════════════
+
+Individual Entrepreneur Vera Iambaeva
+
+Project: {project['project_number']}
+Client: {project.get('user_name', '')}
+Email: {project.get('user_email', '')}
+Invoice Amount: ${project.get('quote_amount', 0):.0f} USD
+
+═══════════════════════════════════════════════
+
+PAYMENT DETAILS VERIFIED IN PAYPAL:
+
+Transaction ID: {project.get('paypal_transaction_id', 'N/A')}
+Payment Method: {project.get('order_activation_payment_method', 'paypal')}
+
+From (Payer): {project.get('paypal_payer_email') or project.get('user_email', 'N/A')}
+To (Recipient): Individual Entrepreneur Vera Iambaeva
+                PayPal Account: 302335809@postbox.ge
+                (Ocean2Joy Digital Video Production)
+
+Payment Received: {payment_received_time}
+
+═══════════════════════════════════════════════
+
+STATUS: ✅ CONFIRMED by Manager on {confirmation_date}
+
+Payment has been verified and confirmed in PayPal account.
+All transaction details match the invoice requirements.
 
 ═══════════════════════════════════════════════
 """
@@ -3950,6 +3990,22 @@ Professional video production delivered digitally.
     return html
 
 
+# CSS template for Payment Confirmation
+PAYMENT_CONFIRMATION_CSS_TEMPLATE = '''
+@page {{ size: A4; margin: 2cm; }}
+body {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10.5pt; line-height: 1.6; color: #1f2937; max-width: 800px; margin: 0 auto; }}
+h1 {{ text-align: center; font-size: 20pt; font-weight: 700; margin: 20px 0; color: #0369a1; letter-spacing: 1px; text-transform: uppercase; }}
+.subtitle {{ text-align: center; color: #6b7280; font-size: 11pt; margin: 5px 0; font-weight: 600; }}
+.divider {{ border-top: 2px solid #e5e7eb; margin: 20px 0; }}
+.entity-box {{ background: #f0f9ff; padding: 10px 15px; margin: 10px 0; border-left: 4px solid #0369a1; font-weight: 600; text-align: center; }}
+.section-header {{ font-weight: 700; font-size: 11pt; color: #0369a1; margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; }}
+.details-box {{ background: #f9fafb; padding: 15px 20px; margin: 15px 0; border-left: 5px solid #10b981; border-radius: 4px; }}
+.status-confirmed {{ background: #f0fdf4; padding: 15px 20px; margin: 15px 0; border-left: 5px solid #10b981; border-radius: 4px; font-weight: 600; text-align: center; }}
+.checkmark {{ color: #10b981; font-weight: 700; font-size: 12pt; }}
+.info-note {{ background: #fffbeb; padding: 12px 18px; margin: 15px 0; border-left: 4px solid #f59e0b; font-size: 9.5pt; color: #78350f; }}
+'''
+
+
 # CSS template for Production Notes with dynamic status color
 PRODUCTION_NOTES_CSS_TEMPLATE = '''
 @page {{ size: A4; margin: 2cm; }}
@@ -4066,6 +4122,73 @@ h1 {{
 
 async def generate_production_notes_html(project: dict) -> str:
     """Generate Production Notes HTML for PDF - matches text version"""
+
+
+async def generate_payment_confirmation_html(project: dict) -> str:
+    """Generate Payment Confirmation HTML for PDF - manager verified payment"""
+    payment_confirmed_at = project.get('payment_confirmed_by_manager_at') or project.get('completed_at')
+    
+    # Format dates
+    payment_received_time = format_datetime_utc(payment_confirmed_at) if payment_confirmed_at else 'Pending verification'
+    confirmation_date = format_date_utc(payment_confirmed_at) if payment_confirmed_at else 'Not confirmed yet'
+    
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Payment Confirmation</title>
+<style>
+{PAYMENT_CONFIRMATION_CSS_TEMPLATE}
+</style>
+</head>
+<body>
+
+<h1>PAYMENT CONFIRMATION</h1>
+<div class="divider"></div>
+
+<div class="entity-box">
+  <p style="margin: 3px 0;">Individual Entrepreneur Vera Iambaeva</p>
+</div>
+
+<p style="margin: 10px 0;"><strong>Project:</strong> {project['project_number']}</p>
+<p style="margin: 10px 0;"><strong>Client:</strong> {project.get('user_name', '')}</p>
+<p style="margin: 10px 0;"><strong>Email:</strong> {project.get('user_email', '')}</p>
+<p style="margin: 10px 0;"><strong>Invoice Amount:</strong> ${project.get('quote_amount', 0):.0f} USD</p>
+
+<div class="divider"></div>
+
+<p class="section-header">PAYMENT DETAILS VERIFIED IN PAYPAL:</p>
+
+<div class="details-box">
+  <p style="margin: 8px 0;"><strong>Transaction ID:</strong> {project.get('paypal_transaction_id', 'N/A')}</p>
+  <p style="margin: 8px 0;"><strong>Payment Method:</strong> {project.get('order_activation_payment_method', 'paypal')}</p>
+  
+  <p style="margin: 15px 0 5px 0;"><strong>From (Payer):</strong> {project.get('paypal_payer_email') or project.get('user_email', 'N/A')}</p>
+  <p style="margin: 5px 0;"><strong>To (Recipient):</strong> Individual Entrepreneur Vera Iambaeva</p>
+  <p style="margin: 5px 0 5px 30px;">PayPal Account: 302335809@postbox.ge</p>
+  <p style="margin: 5px 0 5px 30px;">(Ocean2Joy Digital Video Production)</p>
+  
+  <p style="margin: 15px 0 5px 0;"><strong>Payment Received:</strong> {payment_received_time}</p>
+</div>
+
+<div class="divider"></div>
+
+<div class="status-confirmed">
+  <p style="margin: 0;"><strong>STATUS:</strong> <span class="checkmark">✅</span> CONFIRMED by Manager on {confirmation_date}</p>
+</div>
+
+<div class="info-note">
+  <p style="margin: 0;">Payment has been verified and confirmed in PayPal account.</p>
+  <p style="margin: 5px 0 0 0;">All transaction details match the invoice requirements.</p>
+</div>
+
+<div class="divider"></div>
+
+</body>
+</html>"""
+    
+    return html
+
     production_started = project.get('production_started_at')
     production_completed = project.get('delivered_at')
     
@@ -4497,6 +4620,9 @@ async def download_document_pdf(
     elif doc_type == 'payment_proof':
         html_content = await generate_payment_proof_html(project)
         doc_display_name = "Payment_Proof"
+    elif doc_type == 'payment_confirmation':
+        html_content = await generate_payment_confirmation_html(project)
+        doc_display_name = "Payment_Confirmation"
     elif doc_type == 'production_notes':
         html_content = await generate_production_notes_html(project)
         doc_display_name = "Production_Notes"

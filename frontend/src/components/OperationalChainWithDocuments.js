@@ -156,7 +156,7 @@ To (Recipient): Individual Entrepreneur Vera Iambaeva
                 PayPal Account: 302335809@postbox.ge
                 (Ocean2Joy Digital Video Production)
 
-Payment Received: ${formatDateTimeUTC(project.payment_confirmed_by_manager_at || project.completed_at)} UTC
+Payment Received: ${formatDateTimeUTC(project.payment_confirmed_by_manager_at || project.completed_at)}
 
 ═══════════════════════════════════════════════
 
@@ -826,12 +826,12 @@ Click the Download button to save the file.`;
         docs.push({
           id: 'payment_confirmation',
           name: 'Payment Confirmation',
-          type: 'payment',
+          type: 'payment_confirmation',
           createdBy: 'Manager',
           createdAt: project.payment_confirmed_by_admin_at || project.payment_marked_by_client_at,
           status: project.payment_confirmed_by_admin ? 'confirmed' : 'pending_confirmation',
           icon: '💳',
-          actions: ['view']
+          actions: ['view', 'download:pdf', 'download:txt']
         });
         
         // Receipt
