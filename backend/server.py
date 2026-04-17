@@ -2415,7 +2415,7 @@ Payment Sent: {format_datetime_utc(payment_date)}
 
 ═══════════════════════════════════════════════
 
-STATUS: ✅ CONFIRMED by Manager on {format_date_utc(confirmed_date)}
+STATUS: ✅ PAYMENT SENT by Client on {format_date_utc(payment_date)}
 
 ═══════════════════════════════════════════════
 """
@@ -4063,7 +4063,7 @@ h1 {{
 <div class="divider"></div>
 
 <div class="status-confirmed">
-  <p style="margin: 0;">STATUS: <span class="checkmark">✅</span> CONFIRMED by Manager on {format_date_utc(confirmed_date)}</p>
+  <p style="margin: 0;">STATUS: <span class="checkmark">✅</span> PAYMENT SENT by Client on {format_date_utc(payment_date)}</p>
 </div>
 
 <div class="divider"></div>

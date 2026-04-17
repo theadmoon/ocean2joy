@@ -598,8 +598,7 @@ export const generatePaymentProof = (projectData) => {
   
   // Generate realistic time with UTC timezone
   const paymentSentFormatted = formatDateTimeUTC(projectData.payment_marked_by_client_at) || 'N/A';
-  
-  const paymentConfirmedFormatted = formatDateUTC(projectData.payment_confirmed_by_admin_at);
+  const paymentSentDate = formatDateUTC(projectData.payment_marked_by_client_at) || 'N/A';
   
   return `PAYMENT PROOF
 ═══════════════════════════════════════════════
@@ -627,11 +626,9 @@ Payment Sent: ${paymentSentFormatted}
 
 ═══════════════════════════════════════════════
 
-STATUS: ${paymentConfirmedFormatted ? 
-  `✅ CONFIRMED by Manager on ${paymentConfirmedFormatted}` : 
-  '⏳ PENDING Manager Confirmation'}
+STATUS: ✅ PAYMENT SENT by Client on ${paymentSentDate}
 
-${!paymentConfirmedFormatted ? '\nThis payment is awaiting verification by the manager.' : ''}`;
+═══════════════════════════════════════════════`;
 };
 
 /**
