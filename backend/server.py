@@ -1579,7 +1579,7 @@ async def generate_and_download_document(
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Validate document type
-    valid_doc_types = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'payment_instructions', 'delivery_certificate', 'order_confirmation', 'production_notes']
+    valid_doc_types = ['invoice', 'acceptance_act', 'receipt', 'certificate', 'payment_instructions', 'delivery_certificate', 'order_confirmation', 'production_notes', 'payment_proof']
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail="Invalid document type")
     
@@ -2385,6 +2385,48 @@ For urgent matters only: ocean2joy@gmail.com
 
 Thank you for choosing Ocean2Joy!
 Professional video production delivered digitally.
+
+═══════════════════════════════════════════════
+"""
+    
+    elif doc_type == 'payment_proof':
+        payment_date = project.get('payment_marked_by_client_at') or project.get('completed_at') or datetime.now(timezone.utc)
+        if isinstance(payment_date, str):
+            payment_date = datetime.fromisoformat(payment_date)
+        payment_date = payment_date if payment_date.tzinfo else payment_date.replace(tzinfo=timezone.utc)
+        
+        confirmed_date = project.get('payment_confirmed_by_manager_at') or payment_date
+        if isinstance(confirmed_date, str):
+            confirmed_date = datetime.fromisoformat(confirmed_date)
+        confirmed_date = confirmed_date if confirmed_date.tzinfo else confirmed_date.replace(tzinfo=timezone.utc)
+        
+        doc_content = f"""PAYMENT PROOF
+═══════════════════════════════════════════════
+
+Individual Entrepreneur Vera Iambaeva
+
+Project: {project['project_number']}
+Client: {project.get('user_name', '')}
+Email: {project.get('user_email', '')}
+Invoice Amount: ${project.get('quote_amount', 0):.0f} USD
+
+═══════════════════════════════════════════════
+
+PAYMENT DETAILS:
+
+Transaction ID: {project.get('paypal_transaction_id', 'N/A')}
+
+From (Payer): {project.get('user_email', '')}
+To (Recipient): Individual Entrepreneur Vera Iambaeva
+    PayPal Account: 302335809@postbox.ge
+    (Ocean2Joy Digital Video Production)
+
+Payment Method: {project.get('order_activation_payment_method', 'paypal')}
+Payment Sent: {format_datetime_utc(payment_date)}
+
+═══════════════════════════════════════════════
+
+STATUS: ✅ CONFIRMED by Manager on {format_date_utc(confirmed_date)}
 
 ═══════════════════════════════════════════════
 """
@@ -3923,6 +3965,21 @@ Professional video production delivered digitally.
     return html
 
 
+# CSS template for Production Notes with dynamic status color
+PRODUCTION_NOTES_CSS_TEMPLATE = '''
+@page {{ size: A4; margin: 2cm; }}
+body {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10.5pt; line-height: 1.6; color: #1f2937; max-width: 800px; margin: 0 auto; }}
+h1 {{ text-align: center; font-size: 20pt; font-weight: 700; margin: 20px 0; color: #0369a1; letter-spacing: 1px; text-transform: uppercase; }}
+.subtitle {{ text-align: center; color: #6b7280; font-size: 11pt; margin: 5px 0; }}
+.divider {{ border-top: 2px solid #e5e7eb; margin: 20px 0; }}
+.section-header {{ font-weight: 700; font-size: 11pt; color: #0369a1; margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; }}
+.initial-plan-box {{ background: #f0f9ff; padding: 15px 20px; margin: 15px 0; border-left: 5px solid #0ea5e9; border-radius: 4px; }}
+.updates-box {{ background: #f0fdf4; padding: 15px 20px; margin: 15px 0; border-left: 5px solid #10b981; border-radius: 4px; }}
+.status-box {{ background: #f9fafb; padding: 15px 20px; margin: 15px 0; border-left: 5px solid {status_color}; border-radius: 4px; font-weight: 600; }}
+.checkmark {{ color: #10b981; font-weight: 700; font-size: 12pt; }}
+'''
+
+
 async def generate_payment_proof_html(project: dict) -> str:
     """Generate Payment Proof HTML for PDF - matches text version exactly"""
     payment_date = project.get('payment_marked_by_client_at') or project.get('completed_at') or datetime.now(timezone.utc)
@@ -3954,20 +4011,78 @@ h1 {{
   text-align: center;
   font-size: 20pt;
   font-weight: 700;
+  margin: 20px 0;
+  color: #0369a1;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}}
+.divider {{
+  border-top: 2px solid #e5e7eb;
+  margin: 20px 0;
+}}
+.entity-box {{
+  background: #f0f9ff;
+  padding: 15px 20px;
+  margin: 20px 0;
+  border-left: 5px solid #0ea5e9;
+  border-radius: 4px;
+}}
+.status-confirmed {{
+  background: #f0fdf4;
+  padding: 15px 20px;
+  margin: 20px 0;
+  border-left: 5px solid #10b981;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #047857;
+}}
+.checkmark {{
+  color: #10b981;
+  font-weight: 700;
+  font-size: 12pt;
+}}
+</style>
+</head>
+<body>
 
+<h1>PAYMENT PROOF</h1>
+<div class="divider"></div>
 
-PRODUCTION_NOTES_CSS_TEMPLATE = '''
-@page {{ size: A4; margin: 2cm; }}
-body {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10.5pt; line-height: 1.6; color: #1f2937; max-width: 800px; margin: 0 auto; }}
-h1 {{ text-align: center; font-size: 20pt; font-weight: 700; margin: 20px 0; color: #0369a1; letter-spacing: 1px; text-transform: uppercase; }}
-.subtitle {{ text-align: center; color: #6b7280; font-size: 11pt; margin: 5px 0; }}
-.divider {{ border-top: 2px solid #e5e7eb; margin: 20px 0; }}
-.section-header {{ font-weight: 700; font-size: 11pt; color: #0369a1; margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; }}
-.initial-plan-box {{ background: #f0f9ff; padding: 15px 20px; margin: 15px 0; border-left: 5px solid #0ea5e9; border-radius: 4px; }}
-.updates-box {{ background: #f0fdf4; padding: 15px 20px; margin: 15px 0; border-left: 5px solid #10b981; border-radius: 4px; }}
-.status-box {{ background: #f9fafb; padding: 15px 20px; margin: 15px 0; border-left: 5px solid {status_color}; border-radius: 4px; font-weight: 600; }}
-.checkmark {{ color: #10b981; font-weight: 700; font-size: 12pt; }}
-'''
+<div class="entity-box">
+  <p style="margin: 3px 0;"><strong>Individual Entrepreneur Vera Iambaeva</strong></p>
+</div>
+
+<p style="margin: 10px 0;"><strong>Project:</strong> {project['project_number']}</p>
+<p style="margin: 10px 0;"><strong>Client:</strong> {project.get('user_name', '')}</p>
+<p style="margin: 10px 0;"><strong>Email:</strong> {project.get('user_email', '')}</p>
+<p style="margin: 10px 0;"><strong>Invoice Amount:</strong> ${project.get('quote_amount', 0):.0f} USD</p>
+
+<div class="divider"></div>
+
+<p style="margin: 15px 0; font-weight: 700; text-transform: uppercase;">PAYMENT DETAILS:</p>
+
+<p style="margin: 10px 0;"><strong>Transaction ID:</strong> {project.get('paypal_transaction_id', 'N/A')}</p>
+
+<p style="margin: 15px 0 5px 0;"><strong>From (Payer):</strong> {project.get('user_email', '')}</p>
+<p style="margin: 5px 0;"><strong>To (Recipient):</strong> Individual Entrepreneur Vera Iambaeva</p>
+<p style="margin: 5px 0 5px 30px;">PayPal Account: 302335809@postbox.ge</p>
+<p style="margin: 5px 0 5px 30px;">(Ocean2Joy Digital Video Production)</p>
+
+<p style="margin: 15px 0 5px 0;"><strong>Payment Method:</strong> {project.get('order_activation_payment_method', 'paypal')}</p>
+<p style="margin: 5px 0;"><strong>Payment Sent:</strong> {format_datetime_utc(payment_date)}</p>
+
+<div class="divider"></div>
+
+<div class="status-confirmed">
+  <p style="margin: 0;">STATUS: <span class="checkmark">✅</span> CONFIRMED by Manager on {format_date_utc(confirmed_date)}</p>
+</div>
+
+<div class="divider"></div>
+
+</body>
+</html>"""
+    
+    return html
 
 
 async def generate_production_notes_html(project: dict) -> str:
@@ -4071,81 +4186,6 @@ For urgent matters only: ocean2joy@gmail.com
 </html>"""
     
     return html
-
-
-  margin: 20px 0;
-  color: #0369a1;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}}
-.divider {{
-  border-top: 2px solid #e5e7eb;
-  margin: 20px 0;
-}}
-.entity-box {{
-  background: #f0f9ff;
-  padding: 15px 20px;
-  margin: 20px 0;
-  border-left: 5px solid #0ea5e9;
-  border-radius: 4px;
-}}
-.status-confirmed {{
-  background: #f0fdf4;
-  padding: 15px 20px;
-  margin: 20px 0;
-  border-left: 5px solid #10b981;
-  border-radius: 4px;
-  font-weight: 600;
-  color: #047857;
-}}
-.checkmark {{
-  color: #10b981;
-  font-weight: 700;
-  font-size: 12pt;
-}}
-</style>
-</head>
-<body>
-
-<h1>PAYMENT PROOF</h1>
-<div class="divider"></div>
-
-<div class="entity-box">
-  <p style="margin: 3px 0;"><strong>Individual Entrepreneur Vera Iambaeva</strong></p>
-</div>
-
-<p style="margin: 10px 0;"><strong>Project:</strong> {project['project_number']}</p>
-<p style="margin: 10px 0;"><strong>Client:</strong> {project.get('user_name', '')}</p>
-<p style="margin: 10px 0;"><strong>Email:</strong> {project.get('user_email', '')}</p>
-<p style="margin: 10px 0;"><strong>Invoice Amount:</strong> ${project.get('quote_amount', 0):.0f} USD</p>
-
-<div class="divider"></div>
-
-<p style="margin: 15px 0; font-weight: 700; text-transform: uppercase;">PAYMENT DETAILS:</p>
-
-<p style="margin: 10px 0;"><strong>Transaction ID:</strong> {project.get('paypal_transaction_id', 'N/A')}</p>
-
-<p style="margin: 15px 0 5px 0;"><strong>From (Payer):</strong> {project.get('user_email', '')}</p>
-<p style="margin: 5px 0;"><strong>To (Recipient):</strong> Individual Entrepreneur Vera Iambaeva</p>
-<p style="margin: 5px 0 5px 30px;">PayPal Account: 302335809@postbox.ge</p>
-<p style="margin: 5px 0 5px 30px;">(Ocean2Joy Digital Video Production)</p>
-
-<p style="margin: 15px 0 5px 0;"><strong>Payment Method:</strong> {project.get('order_activation_payment_method', 'paypal')}</p>
-<p style="margin: 5px 0;"><strong>Payment Sent:</strong> {format_datetime_utc(payment_date)}</p>
-
-<div class="divider"></div>
-
-<div class="status-confirmed">
-  <p style="margin: 0;">STATUS: <span class="checkmark">✅</span> CONFIRMED by Manager on {format_date_utc(confirmed_date)}</p>
-</div>
-
-<div class="divider"></div>
-
-</body>
-</html>"""
-    
-    return html
-
 
 
 def generate_operational_chain_html(project: dict) -> str:
