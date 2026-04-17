@@ -133,6 +133,12 @@ ${project.quote_request_manager_comments || 'No notes available'}`;
         break;
         
       case 'payment_confirmation':
+        // Payment confirmation - only show real data when manager has verified
+        const paymentConfirmedAt = project.payment_confirmed_by_manager_at;
+        const paymentReceivedTime = paymentConfirmedAt ? formatDateTimeUTC(paymentConfirmedAt) : 'Pending verification';
+        const confirmationDate = paymentConfirmedAt ? formatDateUTC(paymentConfirmedAt) : 'Not confirmed yet';
+        const confirmationStatus = paymentConfirmedAt ? '✅ CONFIRMED' : '⏳ PENDING VERIFICATION';
+        
         content = `PAYMENT CONFIRMATION
 ═══════════════════════════════════════════════
 
@@ -147,7 +153,7 @@ Invoice Amount: $${project.quote_amount || '0.00'} USD
 
 PAYMENT DETAILS VERIFIED IN PAYPAL:
 
-Transaction ID: ${project.paypal_transaction_id || 'N/A'}
+Transaction ID: ${project.paypal_transaction_id || 'Pending verification'}
 Payment Method: ${project.order_activation_payment_method || 'paypal'}
 
 From (Payer): ${project.paypal_payer_email || project.user_email || 'N/A'}
@@ -155,14 +161,15 @@ To (Recipient): Individual Entrepreneur Vera Iambaeva
                 PayPal Account: 302335809@postbox.ge
                 (Ocean2Joy Digital Video Production)
 
-Payment Received: ${formatDateTimeUTC(project.payment_confirmed_by_manager_at || project.completed_at)}
+Payment Received: ${paymentReceivedTime}
 
 ═══════════════════════════════════════════════
 
-STATUS: ✅ CONFIRMED by Manager on ${formatDateUTC(project.payment_confirmed_by_manager_at || project.completed_at)}
+STATUS: ${confirmationStatus} by Manager on ${confirmationDate}
 
-Payment has been verified and confirmed in PayPal account.
-All transaction details match the invoice requirements.
+${paymentConfirmedAt ? 
+  'Payment has been verified and confirmed in PayPal account.\nAll transaction details match the invoice requirements.' : 
+  'This payment is awaiting manager verification in PayPal.\nConfirmation will be provided once verified.'}
 
 ═══════════════════════════════════════════════`;
         break;
