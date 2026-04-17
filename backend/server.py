@@ -5258,10 +5258,12 @@ You can request:
             "delivered_at": datetime(2026, 3, 11, 16, 30, 45, tzinfo=timezone.utc).isoformat(),
             "completed_at": datetime(2026, 3, 13, 11, 23, 12, tzinfo=timezone.utc).isoformat(),
             "acceptance_status": "approved",
-            # Auto-fill PayPal data from client
+            # Auto-fill PayPal data from client (REAL transaction from PayPal screenshot)
             "paypal_payer_email": test_client["email"],
-            "paypal_transaction_id": "8XJ72945RK156380M",
+            "paypal_transaction_id": "11S61184XV546242W",
             "paypal_payment_status": "COMPLETED",
+            "payment_marked_by_client_at": datetime(2026, 3, 13, 11, 30, 29, tzinfo=timezone.utc).isoformat(),
+            "payment_confirmed_by_manager_at": datetime(2026, 3, 13, 12, 0, 0, tzinfo=timezone.utc).isoformat(),
             "reference_materials": [
                 "Comedy_Script_v1.pdf (uploaded by client)",
                 "Character_References.zip (uploaded by client)",
