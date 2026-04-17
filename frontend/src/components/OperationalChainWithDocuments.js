@@ -833,14 +833,14 @@ Click the Download button to save the file.`;
           name: 'Payment Confirmation',
           type: 'payment_confirmation',
           createdBy: 'Manager',
-          createdAt: project.payment_confirmed_by_admin_at || project.payment_marked_by_client_at,
+          createdAt: project.payment_confirmed_by_manager_at || project.payment_marked_by_client_at,
           status: project.payment_confirmed_by_admin ? 'confirmed' : 'pending_confirmation',
           icon: '💳',
           actions: ['view', 'download:pdf', 'download:txt']
         });
         
         // Receipt
-        if (project.payment_confirmed_by_admin_at) {
+        if (project.payment_confirmed_by_manager_at) {
           const receiptNumber = project.document_numbers?.receipt || 'Receipt';
           docs.push({
             id: 'receipt',
