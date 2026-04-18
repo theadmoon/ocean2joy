@@ -9,17 +9,15 @@
 
 Task #012 исправила **только стили и атрибуты** Services Overview, НО **НЕ обновила данные сервисов в базе**.  
 
-**Текущие данные в O2J2** (НЕПРАВИЛЬНЮЕ):
-- "Custom Video Production **with Actors**"
-- "Professional Video Editing **& Special Effects**"
-- "AI-Generated Video **Content**"
-- $25/min, From $10.99, From $20
+**Текущие данные в O2J2** (могут отличаться от прототипа):
+- Требуется обновление
 
-**Должны быть (из прототипа)**:
-- "Custom Video Production" (без "with Actors")
-- "Video Editing" (без "Professional ... & Special Effects")
-- "AI-Generated Video" (без "Content")
-- From $1050, From $500, From $750
+**Должны быть (ТОЧНЫЕ данные из прототипа Ocean2Joy API `/api/services`)**:
+- "Custom Video Production with Actors"
+- "Professional Video Editing & Special Effects"
+- "AI-Generated Video Content"
+- Цены: $25.0 (per_minute), $10.99 (per_project), $20.0 (custom)
+- Описания: см. MongoDB команды ниже
 
 ---
 
@@ -38,52 +36,52 @@ db.services.find({}, {title: 1, base_price: 1, pricing_model: 1, price_descripti
 
 ### ШАГ 2: ОБНОВИТЬ КАЖДЫЙ СЕРВИС
 
-**СЕРВИС #1: Custom Video Production**
+**СЕРВИС #1: Custom Video Production with Actors**
 
 ```javascript
 db.services.updateOne(
   { type: "custom_video" },
   {
     $set: {
-      "title": "Custom Video Production",
-      "description": "Full-service video production from concept to final cut. Our team handles scripting, filming, editing, and post-production.",
-      "pricing_model": "custom",
-      "base_price": 1050,
-      "price_description": "Starting at $1050, full project pricing based on scope and duration"
+      "title": "Custom Video Production with Actors",
+      "description": "Professional video production with real actors, custom scripts, and high-quality filming. Perfect for commercials, short films, educational content, and brand stories.",
+      "pricing_model": "per_minute",
+      "base_price": 25.0,
+      "price_description": "$25-35 per minute, calculated based on duration and complexity"
     }
   }
 )
 ```
 
-**СЕРВИС #2: Video Editing**
+**СЕРВИС #2: Professional Video Editing & Special Effects**
 
 ```javascript
 db.services.updateOne(
   { type: "video_editing" },
   {
     $set: {
-      "title": "Video Editing",
-      "description": "Professional post-production services including color grading, sound design, motion graphics, and visual effects.",
-      "pricing_model": "custom",
-      "base_price": 500,
-      "price_description": "Starting at $500, pricing based on project complexity and duration"
+      "title": "Professional Video Editing & Special Effects",
+      "description": "Expert video editing and post-production services for your existing footage. From basic cuts to advanced special effects and motion graphics.",
+      "pricing_model": "per_project",
+      "base_price": 10.99,
+      "price_description": "Starting at $10.99 per element, full project pricing calculated based on complexity"
     }
   }
 )
 ```
 
-**СЕРВИС #3: AI-Generated Video**
+**СЕРВИС #3: AI-Generated Video Content**
 
 ```javascript
 db.services.updateOne(
   { type: "ai_video" },
   {
     $set: {
-      "title": "AI-Generated Video",
-      "description": "Cutting-edge AI-powered video creation. Transform your ideas into stunning visual content with machine learning.",
+      "title": "AI-Generated Video Content",
+      "description": "Cutting-edge AI-powered video creation with digital characters and environments. Perfect for creative projects, explainer videos, and unique visual content.",
       "pricing_model": "custom",
-      "base_price": 750,
-      "price_description": "Starting at $750, pricing varies based on video length and complexity"
+      "base_price": 20.0,
+      "price_description": "Custom pricing based on video length, complexity, and AI features used"
     }
   }
 )
@@ -101,24 +99,24 @@ db.services.find({}, {title: 1, base_price: 1, pricing_model: 1, price_descripti
 [
   {
     "_id": "...",
-    "title": "Custom Video Production",
-    "base_price": 1050,
-    "pricing_model": "custom",
-    "price_description": "Starting at $1050, full project pricing based on scope and duration"
+    "title": "Custom Video Production with Actors",
+    "base_price": 25.0,
+    "pricing_model": "per_minute",
+    "price_description": "$25-35 per minute, calculated based on duration and complexity"
   },
   {
     "_id": "...",
-    "title": "Video Editing",
-    "base_price": 500,
-    "pricing_model": "custom",
-    "price_description": "Starting at $500, pricing based on project complexity and duration"
+    "title": "Professional Video Editing & Special Effects",
+    "base_price": 10.99,
+    "pricing_model": "per_project",
+    "price_description": "Starting at $10.99 per element, full project pricing calculated based on complexity"
   },
   {
     "_id": "...",
-    "title": "AI-Generated Video",
-    "base_price": 750,
+    "title": "AI-Generated Video Content",
+    "base_price": 20.0,
     "pricing_model": "custom",
-    "price_description": "Starting at $750, pricing varies based on video length and complexity"
+    "price_description": "Custom pricing based on video length, complexity, and AI features used"
   }
 ]
 ```
